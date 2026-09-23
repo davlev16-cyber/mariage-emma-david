@@ -7,7 +7,7 @@
   --ink: #2f2d22;
   --muted: #6f6a57;
   --error: #9a3b2a;
-  /* Couleurs de la page affichée (changées par body[data-page]) */
+  /* Couleurs par défaut ; chaque section (.t-cover, .t-h...) a les siennes */
   --bg: var(--sand);
   --card: #f7f2e8;
   --text: var(--ink);
@@ -19,53 +19,44 @@
 }
 
 /* Couverture : beige et kaki */
-body[data-page="cover"], body[data-page="none"] { --bg: #efe7d8; }
+.t-cover { --bg: #efe7d8; }
 /* Henné · Beach Party : coucher de soleil, cuivre henné, sable */
-body[data-page="h"] { --bg: #43301f; --card: #533c28; --text: #f3e2c8; --title: #fbe9cc; --accent: #e0a36b; --line: #6d5139; --soft: #d9bf9c; color-scheme: dark; }
+.t-h { --bg: #43301f; --card: #533c28; --text: #f3e2c8; --title: #fbe9cc; --accent: #e0a36b; --line: #6d5139; --soft: #d9bf9c; color-scheme: dark; }
 /* Houppa : ivoire, sauge et blanc */
-body[data-page="p"] { --bg: #f6f2e9; --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #767a66; }
+.t-p { --bg: #f6f2e9; --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #767a66; }
 /* Chabbat : nuit et or des bougies */
-body[data-page="s"] { --bg: #23221b; --card: #2e2c23; --text: #ece3cd; --title: #f1dca8; --accent: #d9b56a; --line: #4a4535; --soft: #b8ad92; color-scheme: dark; }
+.t-s { --bg: #23221b; --card: #2e2c23; --text: #ece3cd; --title: #f1dca8; --accent: #d9b56a; --line: #4a4535; --soft: #b8ad92; color-scheme: dark; }
 /* Réponse : kaki clair */
-body[data-page="rsvp"] { --bg: #e4ddc7; --card: #f3eee1; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
+.t-rsvp { --bg: #e4ddc7; --card: #f3eee1; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font: 300 17px/1.6 "Jost", "Avenir Next", "Helvetica Neue", sans-serif;
-  transition: background-color .8s ease;
-  overflow: hidden;
 }
 
-/* ---------- Cinématiques ---------- */
-.cinema {
-  position: fixed; inset: 0; z-index: 30;
-  background: #efe7d8;
-  opacity: 0; transition: opacity .45s ease;
-}
-.cinema.in { opacity: 1; }
-.cinema.out { opacity: 0; transition-duration: .7s; }
-.cinema canvas { position: absolute; inset: 0; display: block; }
-.cine-caption {
+/* ---------- Cinématiques pilotées par le défilement ---------- */
+.cine { position: relative; }
+.stick { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.stick canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.caps {
   position: absolute; left: 0; right: 0;
   top: calc(env(safe-area-inset-top, 0px) + 8vh);
   padding-inline: 20px;
   display: grid; justify-items: center; gap: 4px; text-align: center;
   pointer-events: none;
 }
-.cap { margin: 0; opacity: 0; transform: translateY(14px); transition: opacity 1.3s ease, transform 1.3s ease; }
-.cine-caption.play .cap { opacity: 1; transform: none; }
+.cap { margin: 0; opacity: 0; will-change: opacity, transform; }
 .tone-dark { color: #3f4126; }
 .tone-light { color: #f1dca8; }
 .cap.bh { font-size: 16px; }
 .cap.small { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; }
 .cap.names, .cap.title { font: 400 clamp(52px, 14vw, 96px)/1 "Italiana", "Didot", Georgia, serif; }
 .cap.script { font: 400 clamp(34px, 9vw, 54px)/1.1 "Pinyon Script", "Snell Roundhand", cursive; }
-#cine-caption .cap.title { margin-top: 4px; }
+.caps .cap.title { margin-top: 4px; }
 
 /* ---------- Bouton musique ---------- */
 .sound {
@@ -82,20 +73,12 @@ body {
 .sound.on .mute { opacity: 0; }
 .sound:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ---------- Pages ---------- */
-.page {
-  position: fixed; inset: 0;
-  overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
-  opacity: 0; transform: translateY(10px);
-  transition: opacity .8s ease, transform .8s ease;
-}
-.page.shown { opacity: 1; transform: none; }
+/* ---------- Pages de texte ---------- */
+.content { background: var(--bg); color: var(--text); }
 .inner {
-  max-width: 600px; min-height: 100%;
+  max-width: 600px; min-height: 100vh;
   margin: 0 auto;
-  padding-inline: 22px; padding-block: 64px 24px;
+  padding-inline: 22px; padding-block: 72px 72px;
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 10px; text-align: center;
 }
@@ -158,25 +141,14 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
 .thanks .link { background: none; color: var(--title); text-decoration: underline; text-underline-offset: 4px; padding: 8px; }
 .sign { font: 400 30px "Pinyon Script", cursive; color: var(--accent); }
 .error { color: var(--error); }
-body[data-page="h"] .error, body[data-page="s"] .error { color: #f0a58c; }
+.t-h .error, .t-s .error { color: #f0a58c; }
 
-/* ---------- Navigation ---------- */
-.nav {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  background: linear-gradient(to top, var(--bg) 55%, transparent);
+.foot {
+  background: #e4ddc7; color: #6b6753; text-align: center;
+  padding-block: 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
+  font-size: 12px; letter-spacing: .24em; text-transform: uppercase;
 }
-.nav-btn {
-  background: none; border: 0; cursor: pointer; padding: 10px 8px;
-  font: 400 13px "Jost", sans-serif; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--title);
-}
-.nav-btn:focus-visible { outline: 2px solid var(--accent); }
-.dots { display: flex; gap: 8px; }
-.dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background .3s, transform .3s; }
-.dots span.on { background: var(--accent); transform: scale(1.3); }
 
 @media (prefers-reduced-motion: reduce) {
-  .page, .cap, .cinema, body { transition: none !important; }
+  .cap { transition: none !important; }
 }
