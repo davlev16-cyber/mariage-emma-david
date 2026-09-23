@@ -51,6 +51,12 @@ body {
   pointer-events: none;
 }
 .cap { margin: 0; opacity: 0; will-change: opacity, transform; }
+/* Henné : texte au centre de l'écran, bien lisible sur le coucher de soleil */
+.caps-h { top: 50%; transform: translateY(-62%); gap: 8px; }
+.caps-h .cap { color: #fff7ec; text-shadow: 0 2px 6px rgba(60, 10, 20, .55), 0 0 28px rgba(60, 10, 20, .5); }
+.caps-h .cap.title { font-size: clamp(64px, 18vw, 112px); }
+.caps-h .cap.script { font-size: clamp(40px, 11vw, 62px); color: #ffe2b0; }
+.caps-h .cap.small { font-size: 14px; font-weight: 500; letter-spacing: .18em; }
 .tone-dark { color: #3f4126; }
 .tone-light { color: #fbeedd; text-shadow: 0 1px 14px rgba(40, 20, 20, .35); }
 .cap.bh { font-size: 16px; }
@@ -155,6 +161,12 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
 .sign { font: 400 30px "Pinyon Script", cursive; color: var(--accent); }
 .error { color: var(--error); }
 .t-h .error { color: #ffc2a8; }
+/* Page Henné : tout centré, texte plus contrasté */
+.t-h .details { grid-template-columns: 1fr; text-align: center; }
+.t-h .details dt { padding-bottom: 0; border-bottom: 0; }
+.t-h .details dd { padding-top: 4px; font-size: 18px; color: var(--title); }
+.t-h .ev-intro { color: var(--title); }
+.t-h .ev-place { color: var(--text); }
 
 .foot {
   background: #e4ddc7; color: #6b6753; text-align: center;

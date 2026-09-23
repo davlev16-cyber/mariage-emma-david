@@ -26,7 +26,7 @@
     sec.style.height = heightVh + "vh";
     const stick = el("div", "stick");
     const canvas = document.createElement("canvas");
-    const caps = el("div", "caps tone-" + tone);
+    const caps = el("div", "caps caps-" + name + " tone-" + tone);
     captions.forEach(([text, cls, at]) => {
       if (!text) return;
       const p = el("p", "cap " + cls, text); p.dataset.at = at;
