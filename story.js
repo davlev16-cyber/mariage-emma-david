@@ -120,6 +120,14 @@
       });
       fs.append(ch); form.append(fs);
     });
+    // Nombre de personnes, si l'invitation est pour plusieurs
+    let nbSel = null;
+    if (invite.count > 1) {
+      const nl = el("label", "field", "Nombre de personnes"); nl.htmlFor = "nb";
+      nbSel = document.createElement("select"); nbSel.id = "nb"; nbSel.className = "nb";
+      for (let i = invite.count; i >= 1; i--) { const o = document.createElement("option"); o.value = i; o.textContent = i; nbSel.append(o); }
+      form.append(nl, nbSel);
+    }
     const lab = el("label", "field", "Un petit mot pour les mariés (facultatif)"); lab.htmlFor = "message";
     const ta = document.createElement("textarea"); ta.id = "message"; ta.rows = 3; ta.maxLength = 500;
     const err = el("p", "error"); err.hidden = true;
@@ -136,14 +144,14 @@
       const saved = JSON.parse(localStorage.getItem(key) || "null");
       if (saved) {
         invite.events.forEach(k => { const i = document.getElementById(k + "-" + saved[k]); if (i) i.checked = true; });
-        ta.value = saved.message || ""; form.hidden = true; thanks.hidden = false;
+        ta.value = saved.message || ""; if (nbSel && saved.nb) nbSel.value = saved.nb; form.hidden = true; thanks.hidden = false;
         tt.textContent = "Votre réponse a bien été enregistrée.";
       }
     } catch (e) {}
     edit.addEventListener("click", () => { thanks.hidden = true; form.hidden = false; });
     form.addEventListener("submit", async e => {
       e.preventDefault(); err.hidden = true;
-      const answer = { code, nom: invite.name, message: ta.value.trim() };
+      const answer = { code, nom: invite.name, nb: nbSel ? Number(nbSel.value) : invite.count, message: ta.value.trim() };
       const missing = [];
       invite.events.forEach(k => {
         const c = form.querySelector('input[name="' + k + '"]:checked');

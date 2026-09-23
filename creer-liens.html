@@ -3,122 +3,361 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Liens d'invitation</title>
+<title>Espace des mariés</title>
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=1790169073">
+<link rel="stylesheet" href="style.css?v=1790169530">
 <style>
-  .panel { display: grid; gap: 14px; background: var(--linen); border: 1px solid var(--stone); padding: 22px; }
-  .panel h2 { margin: 0; font: 400 32px/1.1 "Italiana", Georgia, serif; color: var(--kaki-deep); }
-  input[type=text] { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--stone); background: var(--sand); color: var(--ink); }
-  input[type=text]:focus-visible { outline: 2px solid var(--kaki); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--stone); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--sand); z-index: 5; padding-top: 8px; }
+  .tabs button { flex: 1; background: none; color: var(--muted); padding: 12px 6px; font-size: 12px; border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--kaki-deep); border-bottom-color: var(--kaki-deep); }
+  .tabs button:hover { background: var(--linen); }
+  .panel { display: grid; gap: 14px; background: var(--linen); border: 1px solid var(--stone); padding: 20px; }
+  .panel h2 { margin: 0; font: 400 30px/1.1 "Italiana", Georgia, serif; color: var(--kaki-deep); }
+  input[type=text], input[type=number], input[type=password], select { width: 100%; font: inherit; padding: 11px 12px; border: 1px solid var(--stone); background: var(--sand); color: var(--ink); }
+  input:focus-visible, select:focus-visible { outline: 2px solid var(--kaki); }
+  .row2 { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: end; }
   .checks { display: grid; gap: 8px; }
   .checks label { display: flex; gap: 10px; align-items: center; }
   .checks input { width: 20px; height: 20px; accent-color: var(--kaki); }
   .list { display: grid; gap: 10px; }
   .item { display: grid; gap: 8px; border: 1px solid var(--stone); background: var(--linen); padding: 14px 16px; }
   .item strong { font-weight: 500; color: var(--kaki-deep); }
-  .item .ev { color: var(--muted); font-size: 14px; }
+  .muted { color: var(--muted); font-size: 14px; }
   .item code { font-size: 12px; word-break: break-all; color: var(--muted); }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .row button, .row a { font-size: 12px; padding: 10px 12px; }
-  .row a { font: 500 12px "Jost", sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--kaki); color: var(--linen); text-decoration: none; }
-  .row .del { background: none; color: var(--error); border: 1px solid var(--stone); }
-  .hint { margin: 0; color: var(--muted); font-size: 15px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .actions button, .actions a { font-size: 12px; padding: 10px 12px; }
+  .actions a { font: 500 12px "Jost", sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--kaki); color: var(--linen); text-decoration: none; }
+  button.soft { background: none; color: var(--kaki-deep); border: 1px solid var(--stone); }
+  button.del { background: none; color: var(--error); border: 1px solid var(--stone); }
+  .hint { margin: 0; color: var(--muted); font-size: 14px; }
+  .notice { margin: 0; padding: 14px 16px; border-left: 3px solid var(--kaki); background: var(--linen); font-size: 15px; }
+  .h2 { margin: 0; font: 400 28px "Italiana", Georgia, serif; color: var(--kaki-deep); }
+  /* Réponses */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .stat { background: var(--linen); border: 1px solid var(--stone); padding: 14px; display: grid; gap: 2px; }
+  .stat .ev { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--kaki); }
+  .stat .big { font: 400 34px/1 "Italiana", Georgia, serif; color: var(--kaki-deep); font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 13px; color: var(--muted); }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--stone); color: var(--muted); }
+  .badge.yes { background: #e4ead6; border-color: #b9c79a; color: #3f5424; }
+  .badge.no { background: #f3e1dc; border-color: #d9b2a8; color: #7a2f22; }
+  .msg { margin: 0; font-style: italic; color: var(--ink); font-size: 15px; }
+  /* Tables */
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button { background: var(--linen); color: var(--kaki-deep); border: 1px solid var(--stone); font-size: 12px; padding: 10px 12px; }
+  .seg button[aria-pressed="true"] { background: var(--kaki-deep); color: var(--linen); border-color: var(--kaki-deep); }
+  .tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .table { background: var(--linen); border: 1px solid var(--stone); padding: 14px; display: grid; gap: 10px; align-content: start; }
+  .table.full { border-color: #b9c79a; }
+  .table.over { border-color: var(--error); }
+  .thead { display: grid; grid-template-columns: 1fr 64px; gap: 8px; }
+  .thead input { padding: 8px 10px; }
+  .seats { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .table.over .seats { color: var(--error); font-weight: 500; }
+  .guests { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .guests li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--stone); }
+  .guests li:last-child { border-bottom: 0; }
+  .guests button { background: none; color: var(--error); padding: 4px 8px; font-size: 16px; letter-spacing: 0; }
+  .unplaced li { display: grid; grid-template-columns: 1fr 150px; gap: 8px; align-items: center; }
+  .unplaced select { padding: 8px; font-size: 14px; }
+  .status { font-size: 13px; color: var(--muted); min-height: 1.2em; margin: 0; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
     <p class="eyebrow">Espace des mariés</p>
-    <h1><span>Invitations</span></h1>
-    <p class="lead">Créez un lien personnel pour chaque invité, avec seulement ses dates.</p>
+    <h1><span>Emma &amp; David</span></h1>
   </header>
 
-  <form id="new" class="panel" novalidate>
-    <h2>Nouvel invité</h2>
-    <label class="field" for="name">Nom affiché sur l'invitation</label>
-    <input type="text" id="name" placeholder="Ex. : Sarah & Yoni" maxlength="80">
-    <p class="field">Invité(e)(s) à :</p>
-    <div class="checks" id="checks"></div>
-    <p id="err" class="error" hidden></p>
-    <button type="submit">Créer le lien</button>
-  </form>
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-inv" aria-selected="true" aria-controls="pane-inv">Invitations</button>
+    <button type="button" role="tab" id="tab-rep" aria-selected="false" aria-controls="pane-rep">Réponses</button>
+    <button type="button" role="tab" id="tab-tab" aria-selected="false" aria-controls="pane-tab">Tables</button>
+  </nav>
 
-  <section class="list" id="list" aria-label="Liens créés"></section>
-  <p class="hint">La liste ci-dessus est gardée seulement dans ce navigateur. Les réponses des invités arrivent dans votre tableau Google Sheets.</p>
+  <!-- ===== Invitations ===== -->
+  <section id="pane-inv" role="tabpanel" aria-labelledby="tab-inv" style="display:grid;gap:20px">
+    <form id="new" class="panel" novalidate>
+      <h2>Nouvelle invitation</h2>
+      <div class="row2">
+        <div>
+          <label class="field" for="name">Nom affiché sur l'invitation</label>
+          <input type="text" id="name" placeholder="Ex. : Sarah &amp; Yoni" maxlength="80">
+        </div>
+        <div>
+          <label class="field" for="count">Personnes</label>
+          <input type="number" id="count" min="1" max="30" value="2">
+        </div>
+      </div>
+      <p class="field" style="margin:0">Invité(e)(s) à :</p>
+      <div class="checks" id="checks"></div>
+      <p id="err" class="error" hidden></p>
+      <button type="submit">Créer le lien</button>
+    </form>
+    <section class="list" id="list" aria-label="Invitations créées"></section>
+    <p class="hint">Cette liste est gardée dans ce navigateur. Elle sert aussi à savoir qui n'a pas encore répondu.</p>
+  </section>
+
+  <!-- ===== Accès protégé (Réponses et Tables) ===== -->
+  <section id="access" class="panel" hidden>
+    <h2>Code d'accès</h2>
+    <p class="hint">Les réponses de vos invités sont privées. Entrez le code d'accès (donné avec l'étape Google) : il restera enregistré sur cet appareil.</p>
+    <input type="password" id="key" autocomplete="off" placeholder="Code d'accès">
+    <button type="button" id="save-key">Valider</button>
+    <p id="access-err" class="error" hidden></p>
+  </section>
+  <p id="not-linked" class="notice" hidden>Les réponses ne sont pas encore reliées à votre tableau Google. Il reste l'étape Google à faire : dès qu'elle est faite, les réponses et les tables apparaîtront ici.</p>
+
+  <!-- ===== Réponses ===== -->
+  <section id="pane-rep" role="tabpanel" aria-labelledby="tab-rep" style="display:grid;gap:18px" hidden>
+    <div class="actions"><button type="button" class="soft" id="refresh">Actualiser</button><p class="status" id="rep-status"></p></div>
+    <div class="stats" id="stats"></div>
+    <h2 class="h2">Réponses reçues</h2>
+    <div class="list" id="responses"></div>
+    <h2 class="h2">Pas encore répondu</h2>
+    <div class="list" id="pending"></div>
+  </section>
+
+  <!-- ===== Tables ===== -->
+  <section id="pane-tab" role="tabpanel" aria-labelledby="tab-tab" style="display:grid;gap:18px" hidden>
+    <div class="seg" id="ev-seg" role="group" aria-label="Célébration"></div>
+    <p class="status" id="tab-status"></p>
+    <form id="add-table" class="panel" novalidate>
+      <h2>Ajouter une table</h2>
+      <div class="row2">
+        <div><label class="field" for="t-name">Nom de la table</label><input type="text" id="t-name" maxlength="40" placeholder="Ex. : Table 1, Famille, Amis…"></div>
+        <div><label class="field" for="t-cap">Places</label><input type="number" id="t-cap" min="1" max="40" value="10"></div>
+      </div>
+      <button type="submit">Ajouter</button>
+    </form>
+    <div class="tables" id="tables"></div>
+    <section class="panel">
+      <h2>Invités à placer</h2>
+      <p class="hint" id="unplaced-hint"></p>
+      <ul class="guests unplaced" id="unplaced"></ul>
+    </section>
+  </section>
 </main>
 
-<script src="config.js?v=1790169073"></script>
+<script src="config.js?v=1790169530"></script>
 <script>
 const base = location.href.replace(/creer-liens\.html.*$/, "");
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
 
-function encodeInvite(name, keys) {
-  const json = JSON.stringify({ n: name, e: keys.join("") });
-  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+// ---------- Onglets ----------
+const tabs = { inv: "pane-inv", rep: "pane-rep", tab: "pane-tab" };
+let currentTab = "inv";
+function showTab(t) {
+  currentTab = t;
+  Object.entries(tabs).forEach(([k, pane]) => { $("tab-" + k).setAttribute("aria-selected", k === t); $(pane).hidden = true; });
+  $("access").hidden = true; $("not-linked").hidden = true;
+  if (t === "inv") { $(tabs.inv).hidden = false; return; }
+  if (!SCRIPT_URL) { $("not-linked").hidden = false; return; }
+  if (!store.get("adminKey", "")) { $("access").hidden = false; return; }
+  $(tabs[t]).hidden = false;
+  load();
 }
+Object.keys(tabs).forEach(k => $("tab-" + k).addEventListener("click", () => showTab(k)));
 
-function load() { try { return JSON.parse(localStorage.getItem("invites") || "[]"); } catch (e) { return []; } }
-function save(list) { try { localStorage.setItem("invites", JSON.stringify(list)); } catch (e) {} }
-
-const checks = document.getElementById("checks");
+// ---------- Invitations ----------
+const checks = $("checks");
 Object.entries(EVENTS).forEach(([k, ev]) => {
-  const lab = document.createElement("label");
-  const box = document.createElement("input");
+  const lab = el("label"), box = document.createElement("input");
   box.type = "checkbox"; box.value = k; box.id = "ev-" + k; box.checked = true;
   lab.append(box, document.createTextNode(ev.name + " — " + ev.date));
   checks.append(lab);
 });
+const invites = () => store.get("invites", []);
+const codeOf = inv => encodeInvite(inv.name, inv.events, inv.nb || 1);
 
-function render() {
-  const list = document.getElementById("list");
-  list.textContent = "";
-  load().forEach((inv, idx) => {
-    const url = base + "?i=" + encodeInvite(inv.name, inv.events);
-    const item = document.createElement("div");
-    item.className = "item";
-    const title = document.createElement("strong"); title.textContent = inv.name;
-    const ev = document.createElement("span"); ev.className = "ev";
-    ev.textContent = inv.events.map(k => EVENTS[k].name).join(" · ");
-    const code = document.createElement("code"); code.textContent = url;
-    const row = document.createElement("div"); row.className = "row";
-
-    const copy = document.createElement("button"); copy.type = "button"; copy.textContent = "Copier le lien";
+function renderInvites() {
+  const list = $("list"); list.textContent = "";
+  invites().forEach((inv, idx) => {
+    const url = base + "?i=" + codeOf(inv);
+    const item = el("div", "item");
+    const code = el("code", "", url);
+    const row = el("div", "actions");
+    const copy = el("button", "", "Copier le lien"); copy.type = "button";
     copy.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(url); copy.textContent = "Copié ✓"; }
       catch (e) { const r = document.createRange(); r.selectNodeContents(code); getSelection().removeAllRanges(); getSelection().addRange(r); copy.textContent = "Faites Cmd + C"; }
       setTimeout(() => copy.textContent = "Copier le lien", 2000);
     });
-
-    const wa = document.createElement("a");
-    wa.textContent = "Envoyer par WhatsApp"; wa.target = "_blank"; wa.rel = "noopener";
+    const wa = el("a", "", "Envoyer par WhatsApp"); wa.target = "_blank"; wa.rel = "noopener";
     wa.href = "https://wa.me/?text=" + encodeURIComponent("Emma & David ont la joie de vous inviter à leur mariage 💍\n" + url);
-
-    const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Retirer";
-    del.addEventListener("click", () => { const l = load(); l.splice(idx, 1); save(l); render(); });
-
+    const del = el("button", "del", "Retirer"); del.type = "button";
+    del.addEventListener("click", () => { const l = invites(); l.splice(idx, 1); store.set("invites", l); renderInvites(); });
     row.append(copy, wa, del);
-    item.append(title, ev, code, row);
+    item.append(el("strong", "", inv.name),
+      el("span", "muted", (inv.nb || 1) + " pers. · " + inv.events.map(k => EVENTS[k] ? EVENTS[k].name : k).join(" · ")), code, row);
     list.append(item);
   });
 }
-
-document.getElementById("new").addEventListener("submit", e => {
+$("new").addEventListener("submit", e => {
   e.preventDefault();
-  const name = document.getElementById("name").value.trim();
+  const name = $("name").value.trim();
   const keys = [...checks.querySelectorAll("input:checked")].map(b => b.value);
-  const err = document.getElementById("err");
-  if (!name || !keys.length) {
-    err.textContent = !name ? "Indiquez le nom de l'invité." : "Cochez au moins une date.";
-    err.hidden = false; return;
-  }
+  const nb = Math.min(30, Math.max(1, parseInt($("count").value, 10) || 1));
+  const err = $("err");
+  if (!name || !keys.length) { err.textContent = !name ? "Indiquez le nom de l'invité." : "Cochez au moins une date."; err.hidden = false; return; }
   err.hidden = true;
-  const l = load(); l.unshift({ name, events: keys }); save(l);
-  document.getElementById("name").value = "";
-  render();
+  const l = invites(); l.unshift({ name, events: keys, nb }); store.set("invites", l);
+  $("name").value = ""; renderInvites();
+});
+renderInvites();
+
+// ---------- Accès ----------
+$("save-key").addEventListener("click", async () => {
+  const k = $("key").value.trim();
+  if (!k) return;
+  store.set("adminKey", k);
+  const ok = await load(true);
+  if (ok === false) { store.set("adminKey", ""); $("access-err").textContent = "Code incorrect."; $("access-err").hidden = false; return; }
+  $("access-err").hidden = true;
+  showTab(currentTab);
 });
 
-render();
+// ---------- Données (Google Sheets) ----------
+let data = { responses: [], tables: {} };
+async function load(checkOnly) {
+  $("rep-status").textContent = "Chargement…";
+  try {
+    const r = await fetch(SCRIPT_URL + "?key=" + encodeURIComponent(store.get("adminKey", "")));
+    const d = await r.json();
+    if (d.error) { $("rep-status").textContent = ""; if (!checkOnly) { store.set("adminKey", ""); showTab(currentTab); } return false; }
+    data = { responses: d.responses || [], tables: d.tables || {} };
+    $("rep-status").textContent = "À jour · " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    renderResponses(); renderTables();
+    return true;
+  } catch (e) {
+    $("rep-status").textContent = "Impossible de charger les réponses. Vérifiez la connexion internet.";
+    return null;
+  }
+}
+$("refresh").addEventListener("click", () => load());
+
+// ---------- Réponses ----------
+function renderResponses() {
+  const stats = $("stats"); stats.textContent = "";
+  Object.entries(EVENTS).forEach(([k, ev]) => {
+    let yes = 0, no = 0;
+    data.responses.forEach(r => { if (r[k] === "Oui") yes += r.nb; if (r[k] === "Non") no += r.nb; });
+    const s = el("div", "stat");
+    s.append(el("span", "ev", ev.name), el("span", "big", yes), el("span", "sub", "présents · " + no + " absents"));
+    stats.append(s);
+  });
+  const list = $("responses"); list.textContent = "";
+  const sorted = [...data.responses].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (!sorted.length) list.append(el("p", "hint", "Aucune réponse pour le moment."));
+  sorted.forEach(r => {
+    const item = el("div", "item");
+    const badges = el("div", "badges");
+    Object.entries(EVENTS).forEach(([k, ev]) => {
+      if (r[k] !== "Oui" && r[k] !== "Non") return;
+      badges.append(el("span", "badge " + (r[k] === "Oui" ? "yes" : "no"), ev.name + " : " + r[k]));
+    });
+    const d = new Date(r.date);
+    item.append(el("strong", "", r.nom), el("span", "muted", r.nb + " pers. · répondu le " + (isNaN(d) ? "" : d.toLocaleDateString("fr-FR"))), badges);
+    if (r.message) item.append(el("p", "msg", "« " + r.message + " »"));
+    list.append(item);
+  });
+  const answered = new Set(data.responses.map(r => r.code));
+  const pend = $("pending"); pend.textContent = "";
+  const waiting = invites().filter(inv => !answered.has(codeOf(inv)));
+  if (!waiting.length) pend.append(el("p", "hint", invites().length ? "Tout le monde a répondu 🎉" : "Les invitations créées sur cet appareil apparaîtront ici."));
+  waiting.forEach(inv => {
+    const item = el("div", "item");
+    item.append(el("strong", "", inv.name), el("span", "muted", (inv.nb || 1) + " pers. · " + inv.events.map(k => EVENTS[k] ? EVENTS[k].name : k).join(" · ")));
+    pend.append(item);
+  });
+}
+
+// ---------- Tables ----------
+let evKey = store.get("tablesEvent", "p");
+const seg = $("ev-seg");
+Object.entries(EVENTS).forEach(([k, ev]) => {
+  const b = el("button", "", ev.name); b.type = "button"; b.dataset.k = k;
+  b.addEventListener("click", () => { evKey = k; store.set("tablesEvent", k); renderTables(); });
+  seg.append(b);
+});
+const plan = () => (data.tables[evKey] = data.tables[evKey] || { tables: [] });
+let saveTimer = null;
+function save() {
+  $("tab-status").textContent = "Enregistrement…";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "saveTables", key: store.get("adminKey", ""), tables: data.tables }) });
+      $("tab-status").textContent = "Plan enregistré ✓";
+    } catch (e) { $("tab-status").textContent = "Pas enregistré : vérifiez la connexion internet."; }
+  }, 700);
+}
+
+function renderTables() {
+  [...seg.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.k === evKey));
+  const guests = data.responses.filter(r => r[evKey] === "Oui");
+  const byCode = Object.fromEntries(guests.map(g => [g.code, g]));
+  const P = plan();
+  P.tables.forEach(t => t.guests = t.guests.filter(c => byCode[c]));   // retire ceux qui ne viennent plus
+  const placed = new Set(P.tables.flatMap(t => t.guests));
+
+  const wrap = $("tables"); wrap.textContent = "";
+  P.tables.forEach((t, ti) => {
+    const used = t.guests.reduce((s, c) => s + byCode[c].nb, 0);
+    const card = el("div", "table" + (used > t.cap ? " over" : used === t.cap ? " full" : ""));
+    const head = el("div", "thead");
+    const nm = document.createElement("input"); nm.type = "text"; nm.value = t.name; nm.setAttribute("aria-label", "Nom de la table");
+    nm.addEventListener("change", () => { t.name = nm.value.trim() || t.name; save(); renderTables(); });
+    const cp = document.createElement("input"); cp.type = "number"; cp.min = 1; cp.max = 40; cp.value = t.cap; cp.setAttribute("aria-label", "Places");
+    cp.addEventListener("change", () => { t.cap = Math.max(1, parseInt(cp.value, 10) || t.cap); save(); renderTables(); });
+    head.append(nm, cp);
+    const ul = el("ul", "guests");
+    t.guests.forEach(c => {
+      const li = el("li"); li.append(el("span", "", byCode[c].nom + (byCode[c].nb > 1 ? " (" + byCode[c].nb + ")" : "")));
+      const x = el("button", "", "×"); x.type = "button"; x.setAttribute("aria-label", "Retirer " + byCode[c].nom);
+      x.addEventListener("click", () => { t.guests = t.guests.filter(g => g !== c); save(); renderTables(); });
+      li.append(x); ul.append(li);
+    });
+    const del = el("button", "del", "Supprimer la table"); del.type = "button";
+    del.addEventListener("click", () => { P.tables.splice(ti, 1); save(); renderTables(); });
+    card.append(head, el("span", "seats", used + " / " + t.cap + " places" + (used > t.cap ? " — trop de monde" : "")), ul, del);
+    wrap.append(card);
+  });
+
+  const un = $("unplaced"); un.textContent = "";
+  const rest = guests.filter(g => !placed.has(g.code));
+  const restPers = rest.reduce((s, g) => s + g.nb, 0);
+  $("unplaced-hint").textContent = guests.length
+    ? rest.length ? restPers + " personne(s) ayant répondu oui pour " + EVENTS[evKey].name + " restent à placer." : "Tous les invités sont placés 🎉"
+    : "Personne n'a encore répondu oui pour " + EVENTS[evKey].name + ".";
+  rest.forEach(g => {
+    const li = el("li");
+    li.append(el("span", "", g.nom + (g.nb > 1 ? " (" + g.nb + ")" : "")));
+    const sel = document.createElement("select"); sel.setAttribute("aria-label", "Placer " + g.nom);
+    sel.append(new Option(P.tables.length ? "Placer à…" : "Créez une table", ""));
+    P.tables.forEach((t, i) => sel.append(new Option(t.name, i)));
+    sel.disabled = !P.tables.length;
+    sel.addEventListener("change", () => { if (sel.value === "") return; P.tables[sel.value].guests.push(g.code); save(); renderTables(); });
+    li.append(sel); un.append(li);
+  });
+}
+$("add-table").addEventListener("submit", e => {
+  e.preventDefault();
+  const P = plan();
+  const name = $("t-name").value.trim() || "Table " + (P.tables.length + 1);
+  const cap = Math.max(1, parseInt($("t-cap").value, 10) || 10);
+  P.tables.push({ name, cap, guests: [] });
+  $("t-name").value = ""; save(); renderTables();
+});
 </script>
 </body>
 </html>

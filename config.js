@@ -78,10 +78,17 @@ function decodeInvite(code) {
     const data = JSON.parse(json);
     const events = Object.keys(EVENTS).filter(k => String(data.e || "").includes(k));
     if (!data.n || !events.length) return null;
-    return { name: String(data.n), events };
+    const count = Math.min(30, Math.max(1, parseInt(data.c, 10) || 1));
+    return { name: String(data.n), events, count };
   } catch (e) {
     return null;
   }
+}
+
+// Fabrique le code d'invitation (nom, célébrations, nombre de personnes) pour le lien.
+function encodeInvite(name, keys, count) {
+  const json = JSON.stringify(count > 1 ? { n: name, e: keys.join(""), c: count } : { n: name, e: keys.join("") });
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function inviteCode() {
