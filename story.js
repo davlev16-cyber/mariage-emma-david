@@ -64,7 +64,7 @@
       li.append(el("span", "lbl", EVENTS[k].name), el("span", "val", EVENTS[k].date));
       list.append(li);
     });
-    p.append(list, el("p", "when", "Août 2027 · Israël"));
+    p.append(list, el("p", "when", "Juillet & août 2027 · Marseille & Israël"));
   }
 
   function buildEvent(p, k) {
@@ -84,7 +84,7 @@
 
   function buildRsvp(p) {
     p.append(el("h2", "ev-title", "Votre réponse"));
-    const dl = el("p", "deadline"); dl.innerHTML = "Merci de répondre avant le <strong>jeudi 15 juillet 2027</strong>.";
+    const dl = el("p", "deadline"); dl.innerHTML = "Merci de répondre avant le <strong>samedi 19 juin 2027</strong>.";
     p.append(dl);
     const form = el("form", "rsvp"); form.noValidate = true;
     invite.events.forEach(k => {
@@ -150,19 +150,20 @@
       el("p", "lead", "Cette invitation s'ouvre avec le lien personnel que vous avez reçu. Si vous l'avez perdu, demandez-le à Emma & David."));
   } else {
     cine("intro", 260, [
-      ["ב״ה", "bh", .8], [invite.name, "small", 4.8], ["Emma & David", "names", 5.2], ["Cohav Ayam · Août 2027", "small", 5.9]
+      ["ב״ה", "bh", .8], [invite.name, "small", 4.8], ["Emma & David", "names", 5.2], ["Marseille & Israël · 2027", "small", 5.9]
     ], "dark");
     buildCover(content("cover"));
     const caps = {
+      m: [["Mairie", "title", 1.6], ["Mariage civil", "script", 2.1], ["19 juillet · Mairie Bagatelle, Marseille", "small", 2.6]],
       h: [["Henné", "title", 1.6], ["Beach Party", "script", 2.1], ["15 août · Hilton Beach, Tel Aviv", "small", 2.6]],
       p: [["Houppa", "title", 1.6], ["Face à la mer", "script", 2.1], ["17 août · Cohav Ayam, Césarée", "small", 2.6]],
       s: [["Chabbat", "title", 2.6], ["Chabbat Hatan", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
     };
     invite.events.forEach(k => {
-      cine(k, 200, caps[k], k === "p" ? "dark" : "light");
+      cine(k, 200, caps[k], k === "p" || k === "m" ? "dark" : "light");
       buildEvent(content(k), k);
     });
-    cine("fin", 150, [["Votre réponse", "title", 1.4], ["Avant le 15 juillet 2027", "small", 1.9]], "dark");
+    cine("fin", 150, [["Votre réponse", "title", 1.4], ["Avant le 19 juin 2027", "small", 1.9]], "dark");
     buildRsvp(content("rsvp"));
   }
   story.append(el("footer", "foot", "Emma & David · 2027"));

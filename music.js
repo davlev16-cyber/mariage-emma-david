@@ -230,8 +230,14 @@ const Music = (function () {
     update();
   };
   GESTURES.forEach(t => addEventListener(t, first, true));
+  // #silence dans l'adresse : aucune musique (utile pour les vérifications)
+  const silent = location.hash === "#silence";
+  if (silent) {
+    GESTURES.forEach(t => removeEventListener(t, first, true));
+    addEventListener("DOMContentLoaded", () => { const h = document.getElementById("tap-hint"); if (h) h.hidden = true; });
+  }
   addEventListener("load", () => {
-    if (YOUTUBE_ID) return;
+    if (YOUTUBE_ID || silent) return;
     start();
     if (ctx) ctx.onstatechange = update;
   });

@@ -12,6 +12,20 @@ const YOUTUBE_ID = "";
 
 // Les célébrations, dans l'ordre. Modifiez les textes ici.
 const EVENTS = {
+  m: {
+    name: "Mairie",
+    tagline: "Mariage civil",
+    date: "Lundi 19 juillet 2027",
+    shortDate: "Lun. 19 juillet",
+    place: "Mairie Bagatelle",
+    city: "Marseille",
+    map: "Mairie Bagatelle Marseille",
+    intro: "Emma & David se diront un premier « oui » officiel devant M. le Maire, à Marseille, entourés de leurs proches.",
+    details: [
+      ["Lieu", "Mairie Bagatelle, Marseille"],
+      ["Horaire", "Communiqué prochainement"]
+    ]
+  },
   h: {
     name: "Henné",
     tagline: "Beach Party",

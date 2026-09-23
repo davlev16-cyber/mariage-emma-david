@@ -21,6 +21,8 @@
 
 /* Chaque page est posée sur son décor : couleurs du texte et halo doux (--scrim) pour la lisibilité */
 .t-cover { --scrim: rgba(251, 247, 238, .82); }
+/* Mairie · mariage civil : lavande et bleu de Provence */
+.t-m { --scrim: rgba(250, 247, 240, .84); --card: #f7f4ee; --text: #2f3340; --title: #3d4a5c; --accent: #7d6fa8; --line: #d3cfe0; --soft: #5f6675; }
 /* Henné · Beach Party : bordeaux et or */
 .t-h { --scrim: rgba(70, 14, 26, .62); --card: rgba(106, 37, 51, .7); --text: #f8e8e1; --title: #fff3ea; --accent: #efc88a; --line: rgba(255, 220, 200, .35); --soft: #f0d2ca; color-scheme: dark; }
 /* Houppa : ivoire, sauge et blanc */

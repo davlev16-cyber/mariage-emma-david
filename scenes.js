@@ -3,7 +3,7 @@
 // bouge tout seul (reflets, pétales, flammes).
 
 // Durée de chaque scène (en secondes de « film »), parcourue au fil du défilement.
-const SCENES = { intro: { duration: 9 }, h: { duration: 6 }, p: { duration: 6 }, s: { duration: 6.2 }, fin: { duration: 4 } };
+const SCENES = { intro: { duration: 9 }, m: { duration: 6 }, h: { duration: 6 }, p: { duration: 6 }, s: { duration: 6.2 }, fin: { duration: 4 } };
 
 function createRenderer(canvas) {
   const ctx = canvas.getContext("2d");
@@ -169,6 +169,88 @@ function createRenderer(canvas) {
       ctx.restore();
       petals(st.petals, rt, dt, clamp((t - 3) / 2));
       veil("#fffdf9", 1 - phase(t, 0, 1.4));   // seule l'ouverture naît du blanc
+    },
+
+    // Mairie : la bastide de la mairie Bagatelle dans son parc, volets qui s'ouvrent, lavande qui fleurit
+    m(t, rt) {
+      const sg = ctx.createLinearGradient(0, 0, 0, h * .62);
+      sg.addColorStop(0, "#9fb6c9"); sg.addColorStop(.6, "#d9dfd8"); sg.addColorStop(1, "#f1e6cf");
+      ctx.fillStyle = sg; ctx.fillRect(0, 0, w, h);
+      glow(w * .82, h * .12, h * .5, [[0, "rgba(255,246,220,.9)"], [.25, "rgba(255,238,200,.35)"], [1, "rgba(255,238,200,0)"]]);
+      // Collines de garrigue
+      [["#bcc0a2", .5, .05], ["#a3a988", .56, .04]].forEach(([c, y0, amp], j) => {
+        ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, h);
+        for (let x = 0; x <= w; x += 10) ctx.lineTo(x, h * y0 - Math.sin(x / w * 3.1 + j * 1.7) * h * amp - Math.sin(x / w * 7 + j) * h * .012);
+        ctx.lineTo(w, h); ctx.fill();
+      });
+      // Pelouse
+      const lg = ctx.createLinearGradient(0, h * .6, 0, h);
+      lg.addColorStop(0, "#c4c796"); lg.addColorStop(1, "#a9ad78");
+      ctx.fillStyle = lg; ctx.fillRect(0, h * .6, w, h * .4);
+
+      // Bastide
+      const W = Math.min(w * .82, 520), H = W * .42, cx = w / 2, base = h * .63, x0 = cx - W / 2, top = base - H;
+      ctx.fillStyle = "rgba(90,80,50,.12)"; ctx.fillRect(x0 + 6, top + 8, W, H);
+      ctx.fillStyle = "#f1e5ca"; ctx.fillRect(x0, top, W, H);
+      ctx.fillStyle = "#c98f6a";
+      ctx.beginPath(); ctx.moveTo(x0 - W * .04, top); ctx.lineTo(x0 + W * .08, top - H * .28); ctx.lineTo(x0 + W * .92, top - H * .28); ctx.lineTo(x0 + W * 1.04, top); ctx.fill();
+      ctx.strokeStyle = "rgba(120,70,50,.35)"; ctx.lineWidth = 1;
+      for (let i = 1; i < 6; i++) { const y = top - H * .28 * i / 6; ctx.beginPath(); ctx.moveTo(x0 + W * .08 * i / 6 - W * .04 * (1 - i / 6), y); ctx.lineTo(x0 + W - W * .08 * i / 6 + W * .04 * (1 - i / 6), y); ctx.stroke(); }
+      ctx.fillStyle = "#e3d4b2"; ctx.fillRect(x0 - W * .02, top - 3, W * 1.04, 6);
+      // Fenêtres à volets (5 × 2), la porte au centre en bas
+      const cols = 5, ww = W / cols * .42, wh = H * .3;
+      let idx = 0;
+      for (let r = 0; r < 2; r++) for (let c = 0; c < cols; c++) {
+        const wx = x0 + W * (c + .5) / cols, wy = top + H * (r === 0 ? .14 : .56);
+        if (r === 1 && c === 2) continue;
+        const open = phase(t, .6 + idx++ * .18, .6);
+        ctx.fillStyle = "#4a5560"; ctx.fillRect(wx - ww / 2, wy, ww, wh);
+        ctx.fillStyle = "rgba(255,248,230,.25)"; ctx.fillRect(wx - ww / 2 + 2, wy + 2, ww / 2 - 3, wh - 4);
+        const sw = ww / 2 * (1 - open * .85);
+        ctx.fillStyle = "#9fb2b8";
+        ctx.fillRect(wx - ww / 2 - (ww / 2) * open * .9, wy, sw, wh);
+        ctx.fillRect(wx + ww / 2 + (ww / 2) * open * .9 - sw, wy, sw, wh);
+      }
+      const dw = W / cols * .5, dh = H * .4, dy = base - dh;
+      ctx.fillStyle = "#5c6b73"; ctx.fillRect(cx - dw / 2, dy + dw / 2, dw, dh - dw / 2);
+      ctx.beginPath(); ctx.arc(cx, dy + dw / 2, dw / 2, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = "#8a6f4a"; ctx.font = Math.max(9, W * .028) + "px Jost, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("M A I R I E", cx, dy - H * .06);
+      // Drapeau tricolore
+      const fl = phase(t, 1.4, .8);
+      if (fl > 0) {
+        const px = cx + dw * .9, py = top + H * .05, fwid = W * .09 * fl, fh = W * .06;
+        ctx.strokeStyle = "#6b6252"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py + fh * 1.6); ctx.lineTo(px, py - fh * .4); ctx.stroke();
+        ["#2b4c8c", "#fbfaf5", "#c8363d"].forEach((col, k) => {
+          ctx.fillStyle = col; ctx.beginPath();
+          const xa = px + fwid * k / 3, xb = px + fwid * (k + 1) / 3, wav = x => Math.sin(rt * 4 + x / 9) * fh * .08;
+          ctx.moveTo(xa, py - fh * .4 + wav(xa)); ctx.lineTo(xb, py - fh * .4 + wav(xb)); ctx.lineTo(xb, py + fh * .6 + wav(xb)); ctx.lineTo(xa, py + fh * .6 + wav(xa)); ctx.fill();
+        });
+      }
+      // Allée de gravier
+      ctx.fillStyle = "#ece1c8"; ctx.beginPath();
+      ctx.moveTo(cx - dw * .6, base); ctx.lineTo(cx + dw * .6, base); ctx.lineTo(cx + w * .22, h); ctx.lineTo(cx - w * .22, h); ctx.fill();
+      // Platanes
+      [[.08, 1], [.92, -1]].forEach(([fx, side], j) => {
+        const tx = w * fx, sway = Math.sin(rt * .7 + j) * 3;
+        ctx.fillStyle = "#b9ad8e"; ctx.fillRect(tx - 7, h * .38, 14, h * .32);
+        ctx.fillStyle = "rgba(240,235,215,.6)"; ctx.fillRect(tx - 3, h * .45, 5, h * .05);
+        [["#8d9a6a", 0, 0, .2], ["#a3ad7c", -.08, .05, .15], ["#96a271", .09, .06, .14]].forEach(([c, ox, oy, r]) => {
+          ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(tx + ox * w + sway, h * (.33 + oy), w * r, h * .11, 0, 0, 6.283); ctx.fill();
+        });
+      });
+      // Rangées de lavande qui fleurissent, du fond vers le devant
+      for (let r = 0; r < 4; r++) {
+        const y = h * (.74 + r * .07), sc = .6 + r * .25, bloom = phase(t, 1 + r * .35, 1);
+        for (const side of [-1, 1]) {
+          for (let x = cx + side * (w * .24 + r * w * .02); side < 0 ? x > -20 : x < w + 20; x += side * 16 * sc) {
+            const bh = 18 * sc * (.3 + .7 * bloom);
+            ctx.fillStyle = "#7f8a5c"; ctx.beginPath(); ctx.ellipse(x, y, 9 * sc, 5 * sc, 0, 0, 6.283); ctx.fill();
+            ctx.fillStyle = bloom > .05 ? (r % 2 ? "#9d8fc0" : "#b1a4d3") : "#8e9866";
+            ctx.beginPath(); ctx.ellipse(x + Math.sin(rt * 1.2 + x) * sc, y - bh * .6, 6 * sc, bh * .55, 0, 0, 6.283); ctx.fill();
+          }
+        }
+      }
     },
 
     h(t, rt, dt) {
