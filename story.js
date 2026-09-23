@@ -11,6 +11,25 @@
 
   document.getElementById("sound").addEventListener("click", () => Music.toggle());
 
+  // ----- Ouverture : un toucher de l'écran lance ensemble la musique et la cinématique -----
+  // (les téléphones n'autorisent le son qu'après un toucher)
+  const gate = document.getElementById("gate");
+  let opened = false;
+  document.body.classList.add("locked");
+  function openInvitation() {
+    if (opened) return;
+    opened = true;
+    Music.start();
+    gate.classList.add("open");
+    document.body.classList.remove("locked");
+    pausedUntil = performance.now() + 500;
+    setTimeout(() => gate.remove(), 1100);
+  }
+  gate.addEventListener("click", openInvitation);
+  gate.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openInvitation(); } });
+  // Si le navigateur joue déjà la musique sans toucher (ordinateur), l'invitation s'ouvre seule
+  setTimeout(() => { if (Music.playing()) openInvitation(); }, 1800);
+
   function el(tag, cls, text) {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -152,6 +171,7 @@
     cine("intro", 260, [
       ["ב״ה", "bh", .8], [invite.name, "small", 4.8], ["Emma & David", "names", 5.2], ["Marseille & Israël · 2027", "small", 5.9]
     ], "dark");
+    document.getElementById("gate-guest").textContent = invite.name;
     buildCover(content("cover"));
     const caps = {
       m: [["Mairie", "title", 1.6], ["Mariage civil", "script", 2.1], ["19 juillet · Mairie Bagatelle, Marseille", "small", 2.6]],
@@ -264,7 +284,7 @@
 
   function autoScroll(now) {
     const dt = last ? Math.min(.05, (now - last) / 1000) : 0; last = now;
-    if (stopped || now < pausedUntil) { pos = scrollY; return; }
+    if (!opened || stopped || now < pausedUntil) { pos = scrollY; return; }
     const target = stopAt();
     if (scrollY >= target - 1) { pos = scrollY; return; }
     if (Math.abs(pos - scrollY) > 4) pos = scrollY;

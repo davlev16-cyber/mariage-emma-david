@@ -68,6 +68,32 @@ body {
 .cap.script { font: 400 clamp(34px, 9vw, 54px)/1.1 "Pinyon Script", "Snell Roundhand", cursive; }
 .caps .cap.title { margin-top: 4px; }
 
+/* ---------- Écran d'ouverture : tout l'écran s'ouvre au toucher ---------- */
+body.locked { overflow: hidden; }
+body.locked .tap-hint { display: none; }
+.gate {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding-inline: 24px; text-align: center; cursor: pointer;
+  background: radial-gradient(ellipse at 50% 45%, #fffdf8 0%, #f6efe0 60%, #ece2cc 100%);
+  color: #3f4126;
+  transition: opacity 1s ease, transform 1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.gate.open { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.gate:focus-visible { outline: none; }
+.gate p { margin: 0; }
+.gate .bh { font-size: 16px; color: #6f6a57; margin-bottom: 10px; }
+.gate-guest { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: #6f6a57; min-height: 1em; }
+.gate-names { font: 400 clamp(56px, 16vw, 104px)/1 "Italiana", "Didot", Georgia, serif; color: #3f4126; margin: 6px 0 !important; }
+.gate-names em { font-style: normal; font-size: .5em; color: #5f6139; }
+.gate-date { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: #5f6139; }
+.gate-hint {
+  position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 9vh);
+  font: 400 clamp(22px, 6vw, 28px) "Parisienne", "Pinyon Script", cursive; color: #5f6139;
+  animation: hint 2.4s ease-in-out infinite;
+}
+
 /* ---------- Indication discrète pour lancer la musique ---------- */
 .tap-hint {
   position: fixed; z-index: 40; left: 0; right: 0; margin: 0;
@@ -178,5 +204,6 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .gate-hint { animation: none; }
   .cap { transition: none !important; }
 }

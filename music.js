@@ -183,6 +183,7 @@ const Music = (function () {
   addEventListener("DOMContentLoaded", () => { useYouTube = setupYouTube(); });
 
   function start() {
+    if (location.hash === "#silence") return;
     if (useYouTube) { ytWant = true; if (ytReady) yt.playVideo(); return; }
     if (started || muted) return;
     if (MUSIC_URL) {
@@ -242,5 +243,6 @@ const Music = (function () {
     if (ctx) ctx.onstatechange = update;
   });
 
-  return { start, toggle };
+  const playing = () => started && !muted && (!ctx || ctx.state === "running") && (!audioEl || !audioEl.paused);
+  return { start, toggle, playing };
 })();
