@@ -195,15 +195,7 @@ function createRenderer(canvas) {
       ctx.strokeStyle = "rgba(255,248,232,.7)"; ctx.lineWidth = 2; ctx.beginPath();
       for (let x = 0; x <= w; x += 12) ctx.lineTo(x, wave(x) - 3);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(40,10,15,.55)"; ctx.lineWidth = 1; ctx.beginPath();
-      st.bulbs.forEach((b, i) => { if (i && st.bulbs[i - 1].x > b.x) ctx.moveTo(b.x, b.y); else ctx.lineTo(b.x, b.y); });
-      ctx.stroke();
-      st.bulbs.forEach(b => {
-        const on = phase(t, b.d, .3), fl = .85 + .15 * Math.sin(rt * 7 + b.x);
-        if (on > 0) glow(b.x, b.y + 6, 26, [[0, "rgba(255,214,130," + (.8 * on * fl).toFixed(3) + ")"], [1, "rgba(255,214,130,0)"]]);
-        ctx.fillStyle = on > 0 ? ["#ffe7b0", "#ffd28a", "#fff1d0"][b.hue] : "#8a6a4c";
-        ctx.beginPath(); ctx.arc(b.x, b.y + 6, 3.5, 0, 6.283); ctx.fill();
-      });
+
     },
 
     // Houppa : on avance dans l'allée, entre les chaises fleuries et les lanternes, vers la houppa face à la mer
@@ -225,8 +217,26 @@ function createRenderer(canvas) {
       // Allée blanche
       const topY = g.ground, topHW = g.W * .2, botHW = w * .3;
       const aisleHW = y => topHW + (botHW - topHW) * (y - topY) / (h - topY);
-      ctx.fillStyle = "#fbf7ee"; ctx.beginPath();
+      ctx.fillStyle = "#eadcc0"; ctx.beginPath();
       ctx.moveTo(vx - topHW, topY); ctx.lineTo(vx + topHW, topY); ctx.lineTo(vx + botHW, h + 2); ctx.lineTo(vx - botHW, h + 2); ctx.fill();
+
+      // Pétales semés sur l'allée et bouquets blancs le long des bords, du plus proche au plus lointain
+      st.aisle.forEach(q => {
+        const k = phase(t, .3 + (1 - q.d) * 1.6, .5);
+        if (k <= 0) return;
+        const dd = Math.pow(q.d, 1.6), y = topY + (h - topY) * dd, hw = aisleHW(y);
+        if (q.edge) {
+          const x = vx + q.edge * hw * .98, r = (3 + 12 * dd) * q.s;
+          flower({ x, y: y - r * .3, r, d: 0, rot: q.rot, leaf: q.leaf }, k, rt);
+          flower({ x: x - q.edge * r * .9, y: y + r * .2, r: r * .7, d: 0, rot: q.rot + 1, leaf: false }, k, rt);
+        } else {
+          const x = vx + q.u * hw * .88, r = (1.5 + 5 * dd) * q.s * k;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(q.rot);
+          ctx.fillStyle = q.c; ctx.globalAlpha = .95;
+          ctx.beginPath(); ctx.ellipse(0, 0, r, r * .6, 0, 0, 6.283); ctx.fill();
+          ctx.restore(); ctx.globalAlpha = 1;
+        }
+      });
 
       // Rangées de chaises, de la plus lointaine à la plus proche
       const N = 7, pF = clamp((t - 1.2) / 2.4);
@@ -328,7 +338,13 @@ function createRenderer(canvas) {
     } else if (name === "p") {
       const W = Math.min(w * .34, 250);
       const geo = houppaGeo({ W, H: Math.min(h * .19, W * .85), ground: h * .6 });
-      st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(50) };
+      seed = 31;
+      const cols = ["#fffdf8", "#fbf4e8", "#f3e1d8", "#fffdf8"];
+      const aisle = [];
+      for (let i = 0; i < 150; i++) aisle.push({ d: Math.sqrt(rand()), u: rand() * 2 - 1, s: .7 + rand() * .6, rot: rand() * 6.28, c: cols[Math.floor(rand() * cols.length)] });
+      for (let i = 0; i < 16; i++) [-1, 1].forEach(edge => aisle.push({ edge, d: (i + 1) / 16, s: .8 + rand() * .4, rot: rand() * 3, leaf: rand() < .5 }));
+      aisle.sort((a, b) => a.d - b.d);
+      st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(50), aisle };
     } else if (name === "fin") {
       st = { sparkles: makeSparkles(80) };
     } else if (name === "h") {
