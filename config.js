@@ -1,6 +1,6 @@
 // Adresse du script Google qui enregistre les réponses dans Google Sheets.
 // À remplir après l'étape Google (script : google-script.gs).
-const SCRIPT_URL = "";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdQkUqE8hvUratLKInJaJ7wOD7ybERrOhH_LGvCmWizbmpoNoH6GGGfu0oJB32h-oa/exec";
 
 // Musique : laissez vide pour la mélodie composée par le site,
 // ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
