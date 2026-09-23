@@ -136,13 +136,14 @@
 
   // ----- Construction de l'histoire -----
   if (!invite) {
-    cine("intro", 420, WHITE, [], "dark");
+    cine("intro", 420, WHITE, [["ב״ה", "bh", .8], ["Emma & David", "names", 5.7], ["Août 2027", "small", 6.4]], "dark");
     const p = content("cover");
     p.append(el("h1", "names", "Emma & David"),
       el("p", "lead", "Cette invitation s'ouvre avec le lien personnel que vous avez reçu. Si vous l'avez perdu, demandez-le à Emma & David."));
   } else {
-    cine("intro", 480, WHITE, [], "dark");
-    cines[0].r.setGuest(invite.name);
+    cine("intro", 480, WHITE, [
+      ["ב״ה", "bh", .8], [invite.name, "small", 5.2], ["Emma & David", "names", 5.7], ["Cohav Ayam · Août 2027", "small", 6.4]
+    ], "dark");
     buildCover(content("cover"));
     const caps = {
       h: [["Henné", "title", .9], ["Beach Party", "script", 1.4], ["15 août · Hilton Beach, Tel Aviv", "small", 2]],
@@ -154,7 +155,6 @@
       cine(k, 300, WHITE, caps[k], k === "p" ? "dark" : "light");
       buildEvent(content(k), k);
     });
-    cine("r", 280, WHITE, [["Votre réponse", "title", 3.5], ["Avec toute notre joie", "script", 3.9], ["Avant le 15 juillet 2027", "small", 4.3]], "dark");
     buildRsvp(content("rsvp"));
   }
   story.append(el("footer", "foot", "Emma & David · 2027"));

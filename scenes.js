@@ -7,8 +7,7 @@ const SCENES = {
   intro: { duration: 11, end: "#efe7d8" },
   h: { duration: 6, end: "#5b1b28" },
   p: { duration: 6, end: "#f6f2e9" },
-  s: { duration: 6.2, end: "#e8dcc3" },
-  r: { duration: 6.4, end: "#e4ddc7" }
+  s: { duration: 6.2, end: "#e8dcc3" }
 };
 
 function createRenderer(canvas) {
@@ -167,83 +166,13 @@ function createRenderer(canvas) {
   // ---------- Scènes ----------
   const draws = {
     intro(t, rt, dt, from) {
-      const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, "#fbf8f1"); bg.addColorStop(1, "#ece3d0");
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-      glow(w / 2, h * .55, Math.max(w, h) * .6, [[0, "rgba(255,255,255,.7)"], [1, "rgba(255,255,255,0)"]]);
-
-      const EW = Math.min(w * .82, 460), EH = EW * .66, cx = w / 2;
-      const rise = phase(t, 1.2, 1.8);
-      const x0 = cx - EW / 2, y0 = h * .6 - EH / 2 + (1 - rise) * h * .08;
-      const vY = EH * .55;
-      const flapK = 1 - 1.8 * easeIO((t - 4.4) / 1.6);           // 1 = fermé, -0.8 = ouvert
-      const cardOut = easeIO((t - 5.8) / 2.6);
-      const zoom = 1 + 1.7 * easeIO((t - 8.6) / 2.1);
-      const CW = EW * .9, CH = EH * .95;
-      const cardY = y0 + EH * .04 - cardOut * EH * .76;
-
-      ctx.save();
-      ctx.globalAlpha = .4 + .6 * rise;
-      zoomAt(cx, cardY + CH * .5, zoom);
-
-      // Ombre et dos de l'enveloppe
-      ctx.fillStyle = "rgba(63,65,38,.10)";
-      ctx.fillRect(x0 + 6, y0 + 10, EW, EH);
-      ctx.fillStyle = "#c9ba98"; ctx.fillRect(x0, y0, EW, EH);
-
-      const flap = k => {
-        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + EW, y0); ctx.lineTo(cx, y0 + vY * k); ctx.closePath();
-      };
-      if (flapK < 0) { ctx.fillStyle = "#bfae88"; flap(flapK); ctx.fill(); }
-
-      // Le faire-part
-      ctx.save();
-      ctx.beginPath(); ctx.rect(x0 - EW, 0, EW * 3, y0 + EH); ctx.clip();
-      ctx.fillStyle = "#fffdf8"; ctx.fillRect(cx - CW / 2, cardY, CW, CH);
-      ctx.strokeStyle = "#b9a46d"; ctx.lineWidth = 1;
-      ctx.strokeRect(cx - CW / 2 + 8, cardY + 8, CW - 16, CH - 16);
-      ctx.textAlign = "center"; ctx.fillStyle = "#3f4126";
-      const f = CW / 10;
-      ctx.font = (f * .42) + "px Jost, sans-serif"; ctx.fillText("ב״ה", cx, cardY + CH * .16);
-      ctx.fillStyle = "#6f6a57"; ctx.font = (f * .34) + "px Jost, sans-serif";
-      ctx.fillText((st.guest || "").toUpperCase(), cx, cardY + CH * .3);
-      ctx.fillStyle = "#3f4126"; ctx.font = (f * 1.25) + "px Italiana, Didot, Georgia, serif";
-      ctx.fillText("Emma & David", cx, cardY + CH * .56);
-      ctx.fillStyle = "#5f6139"; ctx.font = (f * .36) + "px Jost, sans-serif";
-      ctx.fillText("ONT LA JOIE DE VOUS CONVIER À LEUR MARIAGE", cx, cardY + CH * .72);
-      ctx.fillText("AOÛT 2027 · ISRAËL", cx, cardY + CH * .84);
+      const g = st.geo, z = 1 + 2.6 * easeIO((t - 8.2) / 2.6);
+      ctx.save(); zoomAt(g.cx, g.top + g.H * .45, z);
+      seaside(t, rt); houppa(t, rt, { poles: 1, cloth: 2.2, flowers: 2.8 });
       ctx.restore();
-
-      // Poche avant (en V)
-      ctx.fillStyle = "#ddd0b2";
-      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(cx, y0 + vY); ctx.lineTo(x0 + EW, y0);
-      ctx.lineTo(x0 + EW, y0 + EH); ctx.lineTo(x0, y0 + EH); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "rgba(95,97,57,.18)"; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(x0, y0 + EH); ctx.lineTo(cx, y0 + EH * .52); ctx.lineTo(x0 + EW, y0 + EH); ctx.stroke();
-
-      // Rabat fermé + cachet de cire
-      if (flapK >= 0) {
-        ctx.fillStyle = "#e4d8bc"; flap(flapK); ctx.fill();
-        ctx.strokeStyle = "rgba(95,97,57,.22)"; flap(flapK); ctx.stroke();
-      }
-      const seal = 1 - phase(t, 3.6, .8);
-      if (seal > 0 && flapK > .2) {
-        const sx = cx, sy = y0 + vY * flapK, r = EW * .075 * (1 + (1 - seal) * .4);
-        ctx.globalAlpha = seal * (.4 + .6 * rise);
-        ctx.fillStyle = "#5f6139";
-        ctx.beginPath();
-        for (let i = 0; i <= 24; i++) { const a = i / 24 * 6.283, rr = r * (1 + Math.sin(i * 2.7) * .06); ctx.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); }
-        ctx.fill();
-        ctx.strokeStyle = "rgba(247,242,232,.45)"; ctx.beginPath(); ctx.arc(sx, sy, r * .72, 0, 6.283); ctx.stroke();
-        ctx.fillStyle = "#efe4c8"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.font = (r * .78) + "px Italiana, Georgia, serif"; ctx.fillText("E&D", sx, sy + 1);
-        ctx.textBaseline = "alphabetic";
-      }
-      ctx.restore();
-
-      petals(st.petals, rt, dt, .9, "#d8cba9");
-      veil(from, 1 - phase(t, 0, 1.2));
-      veil(SCENES.intro.end, phase(t, 9.8, 1.2));
+      petals(st.petals, rt, dt, clamp((t - 3) / 2));
+      veil(from, 1 - phase(t, 0, 1.4));
+      veil(SCENES.intro.end, phase(t, 9.6, 1.3));
     },
 
     h(t, rt, dt, from) {
@@ -274,43 +203,51 @@ function createRenderer(canvas) {
       veil(SCENES.h.end, phase(t, 5, 1));
     },
 
+    // Houppa : l'aqueduc romain de Césarée au coucher du soleil, des fleurs blanches au premier plan
     p(t, rt, dt, from) {
-      const g = st.geo;
-      ctx.save(); zoomAt(g.cx, g.top + g.H * .5, 1 + .18 * ease(t / 6));
-      seaside(t + 3, rt); houppa(t, rt, { poles: -2, cloth: -2, flowers: .3 });
-      ctx.restore();
-      petals(st.petals, rt, dt, clamp(t / 1.5));
+      const horizon = h * .6, sunX = w * .32, sunY = horizon - h * .05 + phase(t, 0, 6) * h * .03;
+      const sg = ctx.createLinearGradient(0, 0, 0, horizon);
+      sg.addColorStop(0, "#c9cfbf"); sg.addColorStop(.55, "#f1e2c4"); sg.addColorStop(1, "#f8d9a9");
+      ctx.fillStyle = sg; ctx.fillRect(0, 0, w, horizon + 1);
+      glow(sunX, sunY, h * .4, [[0, "rgba(255,238,200,.95)"], [.2, "rgba(250,215,160,.5)"], [1, "rgba(250,215,160,0)"]]);
+      ctx.fillStyle = "#fff1d4"; ctx.beginPath(); ctx.arc(sunX, sunY, Math.min(w, h) * .05, 0, 6.283); ctx.fill();
+      sea(rt, horizon, h * .76, ["#b9b99c", "#8c9478", "#6d7760"], st.sparkles, sunX, "rgba(255,240,210,");
+      const shore = h * .74, wave = x => shore + Math.sin(x / 70 + rt * 1.3) * 4;
+      ctx.fillStyle = "#e9d8b4"; ctx.beginPath(); ctx.moveTo(0, shore);
+      for (let x = 0; x <= w; x += 12) ctx.lineTo(x, wave(x));
+      ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
+      ctx.strokeStyle = "rgba(255,250,238,.8)"; ctx.lineWidth = 2; ctx.beginPath();
+      for (let x = 0; x <= w; x += 12) ctx.lineTo(x, wave(x) - 2);
+      ctx.stroke();
+
+      // Arches : de la plus proche (à gauche) à la plus lointaine (à droite)
+      st.arches.forEach((a, i) => {
+        const k = phase(t, .5 + i * .28, .9);
+        if (k <= 0) return;
+        const { x, base, span, H } = a, hh = H * k, pw = span * .22;
+        ctx.fillStyle = mix("#dcc59b", "#cbb58c", i / st.arches.length);
+        ctx.fillRect(x, base - hh, pw, hh);
+        ctx.fillRect(x + span - pw, base - hh, pw, hh);
+        if (k > .6) {
+          // Tablier en haut, puis écoinçons au-dessus d'une arcade en plein cintre
+          const top = base - H, r = (span - pw * 2) / 2, deck = H * .16, ay = top + deck + r;
+          ctx.fillRect(x, top, span + .5, deck + 1);
+          ctx.beginPath(); ctx.moveTo(x + pw, ay); ctx.arc(x + span / 2, ay, r, Math.PI, 0);
+          ctx.lineTo(x + span - pw, top + deck); ctx.lineTo(x + pw, top + deck); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = "rgba(120,95,55,.25)"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(x + span / 2, ay, r, Math.PI, 0); ctx.stroke();
+          ctx.fillStyle = "rgba(120,95,55,.16)"; ctx.fillRect(x + span - pw * .35, top + deck, pw * .35, H - deck);
+        }
+      });
+      // Lumière rasante sur les pierres
+      glow(sunX, sunY, w * .9, [[0, "rgba(255,225,170,.18)"], [1, "rgba(255,225,170,0)"]]);
+
+      // Fleurs blanches qui éclosent sur le sable
+      const pF = clamp((t - 1.8) / 2.6);
+      st.flowers.forEach(f => flower(f, pF, rt));
+      petals(st.petals, rt, dt, phase(t, 2.5, 1.5) * .8);
       veil(from, 1 - phase(t, 0, 1));
       veil(SCENES.p.end, phase(t, 5, 1));
-    },
-
-    // Réponse : une pluie de pétales tombe, tourbillonne puis s'écarte
-    r(t, rt, dt, from) {
-      const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, "#fffdf9"); bg.addColorStop(1, "#efe6d2");
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-      glow(w / 2, h * .45, Math.max(w, h) * .6, [[0, "rgba(255,240,205,.5)"], [1, "rgba(255,240,205,0)"]]);
-      const cx = w / 2, cy = h * .47, R = Math.hypot(w, h) * .5;
-      const open = easeIO((t - 3) / 1.6);
-      st.swirl.forEach(p => {
-        const drop = ease((t - p.d) / 1.6);
-        if (drop <= 0) return;
-        const ang = p.a + t * .55 * p.dir + Math.sin(rt * .8 + p.ph) * .04;
-        const rad = p.r * R * (1 + 2.2 * open);
-        let x = cx + Math.cos(ang) * rad, y = cy + Math.sin(ang) * rad * .8;
-        y -= (1 - drop) * h * 1.1;
-        x += Math.sin(rt * 1.5 + p.ph) * 6;
-        ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot + rt * p.spin);
-        ctx.scale(1, .55 + .45 * Math.abs(Math.sin(rt * p.flip + p.ph)));
-        ctx.shadowColor = "rgba(120,95,50,.22)"; ctx.shadowBlur = p.s * .8; ctx.shadowOffsetY = p.s * .2;
-        ctx.fillStyle = p.c;
-        ctx.beginPath(); ctx.moveTo(0, -p.s);
-        ctx.bezierCurveTo(p.s * .9, -p.s * .5, p.s * .7, p.s * .7, 0, p.s);
-        ctx.bezierCurveTo(-p.s * .7, p.s * .7, -p.s * .9, -p.s * .5, 0, -p.s);
-        ctx.fill(); ctx.restore();
-      });
-      veil(from, 1 - phase(t, 0, .8));
-      veil(SCENES.r.end, phase(t, 5.4, 1));
     },
 
     s(t, rt, dt, from) {
@@ -358,20 +295,25 @@ function createRenderer(canvas) {
     }
   };
 
-  function sparkle(x, y, r, a) {
-    if (a <= 0) return;
-    ctx.save(); ctx.translate(x, y); ctx.globalAlpha = a; ctx.fillStyle = "#fffaf0";
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .22 : r, an = i * Math.PI / 4; ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); }
-    ctx.fill(); ctx.restore(); ctx.globalAlpha = 1;
-  }
-
   function init(name) {
     if (name === "intro") {
-      st = { guest: st.guest, petals: makePetals(Math.min(60, w / 10)) };
-    } else if (name === "p") {
       const geo = houppaGeo();
-      st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(70), petals: makePetals(Math.min(name === "p" ? 110 : 90, w / 7)) };
+      st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(70), petals: makePetals(Math.min(90, w / 7)) };
+    } else if (name === "p") {
+      const arches = [], n = 10;
+      let x = -w * .08;
+      for (let i = 0; i < n; i++) {
+        const sc = 1 - i * .075, span = Math.min(w, h * .9) * .2 * sc;
+        arches.push({ x, span, H: h * .28 * sc, base: h * .8 - (1 - sc) * h * .11 });
+        x += span;
+      }
+      seed = 11;
+      const flowers = [];
+      for (let i = 0; i < 26; i++) {
+        const fx = rand() * w, fy = h * .88 + rand() * h * .1, sz = Math.max(7, w / 38) * (.7 + rand() * .6);
+        flowers.push({ x: fx, y: fy, r: sz, d: rand() * .6, rot: rand() * 3.14, leaf: rand() < .6 });
+      }
+      st = { arches, flowers, sparkles: makeSparkles(70), petals: makePetals(Math.min(40, w / 12)) };
     } else if (name === "h") {
       const bulbs = [];
       [[-.05, .1, 1.05, .2, .12, 16, 0], [-.05, .26, 1.05, .16, .09, 14, .5]].forEach(([x1, y1, x2, y2, sag, n, d]) => {
@@ -381,13 +323,6 @@ function createRenderer(canvas) {
         }
       });
       st = { sparkles: makeSparkles(80), bulbs };
-    } else if (name === "r") {
-      const colors = ["#fffdf8", "#fffdf8", "#fbf4e6", "#e8cc8a", "#f2dcd2"];
-      const n = Math.round(Math.min(260, w * .6));
-      st = { swirl: Array.from({ length: n }, () => ({
-        a: Math.random() * 6.283, r: .06 + Math.pow(Math.random(), .7) * .9, d: Math.random() * 1.4,
-        s: 5 + Math.random() * 7, rot: Math.random() * 6.28, spin: -1 + Math.random() * 2, flip: 1 + Math.random() * 2,
-        ph: Math.random() * 6.28, dir: Math.random() < .85 ? 1 : -1, c: colors[Math.floor(Math.random() * colors.length)] })) };
     } else {
       st = { stars: Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random() * .7, r: .5 + Math.random() * 1.3, d: .4 + Math.random() * 2.2, tw: Math.random() * 6.28 })) };
     }
@@ -400,9 +335,8 @@ function createRenderer(canvas) {
       w = canvas.clientWidth; h = canvas.clientHeight;
       canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const guest = st.guest; init(name); st.guest = guest; current = name;
+      init(name); current = name;
     },
-    setGuest(g) { st.guest = g; },
     draw(name, t, rt, from) {
       if (name !== current || !w) this.resize(name);
       const dt = lastRt ? Math.min(.05, rt - lastRt) : 0; lastRt = rt;
