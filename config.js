@@ -34,7 +34,7 @@ const EVENTS = {
     place: "Cohav Ayam",
     city: "Césarée",
     map: "Kochav Hayam Caesarea",
-    intro: "Emma & David s'uniront sous la houppa, face à la Méditerranée, entourés de ceux qu'ils aiment.",
+    intro: "Emma & David s'uniront sous la houppa, entourés de ceux qu'ils aiment.",
     details: [
       ["Lieu", "Cohav Ayam, Césarée"],
       ["Horaire", "Communiqué prochainement"],
