@@ -15,17 +15,18 @@
   --accent: var(--kaki);
   --line: var(--stone);
   --soft: var(--muted);
+  --white: #fffdf9;
   color-scheme: light;
 }
 
 /* Couverture : beige et kaki */
 .t-cover { --bg: #efe7d8; }
-/* Henné · Beach Party : coucher de soleil, cuivre henné, sable */
-.t-h { --bg: #43301f; --card: #533c28; --text: #f3e2c8; --title: #fbe9cc; --accent: #e0a36b; --line: #6d5139; --soft: #d9bf9c; color-scheme: dark; }
+/* Henné · Beach Party : bordeaux et or */
+.t-h { --bg: #5b1b28; --card: #6a2533; --text: #f6e3dc; --title: #fbeee6; --accent: #e3bb7e; --line: #83404c; --soft: #e2bfb8; color-scheme: dark; }
 /* Houppa : ivoire, sauge et blanc */
 .t-p { --bg: #f6f2e9; --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #767a66; }
-/* Chabbat : nuit et or des bougies */
-.t-s { --bg: #23221b; --card: #2e2c23; --text: #ece3cd; --title: #f1dca8; --accent: #d9b56a; --line: #4a4535; --soft: #b8ad92; color-scheme: dark; }
+/* Chabbat : lumière dorée des bougies, au crépuscule */
+.t-s { --bg: #e8dcc3; --card: #f4ecdc; --text: #2f2a1f; --title: #4a3a1a; --accent: #94702f; --line: #cdbb95; --soft: #6f6450; }
 /* Réponse : kaki clair */
 .t-rsvp { --bg: #e4ddc7; --card: #f3eee1; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
 
@@ -51,7 +52,7 @@ body {
 }
 .cap { margin: 0; opacity: 0; will-change: opacity, transform; }
 .tone-dark { color: #3f4126; }
-.tone-light { color: #f1dca8; }
+.tone-light { color: #fbeedd; text-shadow: 0 1px 14px rgba(40, 20, 20, .35); }
 .cap.bh { font-size: 16px; }
 .cap.small { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; }
 .cap.names, .cap.title { font: 400 clamp(52px, 14vw, 96px)/1 "Italiana", "Didot", Georgia, serif; }
@@ -74,7 +75,15 @@ body {
 .sound:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- Pages de texte ---------- */
-.content { background: var(--bg); color: var(--text); }
+/* Chaque page se fond dans le blanc en bas ; la cinématique suivante repart de ce blanc */
+.content {
+  color: var(--text);
+  background: linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 42vh), var(--white) 100%);
+}
+.content .inner { padding-bottom: 46vh; }
+/* La page de réponse naît du blanc laissé par la page d'avant */
+.t-rsvp { background: linear-gradient(to bottom, var(--white) 0, var(--bg) 40vh, var(--bg) 100%); }
+.t-rsvp .inner { padding-top: 34vh; padding-bottom: 72px; }
 .inner {
   max-width: 600px; min-height: 100vh;
   margin: 0 auto;
@@ -145,7 +154,7 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
 .thanks .link { background: none; color: var(--title); text-decoration: underline; text-underline-offset: 4px; padding: 8px; }
 .sign { font: 400 30px "Pinyon Script", cursive; color: var(--accent); }
 .error { color: var(--error); }
-.t-h .error, .t-s .error { color: #f0a58c; }
+.t-h .error { color: #ffc2a8; }
 
 .foot {
   background: #e4ddc7; color: #6b6753; text-align: center;

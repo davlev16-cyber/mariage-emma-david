@@ -20,7 +20,6 @@
 
   // ----- Sections -----
   const cines = [];
-  const BG = { cover: "#efe7d8", h: "#43301f", p: "#f6f2e9", s: "#23221b", rsvp: "#e4ddc7" };
 
   function cine(name, heightVh, from, captions, tone) {
     const sec = el("section", "cine");
@@ -144,25 +143,23 @@
 
   // ----- Construction de l'histoire -----
   if (!invite) {
-    cine("intro", 420, "#efe7d8", [["ב״ה", "bh", .8], ["Emma & David", "names", 5.7], ["Août 2027", "small", 6.4]], "dark");
+    cine("intro", 420, WHITE, [], "dark");
     const p = content("cover");
     p.append(el("h1", "names", "Emma & David"),
       el("p", "lead", "Cette invitation s'ouvre avec le lien personnel que vous avez reçu. Si vous l'avez perdu, demandez-le à Emma & David."));
   } else {
-    cine("intro", 480, "#efe7d8", [
-      ["ב״ה", "bh", .8], [invite.name, "small", 5.2], ["Emma & David", "names", 5.7], ["Cohav Ayam · Août 2027", "small", 6.4]
-    ], "dark");
+    cine("intro", 480, WHITE, [], "dark");
+    cines[0].r.setGuest(invite.name);
     buildCover(content("cover"));
-    let prevBg = BG.cover;
     const caps = {
       h: [["Henné", "title", .9], ["Beach Party", "script", 1.4], ["15 août · Hilton Beach, Tel Aviv", "small", 2]],
       p: [["Houppa", "title", .9], ["Face à la mer", "script", 1.4], ["17 août · Cohav Ayam, Césarée", "small", 2]],
       s: [["Chabbat", "title", 2.6], ["Chabbat Chalom", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
     };
     invite.events.forEach(k => {
-      cine(k, 300, prevBg, caps[k], k === "s" ? "light" : "dark");
+      // Chaque passage part du blanc laissé par la page précédente
+      cine(k, 300, WHITE, caps[k], k === "p" ? "dark" : "light");
       buildEvent(content(k), k);
-      prevBg = BG[k];
     });
     buildRsvp(content("rsvp"));
   }
