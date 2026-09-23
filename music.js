@@ -1,112 +1,162 @@
-// Musique d'inspiration hébraïque, composée pour le site et jouée par le navigateur :
-// mélodie dans le mode Ahava Rabbah (ré, mi♭, fa♯, sol, la, si♭, do),
-// bourdon ré–la et rythme de darbouka (maqsoum).
+// Musique du site.
+// 1. La chanson choisie (YOUTUBE_ID dans config.js), jouée par un lecteur YouTube caché.
+// 2. Si YouTube refuse la lecture : une composition originale dans l'esprit de la
+//    pop orientale israélienne (mode Hijaz sur ré), jouée par le navigateur.
 // Les navigateurs n'autorisent le son qu'après un premier geste : la musique
 // démarre au premier toucher de l'écran, ou avec le petit bouton ♪.
 
 const Music = (function () {
-  let ctx, master, reverb, timer, nextTime = 0, step = 0, started = false, muted = false, audioEl = null;
-  const BPM = 92, BEAT = 60 / BPM;
-
-  // [note MIDI, durée en temps] — 0 = silence
-  const A = [[69,1],[70,.5],[69,.5],[67,.5],[66,.5],[67,1], [69,2],[0,1],[69,.5],[70,.5],
-             [72,1],[70,.5],[69,.5],[70,.5],[69,.5],[67,1], [66,1],[63,.5],[66,.5],[62,2]];
-  const B = [[74,1],[72,.5],[70,.5],[72,1],[69,1], [70,.5],[69,.5],[67,.5],[69,.5],[66,2],
-             [67,.5],[69,.5],[70,1],[69,.5],[67,.5],[66,1], [63,.5],[66,.5],[67,.5],[66,.5],[62,2]];
-  const SONG = [...A, ...A, ...B, ...A];
+  let ctx, master, reverb, timer, started = false, muted = false, audioEl = null;
+  const BPM = 100, BEAT = 60 / BPM, BAR = BEAT * 4;
   const freq = m => 440 * Math.pow(2, (m - 69) / 12);
 
+  // ----- Composition originale : 16 mesures en boucle -----
+  // Mélodie : [note MIDI, durée en temps] par mesure
+  const MELODY = [
+    [[74,.5],[75,.5],[74,.5],[72,.5],[70,1],[69,1]],
+    [[72,.75],[70,.25],[69,.5],[67,.5],[69,2]],
+    [[70,.5],[69,.5],[67,.5],[66,.5],[67,1],[62,1]],
+    [[66,.5],[67,.5],[69,1],[66,.5],[63,.5],[62,1]],
+    [[69,.5],[70,.5],[72,.5],[74,.5],[75,1.5],[74,.5]],
+    [[75,.5],[74,.5],[72,.5],[70,.5],[67,2]],
+    [[72,.5],[70,.5],[69,.5],[67,.5],[66,1],[67,.5],[66,.5]],
+    [[63,.5],[66,.5],[62,3]],
+    [[74,1],[74,.5],[75,.5],[79,1.5],[78,.5]],
+    [[79,.5],[78,.5],[75,.5],[74,.5],[74,2]],
+    [[72,.5],[74,.5],[75,1],[74,.5],[72,.5],[70,1]],
+    [[69,.5],[70,.5],[69,.5],[67,.5],[66,2]],
+    [[74,1],[74,.5],[75,.5],[79,1],[81,1]],
+    [[82,.5],[81,.5],[79,.5],[78,.5],[79,2]],
+    [[75,.5],[74,.5],[72,.5],[70,.5],[69,1],[67,1]],
+    [[66,.5],[67,.5],[63,.5],[66,.5],[62,2]]
+  ];
+  // Accords (tapis de cordes) et basse
+  const CH = { D: [50, 54, 57], Cm: [48, 51, 55], Gm: [55, 58, 62], Eb: [51, 55, 58] };
+  const BASS = { D: 38, Cm: 36, Gm: 43, Eb: 39 };
+  const CHORDS = ["D","Cm","Gm","D", "D","Eb","Cm","D", "Gm","D","Cm","D", "Gm","D","Eb","D"];
+  const ORNAMENT = new Set([0, 4, 8, 12]);
+
   function makeReverb() {
-    const len = ctx.sampleRate * 2.4, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    const len = ctx.sampleRate * 2.2, buf = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let c = 0; c < 2; c++) {
       const d = buf.getChannelData(c);
       for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
     }
     const conv = ctx.createConvolver(); conv.buffer = buf;
-    const wet = ctx.createGain(); wet.gain.value = 0.35;
+    const wet = ctx.createGain(); wet.gain.value = 0.3;
     conv.connect(wet).connect(master);
     return conv;
   }
+  function out(node, wet) { node.connect(master); if (wet !== false) node.connect(reverb); }
 
-  function out(node) { node.connect(master); node.connect(reverb); }
-
-  // Corde pincée façon oud
-  function pluck(m, t, dur) {
-    const f = freq(m);
-    const g = ctx.createGain();
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 2;
-    lp.frequency.setValueAtTime(3200, t); lp.frequency.exponentialRampToValueAtTime(700, t + 0.5);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.22, t + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.6, dur * 1.4));
-    [[0, "sawtooth"], [4, "triangle"]].forEach(([det, type]) => {
-      const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = det;
-      o.connect(lp); o.start(t); o.stop(t + dur * 1.6 + 0.6);
+  // Bouzouki : corde pincée brillante, trémolo sur les notes longues
+  function pluck(m, t, level, len) {
+    const g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    lp.type = "lowpass"; lp.Q.value = 3;
+    lp.frequency.setValueAtTime(4200, t); lp.frequency.exponentialRampToValueAtTime(900, t + .35);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(level, t + .005);
+    g.gain.exponentialRampToValueAtTime(.0001, t + len);
+    [0, 7].forEach(det => {
+      const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = freq(m); o.detune.value = det;
+      o.connect(lp); o.start(t); o.stop(t + len + .05);
     });
     lp.connect(g); out(g);
-    // Petit vibrato sur les notes longues
-    if (dur >= 1) {
-      const o = ctx.createOscillator(), og = ctx.createGain();
-      o.type = "sine"; o.frequency.value = f; og.gain.setValueAtTime(0.0001, t);
-      og.gain.linearRampToValueAtTime(0.05, t + 0.3); og.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      const lfo = ctx.createOscillator(), lg = ctx.createGain();
-      lfo.frequency.value = 5.5; lg.gain.value = f * 0.012; lfo.connect(lg).connect(o.frequency);
-      o.connect(og); out(og); o.start(t); lfo.start(t); o.stop(t + dur + 0.1); lfo.stop(t + dur + 0.1);
-    }
+  }
+  function lead(m, t, beats, ornament) {
+    const dur = beats * BEAT;
+    if (ornament) pluck(m + 1, t - .07, .12, .12);          // petite appoggiature
+    if (beats >= 1) {                                        // trémolo façon bouzouki
+      const n = Math.floor(dur / (BEAT / 4));
+      for (let i = 0; i < n; i++) pluck(m, t + i * BEAT / 4, i ? .1 : .2, BEAT / 3);
+    } else pluck(m, t, .2, Math.max(.35, dur * 1.3));
   }
 
-  function doum(t) {
+  // Cordes : accord tenu, attaque douce
+  function pad(notes, t) {
+    notes.forEach(m => [-6, 6].forEach(det => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "sawtooth"; o.frequency.value = freq(m); o.detune.value = det;
+      lp.type = "lowpass"; lp.frequency.value = 1100;
+      g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.022, t + .5);
+      g.gain.setValueAtTime(.022, t + BAR - .25); g.gain.linearRampToValueAtTime(.0001, t + BAR + .15);
+      o.connect(lp).connect(g); out(g); o.start(t); o.stop(t + BAR + .2);
+    }));
+  }
+
+  function bass(m, t, len) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = "triangle"; o.frequency.value = freq(m);
+    lp.type = "lowpass"; lp.frequency.value = 500;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.32, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t + len);
+    o.connect(lp).connect(g); out(g, false); o.start(t); o.stop(t + len + .05);
+  }
+
+  function kick(t) {
     const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.25);
-    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-    o.connect(g); out(g); o.start(t); o.stop(t + 0.32);
+    o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + .18);
+    g.gain.setValueAtTime(.7, t); g.gain.exponentialRampToValueAtTime(.0001, t + .25);
+    o.connect(g); out(g, false); o.start(t); o.stop(t + .26);
   }
-
-  function tek(t, level) {
-    const len = ctx.sampleRate * 0.06, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  function noise(t, level, freqHz, q, len) {
+    const n = Math.floor(ctx.sampleRate * len), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     const s = ctx.createBufferSource(); s.buffer = buf;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 3200; bp.Q.value = 1.5;
-    const g = ctx.createGain(); g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = freqHz; bp.Q.value = q;
+    const g = ctx.createGain(); g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(.0001, t + len);
     s.connect(bp).connect(g); out(g); s.start(t);
   }
-
-  function drone() {
-    [[38, 0.05], [45, 0.035], [50, 0.02]].forEach(([m, level]) => {
-      const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
-      o.type = "sawtooth"; o.frequency.value = freq(m);
-      lp.type = "lowpass"; lp.frequency.value = 420;
-      g.gain.value = level;
-      const lfo = ctx.createOscillator(), lg = ctx.createGain();
-      lfo.frequency.value = 0.08 + Math.random() * 0.05; lg.gain.value = level * 0.5;
-      lfo.connect(lg).connect(g.gain);
-      o.connect(lp).connect(g); g.connect(master); g.connect(reverb);
-      o.start(); lfo.start();
-    });
+  const clap = t => noise(t, .35, 1500, .8, .16);
+  const tek = (t, l) => noise(t, l, 3400, 1.6, .05);
+  function doum(t) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(55, t + .2);
+    g.gain.setValueAtTime(.35, t); g.gain.exponentialRampToValueAtTime(.0001, t + .25);
+    o.connect(g); out(g, false); o.start(t); o.stop(t + .26);
   }
 
-  // Programme les notes un peu à l'avance
-  let beatPos = 0, drumBeat = 0;
-  function schedule() {
-    while (nextTime < ctx.currentTime + 0.4) {
-      const [m, len] = SONG[step % SONG.length];
-      if (m) pluck(m, nextTime, len * BEAT);
-      // Darbouka : doum . tek . tek doum . tek (en croches)
-      const startBeat = beatPos, endBeat = beatPos + len;
-      for (let e = Math.ceil(startBeat * 2) / 2; e < endBeat; e += 0.5) {
-        const pos = Math.round((e % 4) * 2);
-        const tt = nextTime + (e - startBeat) * BEAT;
-        if (pos === 0 || pos === 4) doum(tt);
-        else if (pos === 1 || pos === 3 || pos === 6) tek(tt, pos === 6 ? 0.18 : 0.12);
-      }
-      beatPos = endBeat;
-      nextTime += len * BEAT;
-      step++;
+  function scheduleBar(i, t) {
+    const chord = CHORDS[i % 16];
+    pad(CH[chord], t);
+    // Basse : 1, "et" de 2, 3
+    [[0, 1.4], [1.5, .9], [2, 1.8]].forEach(([b, l]) => bass(BASS[chord] + (b === 1.5 ? 12 : 0), t + b * BEAT, l * BEAT));
+    // Rythme pop : grosse caisse 1 et 3, clap 2 et 4 ; darbouka en croches, relance en fin de phrase
+    kick(t); kick(t + 2 * BEAT);
+    clap(t + BEAT); clap(t + 3 * BEAT);
+    [.5, 1.5, 2.5, 3.5].forEach(b => tek(t + b * BEAT, .12));
+    doum(t + 1.5 * BEAT);
+    if (i % 4 === 3) [3, 3.25, 3.5, 3.75].forEach(b => tek(t + b * BEAT, .2));
+    // Mélodie (elle entre à la 2e mesure du morceau)
+    if (i >= 1) {
+      let b = 0;
+      MELODY[(i - 1) % 16].forEach(([m, len], j) => {
+        lead(m, t + b * BEAT, len, j === 0 && ORNAMENT.has((i - 1) % 16));
+        b += len;
+      });
     }
+  }
+
+  let bar = 0, nextBar = 0;
+  function schedule() {
+    while (nextBar < ctx.currentTime + .5) { scheduleBar(bar, nextBar); bar++; nextBar += BAR; }
+  }
+
+  function startSynth() {
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = .0001; master.connect(ctx.destination);
+      reverb = makeReverb();
+      master.gain.exponentialRampToValueAtTime(.45, ctx.currentTime + 2);
+      nextBar = ctx.currentTime + .2;
+      timer = setInterval(schedule, 100);
+      ctx.resume();
+      started = true;
+    } catch (e) { started = false; }
+    update();
   }
 
   // ----- Chanson YouTube, lecteur caché -----
-  let yt = null, ytReady = false, ytWant = false;
+  let yt = null, ytReady = false, ytWant = false, useYouTube = false;
   function setupYouTube() {
     if (!YOUTUBE_ID) return false;
     const box = document.createElement("div");
@@ -120,7 +170,7 @@ const Music = (function () {
         playerVars: { playsinline: 1, rel: 0, loop: 1, playlist: YOUTUBE_ID, modestbranding: 1 },
         events: {
           onReady: () => { ytReady = true; yt.setVolume(70); if (ytWant) yt.playVideo(); },
-          // Si YouTube refuse la lecture, on revient à la mélodie composée
+          // Si YouTube refuse la lecture, on passe à la composition originale
           onError: () => { useYouTube = false; ytReady = false; if (ytWant) start(); },
           onStateChange: e => { started = e.data === 1 || e.data === 3; muted = !started; update(); }
         }
@@ -128,32 +178,22 @@ const Music = (function () {
     };
     const s = document.createElement("script");
     s.src = "https://www.youtube.com/iframe_api";
+    s.onerror = () => { useYouTube = false; if (ytWant) start(); };
     document.head.append(s);
     return true;
   }
-  let useYouTube = false;
   addEventListener("DOMContentLoaded", () => { useYouTube = setupYouTube(); });
 
   function start() {
     if (useYouTube) { ytWant = true; if (ytReady) yt.playVideo(); return; }
     if (started || muted) return;
-    started = true;
     if (MUSIC_URL) {
-      audioEl = new Audio(MUSIC_URL); audioEl.loop = true; audioEl.volume = 0.6;
-      audioEl.play().catch(() => { started = false; });
+      started = true;
+      audioEl = new Audio(MUSIC_URL); audioEl.loop = true; audioEl.volume = .6;
+      audioEl.play().catch(() => { started = false; update(); });
       update(); return;
     }
-    try {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
-      master = ctx.createGain(); master.gain.value = 0.0001; master.connect(ctx.destination);
-      reverb = makeReverb();
-      master.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 3);
-      drone();
-      nextTime = ctx.currentTime + 0.3;
-      timer = setInterval(schedule, 100);
-      ctx.resume();
-    } catch (e) { started = false; }
-    update();
+    startSynth();
   }
 
   function toggle() {
