@@ -143,12 +143,12 @@
 
   // ----- Construction de l'histoire -----
   if (!invite) {
-    cine("intro", 420, [["ב״ה", "bh", .8], ["Emma & David", "names", 5.2], ["Août 2027", "small", 5.9]], "dark");
+    cine("intro", 260, [["ב״ה", "bh", .8], ["Emma & David", "names", 5.2], ["Août 2027", "small", 5.9]], "dark");
     const p = content("cover");
     p.append(el("h1", "names", "Emma & David"),
       el("p", "lead", "Cette invitation s'ouvre avec le lien personnel que vous avez reçu. Si vous l'avez perdu, demandez-le à Emma & David."));
   } else {
-    cine("intro", 440, [
+    cine("intro", 260, [
       ["ב״ה", "bh", .8], [invite.name, "small", 4.8], ["Emma & David", "names", 5.2], ["Cohav Ayam · Août 2027", "small", 5.9]
     ], "dark");
     buildCover(content("cover"));
@@ -158,10 +158,10 @@
       s: [["Chabbat", "title", 2.6], ["Chabbat Hatan", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
     };
     invite.events.forEach(k => {
-      cine(k, 300, caps[k], k === "p" ? "dark" : "light");
+      cine(k, 200, caps[k], k === "p" ? "dark" : "light");
       buildEvent(content(k), k);
     });
-    cine("fin", 220, [["Votre réponse", "title", 1.4], ["Avant le 15 juillet 2027", "small", 1.9]], "dark");
+    cine("fin", 150, [["Votre réponse", "title", 1.4], ["Avant le 15 juillet 2027", "small", 1.9]], "dark");
     buildRsvp(content("rsvp"));
   }
   story.append(el("footer", "foot", "Emma & David · 2027"));
@@ -241,7 +241,8 @@
   // plus lentement pour laisser le temps de lire. Dès que l'invité fait défiler
   // lui-même, l'automatique s'efface, puis reprend après quelques secondes de calme.
   let pausedUntil = performance.now() + 600, last = 0, pos = scrollY, stopped = reduce;
-  const PAUSE = 4000;
+  const PAUSE = 2500;
+  const FAST = 2.2;   // les cinématiques défilent 2,2 fois plus vite que leur durée
   const stopAt = () => {
     const r = document.getElementById("s-rsvp") || document.getElementById("s-cover");
     return r.offsetTop;
@@ -254,9 +255,9 @@
     const y = scrollY;
     for (const c of chapters) {
       const top = c.sec.offsetTop, span = c.sec.offsetHeight - innerHeight;
-      if (y >= top - 2 && y < top + span) return span / SCENES[c.name].duration;
+      if (y >= top - 2 && y < top + span) return span / SCENES[c.name].duration * FAST;
     }
-    return Math.max(40, innerHeight / 9);
+    return Math.max(120, innerHeight / 3.2);
   }
 
   function autoScroll(now) {

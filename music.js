@@ -1,9 +1,7 @@
-// Musique du site.
-// 1. La chanson choisie (YOUTUBE_ID dans config.js), jouée par un lecteur YouTube caché.
-// 2. Si YouTube refuse la lecture : une composition originale dans l'esprit de la
-//    pop orientale israélienne (mode Hijaz sur ré), jouée par le navigateur.
-// Les navigateurs n'autorisent le son qu'après un premier geste : la musique
-// démarre au premier toucher de l'écran, ou avec le petit bouton ♪.
+// Musique du site : une composition originale dans l'esprit de la pop orientale
+// israélienne (mode Hijaz sur ré), jouée directement par le navigateur, sans pub.
+// Elle tente de démarrer dès l'ouverture ; les téléphones exigent souvent un
+// premier toucher de l'écran, qui la lance alors aussitôt. Le bouton ♪ la coupe.
 
 const Music = (function () {
   let ctx, master, reverb, timer, started = false, muted = false, audioEl = null;
@@ -143,7 +141,7 @@ const Music = (function () {
 
   function startSynth() {
     try {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain(); master.gain.value = .0001; master.connect(ctx.destination);
       reverb = makeReverb();
       master.gain.exponentialRampToValueAtTime(.45, ctx.currentTime + 2);
@@ -203,6 +201,8 @@ const Music = (function () {
       return;
     }
     if (!started) { muted = false; start(); return; }
+    // Musique prête mais encore bloquée par le navigateur : ce toucher la débloque
+    if (ctx && ctx.state !== "running" && !muted) { ctx.resume().then(update); return; }
     muted = !muted;
     if (audioEl) { muted ? audioEl.pause() : audioEl.play(); }
     else if (ctx) { muted ? ctx.suspend() : ctx.resume(); }
@@ -211,19 +211,31 @@ const Music = (function () {
 
   function update() {
     const b = document.getElementById("sound");
+    const hint = document.getElementById("tap-hint");
+    const on = started && !muted && (!ctx || ctx.state === "running");
+    if (hint) hint.classList.toggle("gone", on || muted);
     if (!b) return;
-    const on = started && !muted;
     b.classList.toggle("on", on);
     b.setAttribute("aria-label", on ? "Couper la musique" : "Mettre la musique");
   }
 
-  // Premier geste n'importe où sur la page = la musique démarre
+  // 1) Essai dès l'ouverture : certains navigateurs l'autorisent déjà.
+  // 2) Sinon, le premier toucher n'importe où sur l'écran la lance (les téléphones
+  //    n'autorisent le son qu'après un geste : c'est une règle des navigateurs).
+  const GESTURES = ["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown"];
   const first = e => {
     if (e.target && e.target.closest && e.target.closest("#sound")) return;
-    start();
-    ["pointerdown", "touchstart", "keydown"].forEach(t => removeEventListener(t, first, true));
+    if (!started) start();
+    if (ctx && ctx.state !== "running") ctx.resume().then(update);
+    if (started && (!ctx || ctx.state === "running")) GESTURES.forEach(t => removeEventListener(t, first, true));
+    update();
   };
-  ["pointerdown", "touchstart", "keydown"].forEach(t => addEventListener(t, first, true));
+  GESTURES.forEach(t => addEventListener(t, first, true));
+  addEventListener("load", () => {
+    if (YOUTUBE_ID || MUSIC_URL) return;
+    start();
+    if (ctx) ctx.onstatechange = update;
+  });
 
   return { start, toggle };
 })();

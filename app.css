@@ -66,6 +66,19 @@ body {
 .cap.script { font: 400 clamp(34px, 9vw, 54px)/1.1 "Pinyon Script", "Snell Roundhand", cursive; }
 .caps .cap.title { margin-top: 4px; }
 
+/* ---------- Indication discrète pour lancer la musique ---------- */
+.tap-hint {
+  position: fixed; z-index: 40; left: 0; right: 0; margin: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  text-align: center; pointer-events: none;
+  font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #3f4126;
+  text-shadow: 0 0 12px rgba(255, 250, 238, .9);
+  animation: hint 2.4s ease-in-out infinite;
+  transition: opacity .6s ease;
+}
+.tap-hint.gone { opacity: 0 !important; animation: none; }
+@keyframes hint { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
+
 /* ---------- Bouton musique ---------- */
 .sound {
   position: fixed; z-index: 40;

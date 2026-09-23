@@ -6,9 +6,8 @@ const SCRIPT_URL = "";
 // ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
 const MUSIC_URL = "";
 
-// Chanson YouTube, jouée par un lecteur caché. Vide = mélodie composée par le site.
-const YOUTUBE_ID = "1F9YIqidhN4";
-const SONG_LABEL = "Omer Adam · כסף או דמעות";
+// Pas de YouTube : ses publicités ne peuvent pas être bloquées. La musique est la mélodie composée pour le site.
+const YOUTUBE_ID = "";
 
 // Les célébrations, dans l'ordre. Modifiez les textes ici.
 const EVENTS = {
