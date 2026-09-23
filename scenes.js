@@ -7,7 +7,8 @@ const SCENES = {
   intro: { duration: 11, end: "#efe7d8" },
   h: { duration: 6, end: "#5b1b28" },
   p: { duration: 6, end: "#f6f2e9" },
-  s: { duration: 6.2, end: "#e8dcc3" }
+  s: { duration: 6.2, end: "#e8dcc3" },
+  r: { duration: 6.4, end: "#e4ddc7" }
 };
 
 function createRenderer(canvas) {
@@ -283,6 +284,35 @@ function createRenderer(canvas) {
       veil(SCENES.p.end, phase(t, 5, 1));
     },
 
+    // Réponse : une pluie de pétales tombe, tourbillonne puis s'écarte
+    r(t, rt, dt, from) {
+      const bg = ctx.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, "#fffdf9"); bg.addColorStop(1, "#efe6d2");
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+      glow(w / 2, h * .45, Math.max(w, h) * .6, [[0, "rgba(255,240,205,.5)"], [1, "rgba(255,240,205,0)"]]);
+      const cx = w / 2, cy = h * .47, R = Math.hypot(w, h) * .5;
+      const open = easeIO((t - 3) / 1.6);
+      st.swirl.forEach(p => {
+        const drop = ease((t - p.d) / 1.6);
+        if (drop <= 0) return;
+        const ang = p.a + t * .55 * p.dir + Math.sin(rt * .8 + p.ph) * .04;
+        const rad = p.r * R * (1 + 2.2 * open);
+        let x = cx + Math.cos(ang) * rad, y = cy + Math.sin(ang) * rad * .8;
+        y -= (1 - drop) * h * 1.1;
+        x += Math.sin(rt * 1.5 + p.ph) * 6;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(p.rot + rt * p.spin);
+        ctx.scale(1, .55 + .45 * Math.abs(Math.sin(rt * p.flip + p.ph)));
+        ctx.shadowColor = "rgba(120,95,50,.22)"; ctx.shadowBlur = p.s * .8; ctx.shadowOffsetY = p.s * .2;
+        ctx.fillStyle = p.c;
+        ctx.beginPath(); ctx.moveTo(0, -p.s);
+        ctx.bezierCurveTo(p.s * .9, -p.s * .5, p.s * .7, p.s * .7, 0, p.s);
+        ctx.bezierCurveTo(-p.s * .7, p.s * .7, -p.s * .9, -p.s * .5, 0, -p.s);
+        ctx.fill(); ctx.restore();
+      });
+      veil(from, 1 - phase(t, 0, .8));
+      veil(SCENES.r.end, phase(t, 5.4, 1));
+    },
+
     s(t, rt, dt, from) {
       const night = phase(t, 0, 2.2);
       const sg = ctx.createLinearGradient(0, 0, 0, h);
@@ -328,6 +358,14 @@ function createRenderer(canvas) {
     }
   };
 
+  function sparkle(x, y, r, a) {
+    if (a <= 0) return;
+    ctx.save(); ctx.translate(x, y); ctx.globalAlpha = a; ctx.fillStyle = "#fffaf0";
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .22 : r, an = i * Math.PI / 4; ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); }
+    ctx.fill(); ctx.restore(); ctx.globalAlpha = 1;
+  }
+
   function init(name) {
     if (name === "intro") {
       st = { guest: st.guest, petals: makePetals(Math.min(60, w / 10)) };
@@ -343,6 +381,13 @@ function createRenderer(canvas) {
         }
       });
       st = { sparkles: makeSparkles(80), bulbs };
+    } else if (name === "r") {
+      const colors = ["#fffdf8", "#fffdf8", "#fbf4e6", "#e8cc8a", "#f2dcd2"];
+      const n = Math.round(Math.min(260, w * .6));
+      st = { swirl: Array.from({ length: n }, () => ({
+        a: Math.random() * 6.283, r: .06 + Math.pow(Math.random(), .7) * .9, d: Math.random() * 1.4,
+        s: 5 + Math.random() * 7, rot: Math.random() * 6.28, spin: -1 + Math.random() * 2, flip: 1 + Math.random() * 2,
+        ph: Math.random() * 6.28, dir: Math.random() < .85 ? 1 : -1, c: colors[Math.floor(Math.random() * colors.length)] })) };
     } else {
       st = { stars: Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random() * .7, r: .5 + Math.random() * 1.3, d: .4 + Math.random() * 2.2, tw: Math.random() * 6.28 })) };
     }

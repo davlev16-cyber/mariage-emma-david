@@ -23,8 +23,7 @@ const EVENTS = {
     intro: "Pieds dans le sable et henné sur les mains : une soirée de musique, de couleurs et de traditions au bord de la mer pour ouvrir les festivités.",
     details: [
       ["Lieu", "Hilton Beach, Tel Aviv"],
-      ["Horaire", "Communiqué prochainement"],
-      ["Tenue", "Tenue de fête, couleurs bienvenues"]
+      ["Horaire", "Communiqué prochainement"]
     ]
   },
   p: {
@@ -39,8 +38,7 @@ const EVENTS = {
     details: [
       ["Lieu", "Cohav Ayam, Césarée"],
       ["Horaire", "Communiqué prochainement"],
-      ["Déroulé", "Houppa, puis réception et soirée"],
-      ["Tenue", "Tenue de soirée"]
+      ["Déroulé", "Houppa, puis réception et soirée"]
     ]
   },
   s: {

@@ -81,9 +81,9 @@ body {
   background: linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 42vh), var(--white) 100%);
 }
 .content .inner { padding-bottom: 46vh; }
-/* La page de réponse naît du blanc laissé par la page d'avant */
-.t-rsvp { background: linear-gradient(to bottom, var(--white) 0, var(--bg) 40vh, var(--bg) 100%); }
-.t-rsvp .inner { padding-top: 34vh; padding-bottom: 72px; }
+/* La page de réponse est la dernière : pas de fondu en bas */
+.t-rsvp { background: var(--bg); }
+.t-rsvp .inner { padding-bottom: 72px; }
 .inner {
   max-width: 600px; min-height: 100vh;
   margin: 0 auto;

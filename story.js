@@ -154,6 +154,7 @@
       cine(k, 300, WHITE, caps[k], k === "p" ? "dark" : "light");
       buildEvent(content(k), k);
     });
+    cine("r", 280, WHITE, [["Votre réponse", "title", 3.5], ["Avec toute notre joie", "script", 3.9], ["Avant le 15 juillet 2027", "small", 4.3]], "dark");
     buildRsvp(content("rsvp"));
   }
   story.append(el("footer", "foot", "Emma & David · 2027"));
