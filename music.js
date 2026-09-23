@@ -105,7 +105,30 @@ const Music = (function () {
     }
   }
 
+  // ----- Chanson YouTube (lecteur officiel, visible sur la couverture) -----
+  let yt = null, ytReady = false, ytWant = false;
+  function setupYouTube() {
+    if (!YOUTUBE_ID || !document.getElementById("yt")) return false;
+    window.onYouTubeIframeAPIReady = () => {
+      yt = new YT.Player("yt", {
+        videoId: YOUTUBE_ID, width: "100%", height: "200",
+        playerVars: { playsinline: 1, rel: 0, loop: 1, playlist: YOUTUBE_ID, modestbranding: 1 },
+        events: {
+          onReady: () => { ytReady = true; if (ytWant) yt.playVideo(); },
+          onStateChange: e => { started = e.data === 1 || e.data === 3; muted = !started; update(); }
+        }
+      });
+    };
+    const s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    document.head.append(s);
+    return true;
+  }
+  let useYouTube = false;
+  addEventListener("DOMContentLoaded", () => { useYouTube = setupYouTube(); });
+
   function start() {
+    if (useYouTube) { ytWant = true; if (ytReady) yt.playVideo(); return; }
     if (started || muted) return;
     started = true;
     if (MUSIC_URL) {
@@ -127,6 +150,11 @@ const Music = (function () {
   }
 
   function toggle() {
+    if (useYouTube) {
+      if (!ytReady) { ytWant = true; return; }
+      yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo();
+      return;
+    }
     if (!started) { muted = false; start(); return; }
     muted = !muted;
     if (audioEl) { muted ? audioEl.pause() : audioEl.play(); }

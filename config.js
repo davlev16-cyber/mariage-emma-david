@@ -6,6 +6,10 @@ const SCRIPT_URL = "";
 // ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
 const MUSIC_URL = "";
 
+// Chanson YouTube (lecteur officiel intégré). Laissez vide pour revenir à la mélodie composée.
+const YOUTUBE_ID = "1F9YIqidhN4";
+const SONG_LABEL = "Omer Adam · כסף או דמעות";
+
 // Les célébrations, dans l'ordre. Modifiez les textes ici.
 const EVENTS = {
   h: {
