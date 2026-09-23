@@ -21,8 +21,8 @@
 
 /* Chaque page est posée sur son décor : couleurs du texte et halo doux (--scrim) pour la lisibilité */
 .t-cover { --scrim: rgba(251, 247, 238, .82); }
-/* Mairie · mariage civil : lavande et bleu de Provence */
-.t-m { --scrim: rgba(250, 247, 240, .84); --card: #f7f4ee; --text: #2f3340; --title: #3d4a5c; --accent: #7d6fa8; --line: #d3cfe0; --soft: #5f6675; }
+/* Mairie · mariage civil : olivier et lumière dorée */
+.t-m { --scrim: rgba(251, 246, 234, .84); --card: #f8f2e4; --text: #2f3226; --title: #4f5634; --accent: #a08a4a; --line: #d9cfb4; --soft: #66684f; }
 /* Henné · Beach Party : bordeaux et or */
 .t-h { --scrim: rgba(70, 14, 26, .62); --card: rgba(106, 37, 51, .7); --text: #f8e8e1; --title: #fff3ea; --accent: #efc88a; --line: rgba(255, 220, 200, .35); --soft: #f0d2ca; color-scheme: dark; }
 /* Houppa : ivoire, sauge et blanc */
@@ -90,7 +90,7 @@ body.locked .tap-hint { display: none; }
 .gate-date { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: #5f6139; }
 .gate-hint {
   position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 9vh);
-  font: 400 clamp(22px, 6vw, 28px) "Parisienne", "Pinyon Script", cursive; color: #5f6139;
+  font: 500 clamp(22px, 6vw, 28px) "Dancing Script", "Parisienne", cursive; color: #5f6139;
   animation: hint 2.4s ease-in-out infinite;
 }
 
@@ -158,7 +158,7 @@ body.locked .tap-hint { display: none; }
 .hand { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 14px; }
 .hand li { display: grid; gap: 0; }
 .hand .lbl { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
-.hand .val { font: 400 clamp(26px, 7.2vw, 34px)/1.2 "Parisienne", "Pinyon Script", cursive; color: var(--title); text-wrap: balance; }
+.hand .val { font: 500 clamp(24px, 6.6vw, 30px)/1.25 "Dancing Script", "Parisienne", cursive; color: var(--title); text-wrap: balance; }
 .map-link {
   margin-top: 14px; color: var(--title);
   font-size: 13px; letter-spacing: .14em; text-transform: uppercase;

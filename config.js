@@ -4,8 +4,8 @@ const SCRIPT_URL = "";
 
 // Musique : laissez vide pour la mélodie composée par le site,
 // ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
-// Morceau actuel : « Sunset Strings » (Amplify_Music), libre de droits, Pixabay Content License.
-const MUSIC_URL = "musique.mp3";
+// Morceau actuel : « Night of Gold » (djovan), libre de droits, Pixabay Content License.
+const MUSIC_URL = "night-of-gold.mp3";
 
 // Pas de YouTube : ses publicités ne peuvent pas être bloquées. La musique est la mélodie composée pour le site.
 const YOUTUBE_ID = "";
