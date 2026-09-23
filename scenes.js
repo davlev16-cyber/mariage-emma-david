@@ -2,13 +2,8 @@
 // le défilement, en avant comme en arrière) ; rt est le temps réel, pour ce qui
 // bouge tout seul (reflets, pétales, flammes).
 
-const WHITE = "#fffdf9";
-const SCENES = {
-  intro: { duration: 11, end: "#efe7d8" },
-  h: { duration: 6, end: "#5b1b28" },
-  p: { duration: 6, end: "#f6f2e9" },
-  s: { duration: 6.2, end: "#e8dcc3" }
-};
+// Durée de chaque scène (en secondes de « film »), parcourue au fil du défilement.
+const SCENES = { intro: { duration: 9 }, h: { duration: 6 }, p: { duration: 6 }, s: { duration: 6.2 }, fin: { duration: 4 } };
 
 function createRenderer(canvas) {
   const ctx = canvas.getContext("2d");
@@ -77,9 +72,10 @@ function createRenderer(canvas) {
   }
 
   // ---------- Houppa ----------
-  function houppaGeo() {
-    const W = Math.min(w * .62, 420), H = Math.min(h * .36, W * .85);
-    const cx = w / 2, ground = h * .84, depth = W * .14;
+  function houppaGeo(o) {
+    o = o || {};
+    const W = o.W || Math.min(w * .62, 420), H = o.H || Math.min(h * .36, W * .85);
+    const cx = w / 2, ground = o.ground || h * .84, depth = W * .14;
     return { cx, ground, W, H, top: ground - H,
       fl: [cx - W / 2, ground], fr: [cx + W / 2, ground],
       bl: [cx - W / 2 + depth, ground - H * .1], br: [cx + W / 2 - depth, ground - H * .1] };
@@ -122,7 +118,7 @@ function createRenderer(canvas) {
     ctx.strokeStyle = "rgba(95,97,57,.25)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(base[0] + width / 2, base[1]); ctx.lineTo(base[0] + width / 2, y2); ctx.stroke();
   }
-  function seaside(t, rt) {
+  function seaside(t, rt, noAisle) {
     const horizon = h * .6, sunX = w * .7;
     const sg = ctx.createLinearGradient(0, 0, 0, horizon);
     sg.addColorStop(0, "#c9c4a4"); sg.addColorStop(.55, "#e9dcc2"); sg.addColorStop(1, "#f6e6c8");
@@ -136,6 +132,7 @@ function createRenderer(canvas) {
     ctx.fillStyle = tg; ctx.beginPath(); ctx.moveTo(0, top + h * .03);
     ctx.quadraticCurveTo(w / 2, top - h * .015, w, top + h * .03); ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
     const g = st.geo;
+    if (noAisle) return;
     ctx.fillStyle = "rgba(250,245,234,.75)"; ctx.beginPath();
     ctx.moveTo(g.cx - g.W * .22, g.ground); ctx.lineTo(g.cx + g.W * .22, g.ground);
     ctx.lineTo(g.cx + g.W * .55, h); ctx.lineTo(g.cx - g.W * .55, h); ctx.fill();
@@ -165,17 +162,16 @@ function createRenderer(canvas) {
 
   // ---------- Scènes ----------
   const draws = {
-    intro(t, rt, dt, from) {
-      const g = st.geo, z = 1 + 2.6 * easeIO((t - 8.2) / 2.6);
-      ctx.save(); zoomAt(g.cx, g.top + g.H * .45, z);
+    intro(t, rt, dt) {
+      const g = st.geo;
+      ctx.save(); zoomAt(g.cx, g.top + g.H * .45, 1 + .08 * ease(t / 9));
       seaside(t, rt); houppa(t, rt, { poles: 1, cloth: 2.2, flowers: 2.8 });
       ctx.restore();
       petals(st.petals, rt, dt, clamp((t - 3) / 2));
-      veil(from, 1 - phase(t, 0, 1.4));
-      veil(SCENES.intro.end, phase(t, 9.6, 1.3));
+      veil("#fffdf9", 1 - phase(t, 0, 1.4));   // seule l'ouverture naît du blanc
     },
 
-    h(t, rt, dt, from) {
+    h(t, rt, dt) {
       const horizon = h * .55, sunX = w * .5, sunY = horizon + phase(t, 0, 6) * h * .03 - h * .03;
       const sg = ctx.createLinearGradient(0, 0, 0, horizon);
       sg.addColorStop(0, "#5b1b28"); sg.addColorStop(.5, "#a13f4a"); sg.addColorStop(1, "#eba882");
@@ -199,58 +195,81 @@ function createRenderer(canvas) {
         ctx.fillStyle = on > 0 ? ["#ffe7b0", "#ffd28a", "#fff1d0"][b.hue] : "#8a6a4c";
         ctx.beginPath(); ctx.arc(b.x, b.y + 6, 3.5, 0, 6.283); ctx.fill();
       });
-      veil(from, 1 - phase(t, 0, .9));
-      veil(SCENES.h.end, phase(t, 5, 1));
     },
 
-    // Houppa : l'aqueduc romain de Césarée au coucher du soleil, des fleurs blanches au premier plan
-    p(t, rt, dt, from) {
-      const horizon = h * .6, sunX = w * .32, sunY = horizon - h * .05 + phase(t, 0, 6) * h * .03;
+    // Houppa : on avance dans l'allée, entre les chaises fleuries et les lanternes, vers la houppa face à la mer
+    p(t, rt, dt) {
+      const vx = w / 2, horizon = h * .5;
+      const z = 1 + .22 * easeIO(t / 6);
+      ctx.save(); zoomAt(vx, horizon + h * .1, z);
       const sg = ctx.createLinearGradient(0, 0, 0, horizon);
-      sg.addColorStop(0, "#c9cfbf"); sg.addColorStop(.55, "#f1e2c4"); sg.addColorStop(1, "#f8d9a9");
+      sg.addColorStop(0, "#d8d7c2"); sg.addColorStop(.6, "#f3e3c6"); sg.addColorStop(1, "#f8dcb0");
+      ctx.fillStyle = sg; ctx.fillRect(-w, -h, w * 3, horizon + h + 1);
+      glow(vx, horizon - h * .04, h * .45, [[0, "rgba(255,240,205,.95)"], [.2, "rgba(250,220,170,.45)"], [1, "rgba(250,220,170,0)"]]);
+      sea(rt, horizon, horizon + h * .07, ["#b9bca2", "#98a086"], st.sparkles, vx, "rgba(255,244,220,");
+      const tg = ctx.createLinearGradient(0, horizon + h * .07, 0, h);
+      tg.addColorStop(0, "#ece0c6"); tg.addColorStop(1, "#d6c39c");
+      ctx.fillStyle = tg; ctx.fillRect(-w, horizon + h * .07, w * 3, h * 2);
+
+      const g = st.geo;
+      houppa(t, rt, { poles: -2, cloth: -2, flowers: .2 });
+      // Allée blanche
+      const topY = g.ground, topHW = g.W * .2, botHW = w * .3;
+      const aisleHW = y => topHW + (botHW - topHW) * (y - topY) / (h - topY);
+      ctx.fillStyle = "#fbf7ee"; ctx.beginPath();
+      ctx.moveTo(vx - topHW, topY); ctx.lineTo(vx + topHW, topY); ctx.lineTo(vx + botHW, h + 2); ctx.lineTo(vx - botHW, h + 2); ctx.fill();
+
+      // Rangées de chaises, de la plus lointaine à la plus proche
+      const N = 7, pF = clamp((t - 1.2) / 2.4);
+      for (let i = 0; i < N; i++) {
+        const d = (i + 1) / N, y = topY + (h * 1.02 - topY) * Math.pow(d, 1.6), sc = .22 + Math.pow(d, 1.6) * .95;
+        const aw = aisleHW(y), cw = Math.min(w, h) * .075 * sc, gap = cw * .35;
+        [-1, 1].forEach(side => {
+          for (let j = 2; j >= 0; j--) {
+            const x = vx + side * (aw + gap + j * cw * 1.3 + cw / 2);
+            ctx.fillStyle = "rgba(110,90,55,.12)"; ctx.fillRect(x - cw / 2, y - cw * .05, cw, cw * .12);
+            ctx.fillStyle = "#fffdf8"; ctx.strokeStyle = "rgba(120,100,60,.35)"; ctx.lineWidth = Math.max(.5, sc);
+            ctx.fillRect(x - cw / 2, y - cw * .55, cw, cw * .14); ctx.strokeRect(x - cw / 2, y - cw * .55, cw, cw * .14);
+            ctx.beginPath(); ctx.moveTo(x - cw / 2, y - cw * .55); ctx.lineTo(x - cw / 2, y - cw * 1.35);
+            ctx.quadraticCurveTo(x, y - cw * 1.55, x + cw / 2, y - cw * 1.35); ctx.lineTo(x + cw / 2, y - cw * .55); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.fillRect(x - cw * .45, y - cw * .45, cw * .1, cw * .45); ctx.fillRect(x + cw * .35, y - cw * .45, cw * .1, cw * .45);
+            if (j === 0) {
+              // Bouquet blanc sur la chaise côté allée
+              const fx = x - side * cw * .45, fy = y - cw * 1.2;
+              [[0, 0, .34], [-.22, .18, .26], [.2, .2, .24]].forEach(([ox, oy, r], q) =>
+                flower({ x: fx + ox * cw, y: fy + oy * cw, r: r * cw, d: (N - 1 - i) * .06 + q * .05, rot: i + q, leaf: q === 1 }, pF, rt));
+              // Lanterne au bord de l'allée, allumée de la plus proche à la plus lointaine
+              const lx = vx + side * (aw - cw * .15), lh = cw * .9, lw = cw * .45;
+              const on = phase(t, .6 + (N - 1 - i) * .3, .4), fl = .85 + .15 * Math.sin(rt * 9 + i + side);
+              if (on > 0) glow(lx, y - lh * .5, cw * 2.2, [[0, "rgba(255,210,130," + (.55 * on * fl).toFixed(3) + ")"], [1, "rgba(255,210,130,0)"]]);
+              ctx.fillStyle = "rgba(255,252,240,.55)"; ctx.strokeStyle = "rgba(120,100,60,.5)";
+              ctx.fillRect(lx - lw / 2, y - lh, lw, lh); ctx.strokeRect(lx - lw / 2, y - lh, lw, lh);
+              ctx.fillStyle = on > 0 ? "#ffe6a8" : "#efe6d2";
+              ctx.beginPath(); ctx.ellipse(lx, y - lh * .45, lw * .16, lh * .16 * (on > 0 ? fl : .5), 0, 0, 6.283); ctx.fill();
+            }
+          }
+        });
+      }
+      ctx.restore();
+    },
+
+    // Réponse : la mer calme au lever du jour
+    fin(t, rt) {
+      const horizon = h * .58, sunY = horizon - h * .02 - ease(t / 4) * h * .06;
+      const sg = ctx.createLinearGradient(0, 0, 0, horizon);
+      sg.addColorStop(0, "#efece2"); sg.addColorStop(.6, "#f6ead4"); sg.addColorStop(1, "#f8e2bd");
       ctx.fillStyle = sg; ctx.fillRect(0, 0, w, horizon + 1);
-      glow(sunX, sunY, h * .4, [[0, "rgba(255,238,200,.95)"], [.2, "rgba(250,215,160,.5)"], [1, "rgba(250,215,160,0)"]]);
-      ctx.fillStyle = "#fff1d4"; ctx.beginPath(); ctx.arc(sunX, sunY, Math.min(w, h) * .05, 0, 6.283); ctx.fill();
-      sea(rt, horizon, h * .76, ["#b9b99c", "#8c9478", "#6d7760"], st.sparkles, sunX, "rgba(255,240,210,");
-      const shore = h * .74, wave = x => shore + Math.sin(x / 70 + rt * 1.3) * 4;
-      ctx.fillStyle = "#e9d8b4"; ctx.beginPath(); ctx.moveTo(0, shore);
+      glow(w / 2, sunY, h * .45, [[0, "rgba(255,244,215,.95)"], [.2, "rgba(252,228,185,.45)"], [1, "rgba(252,228,185,0)"]]);
+      ctx.fillStyle = "#fff6e2"; ctx.beginPath(); ctx.arc(w / 2, sunY, Math.min(w, h) * .05, 0, 6.283); ctx.fill();
+      sea(rt, horizon, h * .8, ["#cfd0bb", "#b3b79c", "#9aa085"], st.sparkles, w / 2, "rgba(255,246,225,");
+      const shore = h * .78, wave = x => shore + Math.sin(x / 80 + rt * 1.1) * 4;
+      ctx.fillStyle = "#efe4cc"; ctx.beginPath(); ctx.moveTo(0, shore);
       for (let x = 0; x <= w; x += 12) ctx.lineTo(x, wave(x));
       ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
-      ctx.strokeStyle = "rgba(255,250,238,.8)"; ctx.lineWidth = 2; ctx.beginPath();
-      for (let x = 0; x <= w; x += 12) ctx.lineTo(x, wave(x) - 2);
-      ctx.stroke();
-
-      // Arches : de la plus proche (à gauche) à la plus lointaine (à droite)
-      st.arches.forEach((a, i) => {
-        const k = phase(t, .5 + i * .28, .9);
-        if (k <= 0) return;
-        const { x, base, span, H } = a, hh = H * k, pw = span * .22;
-        ctx.fillStyle = mix("#dcc59b", "#cbb58c", i / st.arches.length);
-        ctx.fillRect(x, base - hh, pw, hh);
-        ctx.fillRect(x + span - pw, base - hh, pw, hh);
-        if (k > .6) {
-          // Tablier en haut, puis écoinçons au-dessus d'une arcade en plein cintre
-          const top = base - H, r = (span - pw * 2) / 2, deck = H * .16, ay = top + deck + r;
-          ctx.fillRect(x, top, span + .5, deck + 1);
-          ctx.beginPath(); ctx.moveTo(x + pw, ay); ctx.arc(x + span / 2, ay, r, Math.PI, 0);
-          ctx.lineTo(x + span - pw, top + deck); ctx.lineTo(x + pw, top + deck); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = "rgba(120,95,55,.25)"; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(x + span / 2, ay, r, Math.PI, 0); ctx.stroke();
-          ctx.fillStyle = "rgba(120,95,55,.16)"; ctx.fillRect(x + span - pw * .35, top + deck, pw * .35, H - deck);
-        }
-      });
-      // Lumière rasante sur les pierres
-      glow(sunX, sunY, w * .9, [[0, "rgba(255,225,170,.18)"], [1, "rgba(255,225,170,0)"]]);
-
-      // Fleurs blanches qui éclosent sur le sable
-      const pF = clamp((t - 1.8) / 2.6);
-      st.flowers.forEach(f => flower(f, pF, rt));
-      petals(st.petals, rt, dt, phase(t, 2.5, 1.5) * .8);
-      veil(from, 1 - phase(t, 0, 1));
-      veil(SCENES.p.end, phase(t, 5, 1));
     },
 
-    s(t, rt, dt, from) {
+    s(t, rt, dt) {
       const night = phase(t, 0, 2.2);
       const sg = ctx.createLinearGradient(0, 0, 0, h);
       sg.addColorStop(0, mix("#d9a47c", "#5a6480", night));
@@ -290,8 +309,6 @@ function createRenderer(canvas) {
           ctx.restore();
         }
       });
-      veil(from, 1 - phase(t, 0, .9));
-      veil(SCENES.s.end, phase(t, 5.2, 1));
     }
   };
 
@@ -300,20 +317,11 @@ function createRenderer(canvas) {
       const geo = houppaGeo();
       st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(70), petals: makePetals(Math.min(90, w / 7)) };
     } else if (name === "p") {
-      const arches = [], n = 10;
-      let x = -w * .08;
-      for (let i = 0; i < n; i++) {
-        const sc = 1 - i * .075, span = Math.min(w, h * .9) * .2 * sc;
-        arches.push({ x, span, H: h * .28 * sc, base: h * .8 - (1 - sc) * h * .11 });
-        x += span;
-      }
-      seed = 11;
-      const flowers = [];
-      for (let i = 0; i < 26; i++) {
-        const fx = rand() * w, fy = h * .88 + rand() * h * .1, sz = Math.max(7, w / 38) * (.7 + rand() * .6);
-        flowers.push({ x: fx, y: fy, r: sz, d: rand() * .6, rot: rand() * 3.14, leaf: rand() < .6 });
-      }
-      st = { arches, flowers, sparkles: makeSparkles(70), petals: makePetals(Math.min(40, w / 12)) };
+      const W = Math.min(w * .34, 250);
+      const geo = houppaGeo({ W, H: Math.min(h * .19, W * .85), ground: h * .6 });
+      st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(50) };
+    } else if (name === "fin") {
+      st = { sparkles: makeSparkles(80) };
     } else if (name === "h") {
       const bulbs = [];
       [[-.05, .1, 1.05, .2, .12, 16, 0], [-.05, .26, 1.05, .16, .09, 14, .5]].forEach(([x1, y1, x2, y2, sag, n, d]) => {
@@ -332,16 +340,16 @@ function createRenderer(canvas) {
   return {
     resize(name) {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      w = canvas.clientWidth; h = canvas.clientHeight;
+      w = canvas.clientWidth || innerWidth; h = canvas.clientHeight || innerHeight;
       canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       init(name); current = name;
     },
-    draw(name, t, rt, from) {
+    draw(name, t, rt) {
       if (name !== current || !w) this.resize(name);
       const dt = lastRt ? Math.min(.05, rt - lastRt) : 0; lastRt = rt;
       ctx.clearRect(0, 0, w, h);
-      draws[name](t, rt, dt, from);
+      draws[name](t, rt, dt);
     }
   };
 }

@@ -43,7 +43,7 @@ const EVENTS = {
   },
   s: {
     name: "Chabbat",
-    tagline: "Chabbat Chalom",
+    tagline: "Chabbat Hatan",
     date: "Vendredi 20 & samedi 21 août 2027",
     shortDate: "Ven. 20 & sam. 21 août",
     place: "Restaurant Simo & synagogue",

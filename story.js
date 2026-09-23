@@ -19,13 +19,15 @@
   }
 
   // ----- Sections -----
-  const cines = [];
+  // Chaque chapitre = une zone de défilement pour sa cinématique (avec ses légendes)
+  // puis sa page de texte, posée sur le décor. Le décor est dessiné dans un seul
+  // canvas fixe (#stage) derrière toute la page.
+  const chapters = [];
 
-  function cine(name, heightVh, from, captions, tone) {
+  function cine(name, heightVh, captions, tone) {
     const sec = el("section", "cine");
     sec.style.height = heightVh + "vh";
     const stick = el("div", "stick");
-    const canvas = document.createElement("canvas");
     const caps = el("div", "caps caps-" + name + " tone-" + tone);
     captions.forEach(([text, cls, at]) => {
       if (!text) return;
@@ -33,14 +35,15 @@
       if (cls === "bh") p.lang = "he";
       caps.append(p);
     });
-    stick.append(canvas, caps);
+    stick.append(caps);
     sec.append(stick);
     story.append(sec);
-    cines.push({ name, sec, canvas, caps: [...caps.children], from, r: createRenderer(canvas) });
+    chapters.push({ name, sec, caps: [...caps.children] });
   }
 
   function content(id) {
     const sec = el("section", "content t-" + id);
+    if (chapters.length) chapters[chapters.length - 1].content = sec;
     sec.id = "s-" + id;
     const inner = el("div", "inner");
     sec.append(inner);
@@ -67,11 +70,15 @@
     const ev = EVENTS[k];
     p.append(el("p", "eyebrow", "Emma & David"), el("h2", "ev-title", ev.name), el("p", "ev-tag", ev.tagline),
       el("p", "ev-date", ev.date), el("p", "ev-place", ev.place + " · " + ev.city), el("p", "ev-intro", ev.intro));
-    const dl = el("dl", "details");
-    ev.details.forEach(([a, b]) => dl.append(el("dt", "", a), el("dd", "", b)));
+    const list = el("ul", "hand");
+    ev.details.forEach(([a, b]) => {
+      const li = el("li");
+      li.append(el("span", "lbl", a), el("span", "val", b));
+      list.append(li);
+    });
     const map = el("a", "map-link", "Voir sur la carte");
     map.href = mapUrl(ev); map.target = "_blank"; map.rel = "noopener";
-    p.append(dl, map);
+    p.append(list, map);
   }
 
   function buildRsvp(p) {
@@ -136,46 +143,91 @@
 
   // ----- Construction de l'histoire -----
   if (!invite) {
-    cine("intro", 420, WHITE, [["ב״ה", "bh", .8], ["Emma & David", "names", 5.7], ["Août 2027", "small", 6.4]], "dark");
+    cine("intro", 420, [["ב״ה", "bh", .8], ["Emma & David", "names", 5.2], ["Août 2027", "small", 5.9]], "dark");
     const p = content("cover");
     p.append(el("h1", "names", "Emma & David"),
       el("p", "lead", "Cette invitation s'ouvre avec le lien personnel que vous avez reçu. Si vous l'avez perdu, demandez-le à Emma & David."));
   } else {
-    cine("intro", 480, WHITE, [
-      ["ב״ה", "bh", .8], [invite.name, "small", 5.2], ["Emma & David", "names", 5.7], ["Cohav Ayam · Août 2027", "small", 6.4]
+    cine("intro", 440, [
+      ["ב״ה", "bh", .8], [invite.name, "small", 4.8], ["Emma & David", "names", 5.2], ["Cohav Ayam · Août 2027", "small", 5.9]
     ], "dark");
     buildCover(content("cover"));
     const caps = {
-      h: [["Henné", "title", .9], ["Beach Party", "script", 1.4], ["15 août · Hilton Beach, Tel Aviv", "small", 2]],
-      p: [["Houppa", "title", .9], ["Face à la mer", "script", 1.4], ["17 août · Cohav Ayam, Césarée", "small", 2]],
-      s: [["Chabbat", "title", 2.6], ["Chabbat Chalom", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
+      h: [["Henné", "title", 1.6], ["Beach Party", "script", 2.1], ["15 août · Hilton Beach, Tel Aviv", "small", 2.6]],
+      p: [["Houppa", "title", 1.6], ["Face à la mer", "script", 2.1], ["17 août · Cohav Ayam, Césarée", "small", 2.6]],
+      s: [["Chabbat", "title", 2.6], ["Chabbat Hatan", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
     };
     invite.events.forEach(k => {
-      // Chaque passage part du blanc laissé par la page précédente
-      cine(k, 300, WHITE, caps[k], k === "p" ? "dark" : "light");
+      cine(k, 300, caps[k], k === "p" ? "dark" : "light");
       buildEvent(content(k), k);
     });
+    cine("fin", 220, [["Votre réponse", "title", 1.4], ["Avant le 15 juillet 2027", "small", 1.9]], "dark");
     buildRsvp(content("rsvp"));
   }
   story.append(el("footer", "foot", "Emma & David · 2027"));
 
   // ----- Rendu piloté par le défilement -----
-  function progressOf(c) {
-    const r = c.sec.getBoundingClientRect();
-    const span = c.sec.offsetHeight - innerHeight;
-    return { visible: r.bottom > 0 && r.top < innerHeight, p: clamp(-r.top / span) };
+  // Un canvas hors écran par décor ; le canvas fixe de la page compose le décor
+  // courant. Au début de chaque cinématique, le décor précédent se mélange au
+  // suivant (fondu enchaîné avec un léger mouvement de caméra), en avant comme en arrière.
+  const stage = document.getElementById("stage");
+  const sctx = stage.getContext("2d");
+  const renderers = {};
+  function rendererFor(name) {
+    if (!renderers[name]) {
+      const c = document.createElement("canvas");
+      renderers[name] = { canvas: c, r: createRenderer(c) };
+    }
+    return renderers[name];
   }
+  function sizeStage() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    stage.width = innerWidth * dpr; stage.height = innerHeight * dpr;
+    Object.keys(renderers).forEach(n => renderers[n].r.resize(n));
+  }
+  sizeStage();
+  addEventListener("resize", sizeStage);
+
+  function sceneImage(name, t, rt) {
+    const R = rendererFor(name);
+    R.r.draw(name, t, rt);
+    return R.canvas;
+  }
+  function blit(img, alpha, zoom) {
+    const W = stage.width, H = stage.height;
+    sctx.globalAlpha = alpha;
+    const dw = W * zoom, dh = H * zoom;
+    sctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    sctx.globalAlpha = 1;
+  }
+  const easeIO = v => { v = clamp(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
+  const BLEND = .45;   // part de la cinématique pendant laquelle les décors se mélangent
 
   function frame(now) {
-    const rt = now / 1000;
-    cines.forEach(c => {
-      const { visible, p } = progressOf(c);
-      if (!visible) return;
-      const t = p * SCENES[c.name].duration;
-      c.r.draw(c.name, t, rt, c.from);
-      c.caps.forEach(cap => {
-        const k = clamp((t - Number(cap.dataset.at)) / 1);
-        const e = 1 - Math.pow(1 - k, 3);
+    const rt = now / 1000, y = scrollY;
+    // Chapitre courant : le dernier dont la cinématique a commencé
+    let i = 0;
+    chapters.forEach((c, j) => { if (y >= c.sec.offsetTop - 1) i = j; });
+    const c = chapters[i], span = c.sec.offsetHeight - innerHeight;
+    const p = clamp((y - c.sec.offsetTop) / span);
+    const t = p * SCENES[c.name].duration;
+
+    sctx.clearRect(0, 0, stage.width, stage.height);
+    const k = i > 0 ? easeIO(p / BLEND) : 1;
+    if (k < 1) {
+      const prev = chapters[i - 1].name;
+      blit(sceneImage(prev, SCENES[prev].duration, rt), 1, 1 + .07 * k);
+      blit(sceneImage(c.name, t, rt), k, 1.07 - .07 * k);
+    } else {
+      blit(sceneImage(c.name, t, rt), 1, 1);
+    }
+
+    chapters.forEach((ch, j) => {
+      if (Math.abs(j - i) > 1) return;
+      const pj = clamp((y - ch.sec.offsetTop) / (ch.sec.offsetHeight - innerHeight));
+      const tj = pj * SCENES[ch.name].duration;
+      ch.caps.forEach(cap => {
+        const e = 1 - Math.pow(1 - clamp((tj - Number(cap.dataset.at)) / 1), 3);
         cap.style.opacity = e.toFixed(3);
         cap.style.transform = "translateY(" + ((1 - e) * 14).toFixed(1) + "px)";
       });
@@ -183,8 +235,6 @@
     autoScroll(now);
     requestAnimationFrame(frame);
   }
-
-  addEventListener("resize", () => cines.forEach(c => c.r.resize(c.name)));
 
   // ----- Défilement automatique -----
   // La page avance seule : les cinématiques à leur vitesse réelle, les pages de texte
@@ -202,7 +252,7 @@
 
   function speedHere() {
     const y = scrollY;
-    for (const c of cines) {
+    for (const c of chapters) {
       const top = c.sec.offsetTop, span = c.sec.offsetHeight - innerHeight;
       if (y >= top - 2 && y < top + span) return span / SCENES[c.name].duration;
     }

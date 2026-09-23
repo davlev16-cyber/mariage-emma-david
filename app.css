@@ -19,30 +19,31 @@
   color-scheme: light;
 }
 
-/* Couverture : beige et kaki */
-.t-cover { --bg: #efe7d8; }
+/* Chaque page est posée sur son décor : couleurs du texte et halo doux (--scrim) pour la lisibilité */
+.t-cover { --scrim: rgba(251, 247, 238, .82); }
 /* Henné · Beach Party : bordeaux et or */
-.t-h { --bg: #5b1b28; --card: #6a2533; --text: #f6e3dc; --title: #fbeee6; --accent: #e3bb7e; --line: #83404c; --soft: #e2bfb8; color-scheme: dark; }
+.t-h { --scrim: rgba(70, 14, 26, .62); --card: rgba(106, 37, 51, .7); --text: #f8e8e1; --title: #fff3ea; --accent: #efc88a; --line: rgba(255, 220, 200, .35); --soft: #f0d2ca; color-scheme: dark; }
 /* Houppa : ivoire, sauge et blanc */
-.t-p { --bg: #f6f2e9; --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #767a66; }
-/* Chabbat : lumière dorée des bougies, au crépuscule */
-.t-s { --bg: #e8dcc3; --card: #f4ecdc; --text: #2f2a1f; --title: #4a3a1a; --accent: #94702f; --line: #cdbb95; --soft: #6f6450; }
-/* Réponse : kaki clair */
-.t-rsvp { --bg: #e4ddc7; --card: #f3eee1; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
+.t-p { --scrim: rgba(252, 248, 238, .82); --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #676b57; }
+/* Chabbat Hatan : crépuscule doré */
+.t-s { --scrim: rgba(250, 243, 228, .82); --card: #f4ecdc; --text: #2f2a1f; --title: #4a3a1a; --accent: #94702f; --line: #cdbb95; --soft: #6f6450; }
+/* Réponse : lever du jour sur la mer */
+.t-rsvp { --scrim: rgba(251, 247, 238, .86); --card: #fbf7ee; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
   margin: 0;
-  background: var(--bg);
+  background: #fffdf9;
   color: var(--text);
   font: 300 17px/1.6 "Jost", "Avenir Next", "Helvetica Neue", sans-serif;
 }
 
-/* ---------- Cinématiques pilotées par le défilement ---------- */
+/* ---------- Décor et cinématiques pilotés par le défilement ---------- */
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+#story { position: relative; z-index: 1; }
 .cine { position: relative; }
 .stick { position: sticky; top: 0; height: 100vh; overflow: hidden; }
-.stick canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .caps {
   position: absolute; left: 0; right: 0;
   top: calc(env(safe-area-inset-top, 0px) + 8vh);
@@ -81,21 +82,16 @@ body {
 .sound:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- Pages de texte ---------- */
-/* Chaque page se fond dans le blanc en bas ; la cinématique suivante repart de ce blanc */
-.content {
-  color: var(--text);
-  background: linear-gradient(to bottom, var(--bg) 0, var(--bg) calc(100% - 42vh), var(--white) 100%);
-}
-.content .inner { padding-bottom: 46vh; }
-/* La page de réponse naît du blanc laissé par la page d'avant */
-.t-rsvp { background: linear-gradient(to bottom, var(--white) 0, var(--bg) 40vh, var(--bg) 100%); }
-.t-rsvp .inner { padding-top: 34vh; padding-bottom: 72px; }
+/* ---------- Pages de texte, posées sur le décor ---------- */
+.content { color: var(--text); }
+.inner { padding-bottom: 46vh; }
 .inner {
   max-width: 600px; min-height: 100vh;
   margin: 0 auto;
   padding-inline: 22px; padding-block: 72px 72px;
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   gap: 10px; text-align: center;
+  background: radial-gradient(ellipse 75% 58% at 50% 50%, var(--scrim) 0%, var(--scrim) 42%, transparent 76%);
 }
 .inner p { margin: 0; }
 .bh { font-size: 15px; color: var(--soft); margin-bottom: 6px !important; }
@@ -118,14 +114,10 @@ body {
 .ev-date { margin-top: 10px !important; font-weight: 500; font-size: 19px; color: var(--title); }
 .ev-place { color: var(--soft); }
 .ev-intro { margin: 18px 0 8px !important; font: 400 clamp(21px, 5.4vw, 26px)/1.4 "Italiana", Georgia, serif; text-wrap: balance; }
-.details {
-  margin: 8px 0 0; width: 100%;
-  display: grid; grid-template-columns: minmax(96px, auto) 1fr;
-  text-align: left; background: var(--card); border: 1px solid var(--line);
-}
-.details dt, .details dd { margin: 0; padding: 13px 16px; border-bottom: 1px solid var(--line); }
-.details dt { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); padding-top: 16px; }
-.details dt:last-of-type, .details dd:last-of-type { border-bottom: 0; }
+.hand { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 14px; }
+.hand li { display: grid; gap: 0; }
+.hand .lbl { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+.hand .val { font: 400 clamp(26px, 7.2vw, 34px)/1.2 "Parisienne", "Pinyon Script", cursive; color: var(--title); text-wrap: balance; }
 .map-link {
   margin-top: 14px; color: var(--title);
   font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
@@ -161,15 +153,11 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
 .sign { font: 400 30px "Pinyon Script", cursive; color: var(--accent); }
 .error { color: var(--error); }
 .t-h .error { color: #ffc2a8; }
-/* Page Henné : tout centré, texte plus contrasté */
-.t-h .details { grid-template-columns: 1fr; text-align: center; }
-.t-h .details dt { padding-bottom: 0; border-bottom: 0; }
-.t-h .details dd { padding-top: 4px; font-size: 18px; color: var(--title); }
-.t-h .ev-intro { color: var(--title); }
-.t-h .ev-place { color: var(--text); }
+/* Page Henné : texte clair bien détaché */
+.t-h .inner { text-shadow: 0 1px 10px rgba(50, 8, 18, .45); }
 
 .foot {
-  background: #e4ddc7; color: #6b6753; text-align: center;
+  position: relative; background: rgba(251, 247, 238, .9); color: #6b6753; text-align: center;
   padding-block: 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
   font-size: 12px; letter-spacing: .24em; text-transform: uppercase;
 }
