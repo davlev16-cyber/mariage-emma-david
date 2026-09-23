@@ -6,8 +6,8 @@ const SCRIPT_URL = "";
 // ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
 const MUSIC_URL = "";
 
-// Chanson YouTube (lecteur officiel, qui doit rester visible). Vide = mélodie composée par le site.
-const YOUTUBE_ID = "";
+// Chanson YouTube, jouée par un lecteur caché. Vide = mélodie composée par le site.
+const YOUTUBE_ID = "1F9YIqidhN4";
 const SONG_LABEL = "Omer Adam · כסף או דמעות";
 
 // Les célébrations, dans l'ordre. Modifiez les textes ici.

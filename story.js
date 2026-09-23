@@ -61,13 +61,6 @@
       list.append(li);
     });
     p.append(list, el("p", "when", "Août 2027 · Israël"));
-    if (YOUTUBE_ID) {
-      const song = el("figure", "song");
-      const frame = el("div", "song-player"); frame.id = "yt";
-      const cap = el("figcaption", "", SONG_LABEL); cap.lang = "he";
-      song.append(frame, cap);
-      p.append(song);
-    }
   }
 
   function buildEvent(p, k) {

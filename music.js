@@ -105,16 +105,23 @@ const Music = (function () {
     }
   }
 
-  // ----- Chanson YouTube (lecteur officiel, visible sur la couverture) -----
+  // ----- Chanson YouTube, lecteur caché -----
   let yt = null, ytReady = false, ytWant = false;
   function setupYouTube() {
-    if (!YOUTUBE_ID || !document.getElementById("yt")) return false;
+    if (!YOUTUBE_ID) return false;
+    const box = document.createElement("div");
+    box.id = "yt";
+    box.setAttribute("aria-hidden", "true");
+    box.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0;pointer-events:none;overflow:hidden;";
+    document.body.append(box);
     window.onYouTubeIframeAPIReady = () => {
       yt = new YT.Player("yt", {
-        videoId: YOUTUBE_ID, width: "100%", height: "200",
+        videoId: YOUTUBE_ID, width: "2", height: "2",
         playerVars: { playsinline: 1, rel: 0, loop: 1, playlist: YOUTUBE_ID, modestbranding: 1 },
         events: {
-          onReady: () => { ytReady = true; if (ytWant) yt.playVideo(); },
+          onReady: () => { ytReady = true; yt.setVolume(70); if (ytWant) yt.playVideo(); },
+          // Si YouTube refuse la lecture, on revient à la mélodie composée
+          onError: () => { useYouTube = false; ytReady = false; if (ytWant) start(); },
           onStateChange: e => { started = e.data === 1 || e.data === 3; muted = !started; update(); }
         }
       });
