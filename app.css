@@ -54,6 +54,8 @@ body {
   pointer-events: none;
 }
 .cap { margin: 0; opacity: 0; will-change: opacity, transform; }
+/* Mairie : texte au centre de l'écran */
+.caps-m { top: 50%; transform: translateY(-60%); gap: 8px; }
 /* Henné : texte au centre de l'écran, bien lisible sur le coucher de soleil */
 .caps-h { top: 50%; transform: translateY(-62%); gap: 8px; }
 .caps-h .cap { color: #fff7ec; text-shadow: 0 2px 6px rgba(60, 10, 20, .55), 0 0 28px rgba(60, 10, 20, .5); }
@@ -208,3 +210,4 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
   .gate-hint { animation: none; }
   .cap { transition: none !important; }
 }
+.guest:empty, .gate-guest:empty { display: none; }

@@ -77,9 +77,9 @@ function decodeInvite(code) {
     const json = decodeURIComponent(escape(atob(b64)));
     const data = JSON.parse(json);
     const events = Object.keys(EVENTS).filter(k => String(data.e || "").includes(k));
-    if (!data.n || !events.length) return null;
+    if (!events.length) return null;   // le nom peut être vide (lien d'aperçu des mariés)
     const count = Math.min(30, Math.max(1, parseInt(data.c, 10) || 1));
-    return { name: String(data.n), events, count };
+    return { name: String(data.n || ""), events, count };
   } catch (e) {
     return null;
   }

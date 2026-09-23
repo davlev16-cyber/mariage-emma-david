@@ -75,7 +75,7 @@
     p.append(bh, el("p", "eyebrow", "Avec la bénédiction de leurs familles"),
       el("h1", "names", "Emma & David"),
       el("p", "lead", "ont la joie de vous convier à leur mariage"),
-      el("p", "guest", invite.name));
+      el("p", "guest", invite.name || null));
     // Les dates de l'invité, écrites à la main comme sur les pages des célébrations
     const list = el("ul", "hand");
     invite.events.forEach(k => {
