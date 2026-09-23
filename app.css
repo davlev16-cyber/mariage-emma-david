@@ -1,0 +1,182 @@
+/* Invitation Emma & David — une ambiance de couleurs par page */
+:root {
+  --sand: #efe7d8;
+  --kaki: #5f6139;
+  --kaki-deep: #3f4126;
+  --stone: #cbbd9f;
+  --ink: #2f2d22;
+  --muted: #6f6a57;
+  --error: #9a3b2a;
+  /* Couleurs de la page affichée (changées par body[data-page]) */
+  --bg: var(--sand);
+  --card: #f7f2e8;
+  --text: var(--ink);
+  --title: var(--kaki-deep);
+  --accent: var(--kaki);
+  --line: var(--stone);
+  --soft: var(--muted);
+  color-scheme: light;
+}
+
+/* Couverture : beige et kaki */
+body[data-page="cover"], body[data-page="none"] { --bg: #efe7d8; }
+/* Henné · Beach Party : coucher de soleil, cuivre henné, sable */
+body[data-page="h"] { --bg: #43301f; --card: #533c28; --text: #f3e2c8; --title: #fbe9cc; --accent: #e0a36b; --line: #6d5139; --soft: #d9bf9c; color-scheme: dark; }
+/* Houppa : ivoire, sauge et blanc */
+body[data-page="p"] { --bg: #f6f2e9; --card: #fffdf8; --text: #33352a; --title: #4b5237; --accent: #7c8663; --line: #d9d6c4; --soft: #767a66; }
+/* Chabbat : nuit et or des bougies */
+body[data-page="s"] { --bg: #23221b; --card: #2e2c23; --text: #ece3cd; --title: #f1dca8; --accent: #d9b56a; --line: #4a4535; --soft: #b8ad92; color-scheme: dark; }
+/* Réponse : kaki clair */
+body[data-page="rsvp"] { --bg: #e4ddc7; --card: #f3eee1; --text: #2f2d22; --title: #3f4126; --accent: #5f6139; --line: #c3b797; --soft: #6b6753; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 300 17px/1.6 "Jost", "Avenir Next", "Helvetica Neue", sans-serif;
+  transition: background-color .8s ease;
+  overflow: hidden;
+}
+
+/* ---------- Cinématiques ---------- */
+.cinema {
+  position: fixed; inset: 0; z-index: 30;
+  background: #efe7d8;
+  opacity: 0; transition: opacity .45s ease;
+}
+.cinema.in { opacity: 1; }
+.cinema.out { opacity: 0; transition-duration: .7s; }
+.cinema canvas { position: absolute; inset: 0; display: block; }
+.cine-caption {
+  position: absolute; left: 0; right: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 8vh);
+  padding-inline: 20px;
+  display: grid; justify-items: center; gap: 4px; text-align: center;
+  pointer-events: none;
+}
+.cap { margin: 0; opacity: 0; transform: translateY(14px); transition: opacity 1.3s ease, transform 1.3s ease; }
+.cine-caption.play .cap { opacity: 1; transform: none; }
+.tone-dark { color: #3f4126; }
+.tone-light { color: #f1dca8; }
+.cap.bh { font-size: 16px; }
+.cap.small { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; }
+.cap.names, .cap.title { font: 400 clamp(52px, 14vw, 96px)/1 "Italiana", "Didot", Georgia, serif; }
+.cap.script { font: 400 clamp(34px, 9vw, 54px)/1.1 "Pinyon Script", "Snell Roundhand", cursive; }
+#cine-caption .cap.title { margin-top: 4px; }
+
+/* ---------- Bouton musique ---------- */
+.sound {
+  position: fixed; z-index: 40;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1px solid rgba(63, 65, 38, .25);
+  background: rgba(247, 242, 232, .55);
+  color: #3f4126; cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.sound .mute { opacity: 1; }
+.sound.on .mute { opacity: 0; }
+.sound:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Pages ---------- */
+.page {
+  position: fixed; inset: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.page.shown { opacity: 1; transform: none; }
+.inner {
+  max-width: 600px; min-height: 100%;
+  margin: 0 auto;
+  padding-inline: 22px; padding-block: 64px 24px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 10px; text-align: center;
+}
+.inner p { margin: 0; }
+.bh { font-size: 15px; color: var(--soft); margin-bottom: 6px !important; }
+.eyebrow { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--accent); }
+.names {
+  margin: 8px 0 4px;
+  font: 400 clamp(60px, 17vw, 110px)/.95 "Italiana", "Didot", Georgia, serif;
+  color: var(--title);
+}
+.lead { font-size: 18px; text-wrap: balance; }
+.guest { font: 400 clamp(24px, 6vw, 30px)/1.2 "Italiana", Georgia, serif; color: var(--accent); margin-top: 6px !important; text-wrap: balance; }
+.agenda { list-style: none; padding: 0; margin: 18px 0 6px; width: 100%; max-width: 360px; border-top: 1px solid var(--line); }
+.agenda li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.a-name { font-weight: 500; color: var(--title); }
+.a-date { color: var(--soft); font-variant-numeric: tabular-nums; }
+.when { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--accent); margin-top: 8px !important; }
+
+.ev-title { margin: 6px 0 0; font: 400 clamp(64px, 19vw, 120px)/.95 "Italiana", "Didot", Georgia, serif; color: var(--title); }
+.ev-tag { font: 400 clamp(32px, 9vw, 48px)/1.1 "Pinyon Script", "Snell Roundhand", cursive; color: var(--accent); margin-top: -4px !important; }
+.ev-date { margin-top: 10px !important; font-weight: 500; font-size: 19px; color: var(--title); }
+.ev-place { color: var(--soft); }
+.ev-intro { margin: 18px 0 8px !important; font: 400 clamp(21px, 5.4vw, 26px)/1.4 "Italiana", Georgia, serif; text-wrap: balance; }
+.details {
+  margin: 8px 0 0; width: 100%;
+  display: grid; grid-template-columns: minmax(96px, auto) 1fr;
+  text-align: left; background: var(--card); border: 1px solid var(--line);
+}
+.details dt, .details dd { margin: 0; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.details dt { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); padding-top: 16px; }
+.details dt:last-of-type, .details dd:last-of-type { border-bottom: 0; }
+.map-link {
+  margin-top: 14px; color: var(--title);
+  font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+  text-underline-offset: 5px;
+}
+
+/* ---------- Réponse ---------- */
+.deadline { color: var(--soft); margin-bottom: 8px !important; }
+form.rsvp { width: 100%; display: grid; gap: 12px; text-align: left; }
+fieldset { margin: 0; border: 1px solid var(--line); background: var(--card); padding: 14px 16px 16px; display: grid; gap: 10px; }
+legend { padding: 0 6px; font-weight: 500; color: var(--title); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice span { display: block; text-align: center; padding: 12px 6px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-size: 15px; }
+.choice input:checked + span { background: var(--accent); border-color: var(--accent); color: #f7f2e8; }
+.choice input:focus-visible + span { outline: 2px solid var(--title); outline-offset: 2px; }
+.field { font-weight: 500; color: var(--title); margin-top: 4px; }
+textarea { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); resize: vertical; }
+textarea:focus-visible { outline: 2px solid var(--accent); }
+.submit, .thanks .link {
+  font: 500 14px "Jost", sans-serif; letter-spacing: .14em; text-transform: uppercase;
+  padding: 16px; border: 0; cursor: pointer;
+  background: var(--title); color: var(--bg);
+}
+.submit:disabled { opacity: .6; cursor: wait; }
+.thanks { display: grid; gap: 8px; justify-items: center; padding: 26px; width: 100%; background: var(--card); border: 1px solid var(--line); }
+.thanks-title { font: 400 44px/1 "Italiana", Georgia, serif; color: var(--title); }
+.thanks .link { background: none; color: var(--title); text-decoration: underline; text-underline-offset: 4px; padding: 8px; }
+.sign { font: 400 30px "Pinyon Script", cursive; color: var(--accent); }
+.error { color: var(--error); }
+body[data-page="h"] .error, body[data-page="s"] .error { color: #f0a58c; }
+
+/* ---------- Navigation ---------- */
+.nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: linear-gradient(to top, var(--bg) 55%, transparent);
+}
+.nav-btn {
+  background: none; border: 0; cursor: pointer; padding: 10px 8px;
+  font: 400 13px "Jost", sans-serif; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--title);
+}
+.nav-btn:focus-visible { outline: 2px solid var(--accent); }
+.dots { display: flex; gap: 8px; }
+.dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background .3s, transform .3s; }
+.dots span.on { background: var(--accent); transform: scale(1.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page, .cap, .cinema, body { transition: none !important; }
+}

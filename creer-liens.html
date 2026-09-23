@@ -38,7 +38,7 @@
   <form id="new" class="panel" novalidate>
     <h2>Nouvel invité</h2>
     <label class="field" for="name">Nom affiché sur l'invitation</label>
-    <input type="text" id="name" placeholder="Ex. : Famille Cohen, ou Sarah et Yoni" maxlength="80">
+    <input type="text" id="name" placeholder="Ex. : Sarah & Yoni" maxlength="80">
     <p class="field">Invité(e)(s) à :</p>
     <div class="checks" id="checks"></div>
     <p id="err" class="error" hidden></p>
@@ -92,7 +92,7 @@ function render() {
 
     const wa = document.createElement("a");
     wa.textContent = "Envoyer par WhatsApp"; wa.target = "_blank"; wa.rel = "noopener";
-    wa.href = "https://wa.me/?text=" + encodeURIComponent("Emma et David ont la joie de vous inviter à leur mariage 💍\n" + url);
+    wa.href = "https://wa.me/?text=" + encodeURIComponent("Emma & David ont la joie de vous inviter à leur mariage 💍\n" + url);
 
     const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Retirer";
     del.addEventListener("click", () => { const l = load(); l.splice(idx, 1); save(l); render(); });

@@ -7,62 +7,31 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="app.css">
 </head>
-<body class="intro-open">
+<body data-page="cover">
 
-<div id="intro" class="intro" role="dialog" aria-label="Ouverture de l'invitation">
-  <canvas id="scene" aria-hidden="true"></canvas>
-  <div class="intro-text" id="intro-text">
-    <p class="bh">ב״ה</p>
-    <p class="intro-guest" id="intro-guest"></p>
-    <p class="intro-names">Emma <em>&amp;</em> David</p>
-    <p class="intro-place">Cohav Ayam · Août 2027</p>
-    <button type="button" id="open">Ouvrir l'invitation</button>
-  </div>
-  <button type="button" id="skip" class="skip">Passer</button>
+<div id="cinema" class="cinema in" aria-hidden="true">
+  <canvas id="cine-canvas"></canvas>
+  <div id="cine-caption" class="cine-caption"></div>
 </div>
 
-<main class="wrap">
+<button type="button" id="sound" class="sound" aria-label="Mettre la musique">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/><path class="mute" d="M3 3l18 18" stroke="currentColor" stroke-width="1.6"/></svg>
+</button>
 
-  <header class="hero">
-    <p class="bh">ב״ה</p>
-    <p class="eyebrow">Avec la bénédiction de leurs familles</p>
-    <h1><span>Emma</span><em>&amp;</em><span>David</span></h1>
-    <p class="lead">ont la joie de vous convier à leur mariage</p>
-    <p class="guest" id="guest" hidden></p>
-    <p class="when">Août 2027 · Israël</p>
-  </header>
+<main id="pages"></main>
 
-  <section id="events" class="events" aria-label="Les célébrations"></section>
-
-  <section id="rsvp" class="rsvp" hidden>
-    <h2>Votre réponse</h2>
-    <p class="deadline">Merci de répondre avant le <strong>jeudi 15 juillet 2027</strong>.</p>
-    <form id="rsvp-form" novalidate>
-      <div id="questions" class="questions"></div>
-      <label class="field" for="message">Un petit mot pour les mariés <span>(facultatif)</span></label>
-      <textarea id="message" rows="3" maxlength="500"></textarea>
-      <p id="form-error" class="error" hidden></p>
-      <button type="submit" id="submit">Envoyer ma réponse</button>
-    </form>
-    <div id="thanks" class="thanks" hidden>
-      <p class="thanks-title">Merci !</p>
-      <p id="thanks-text">Votre réponse a bien été envoyée.</p>
-      <button type="button" id="edit" class="link">Modifier ma réponse</button>
-    </div>
-  </section>
-
-  <section id="no-invite" class="no-invite" hidden>
-    <p>Cette page s'ouvre avec le lien personnel que vous avez reçu.<br>Si vous l'avez perdu, demandez-le à Emma ou David.</p>
-  </section>
-
-  <footer class="foot">Emma &amp; David · 2027</footer>
-</main>
+<nav id="nav" class="nav" hidden>
+  <button type="button" id="prev" class="nav-btn">‹ Retour</button>
+  <div id="dots" class="dots" aria-hidden="true"></div>
+  <button type="button" id="next" class="nav-btn">Suivant ›</button>
+</nav>
 
 <script src="config.js"></script>
-<script src="intro.js"></script>
-<script src="invitation.js"></script>
+<script src="music.js"></script>
+<script src="cinema.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

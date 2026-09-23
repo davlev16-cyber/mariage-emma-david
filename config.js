@@ -2,17 +2,21 @@
 // À remplir après l'étape Google (script : google-script.gs).
 const SCRIPT_URL = "";
 
-// Les célébrations. Modifiez les textes ici (horaires, adresses, programme...).
+// Musique : laissez vide pour la mélodie composée par le site,
+// ou indiquez un fichier MP3 (dont vous avez les droits), ex. "musique.mp3".
+const MUSIC_URL = "";
+
+// Les célébrations, dans l'ordre. Modifiez les textes ici.
 const EVENTS = {
   h: {
     name: "Henné",
-    page: "henne.html",
+    tagline: "Beach Party",
     date: "Dimanche 15 août 2027",
+    shortDate: "Dim. 15 août",
     place: "Hilton Beach",
     city: "Tel Aviv",
-    time: "Horaire communiqué prochainement",
     map: "Hilton Beach Tel Aviv",
-    intro: "Une soirée de couleurs, de musique et de traditions, pour ouvrir les festivités en famille, au bord de la mer.",
+    intro: "Pieds dans le sable et henné sur les mains : une soirée de musique, de couleurs et de traditions au bord de la mer pour ouvrir les festivités.",
     details: [
       ["Lieu", "Hilton Beach, Tel Aviv"],
       ["Horaire", "Communiqué prochainement"],
@@ -21,13 +25,13 @@ const EVENTS = {
   },
   p: {
     name: "Houppa",
-    page: "houppa.html",
+    tagline: "Face à la mer",
     date: "Mardi 17 août 2027",
+    shortDate: "Mar. 17 août",
     place: "Cohav Ayam",
     city: "Césarée",
-    time: "Horaire communiqué prochainement",
     map: "Kochav Hayam Caesarea",
-    intro: "Emma et David s'uniront sous la houppa, face à la mer, entourés de ceux qu'ils aiment.",
+    intro: "Emma & David s'uniront sous la houppa, face à la Méditerranée, entourés de ceux qu'ils aiment.",
     details: [
       ["Lieu", "Cohav Ayam, Césarée"],
       ["Horaire", "Communiqué prochainement"],
@@ -37,11 +41,11 @@ const EVENTS = {
   },
   s: {
     name: "Chabbat",
-    page: "chabbat.html",
-    date: "Vendredi 20 et samedi 21 août 2027",
-    place: "Restaurant Simo et synagogue",
+    tagline: "Chabbat Chalom",
+    date: "Vendredi 20 & samedi 21 août 2027",
+    shortDate: "Ven. 20 & sam. 21 août",
+    place: "Restaurant Simo & synagogue",
     city: "Tel Aviv",
-    time: "Horaires communiqués prochainement",
     map: "Simo restaurant Tel Aviv",
     intro: "Pour clore la semaine, un Chabbat partagé avec les mariés, entre table de fête et prières.",
     details: [
@@ -52,13 +56,13 @@ const EVENTS = {
   }
 };
 
-// Lit l'invitation contenue dans le lien (?i=...). Partagé par toutes les pages.
+// Lit l'invitation contenue dans le lien (?i=...).
 function decodeInvite(code) {
   try {
     const b64 = code.replace(/-/g, "+").replace(/_/g, "/");
     const json = decodeURIComponent(escape(atob(b64)));
     const data = JSON.parse(json);
-    const events = String(data.e || "").split("").filter(k => EVENTS[k]);
+    const events = Object.keys(EVENTS).filter(k => String(data.e || "").includes(k));
     if (!data.n || !events.length) return null;
     return { name: String(data.n), events };
   } catch (e) {
