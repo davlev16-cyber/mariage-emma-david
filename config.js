@@ -23,7 +23,7 @@ const EVENTS = {
     intro: "Emma & David se diront oui",
     details: [
       ["Lieu", "Mairie Bagatelle, Marseille"],
-      ["Horaire", "Communiqué prochainement"]
+      ["Horaire", "14h30"]
     ]
   },
   h: {
@@ -37,7 +37,7 @@ const EVENTS = {
     intro: "",
     details: [
       ["Lieu", "Hilton Beach, Tel Aviv"],
-      ["Horaire", "Communiqué prochainement"]
+      ["Horaire", "16h"]
     ]
   },
   p: {
@@ -51,7 +51,7 @@ const EVENTS = {
     intro: "",
     details: [
       ["Lieu", "Cochav Hayam, Césarée"],
-      ["Horaire", "Communiqué prochainement"]
+      ["Horaire", "17h"]
     ]
   },
   s: {
@@ -65,6 +65,7 @@ const EVENTS = {
     intro: "",
     details: [
       ["Vendredi soir", "Restaurant Simo, Tel Aviv"],
+      ["Horaire", "À l'entrée du Chabbat"],
       ["Samedi", "Synagogue de Tel Aviv"]
     ]
   }
