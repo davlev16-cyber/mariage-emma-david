@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liens d'invitation</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .panel { display: grid; gap: 14px; background: var(--linen); border: 1px solid var(--stone); padding: 22px; }
+  .panel h2 { margin: 0; font: 400 32px/1.1 "Italiana", Georgia, serif; color: var(--kaki-deep); }
+  input[type=text] { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--stone); background: var(--sand); color: var(--ink); }
+  input[type=text]:focus-visible { outline: 2px solid var(--kaki); }
+  .checks { display: grid; gap: 8px; }
+  .checks label { display: flex; gap: 10px; align-items: center; }
+  .checks input { width: 20px; height: 20px; accent-color: var(--kaki); }
+  .list { display: grid; gap: 10px; }
+  .item { display: grid; gap: 8px; border: 1px solid var(--stone); background: var(--linen); padding: 14px 16px; }
+  .item strong { font-weight: 500; color: var(--kaki-deep); }
+  .item .ev { color: var(--muted); font-size: 14px; }
+  .item code { font-size: 12px; word-break: break-all; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .row button, .row a { font-size: 12px; padding: 10px 12px; }
+  .row a { font: 500 12px "Jost", sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--kaki); color: var(--linen); text-decoration: none; }
+  .row .del { background: none; color: var(--error); border: 1px solid var(--stone); }
+  .hint { margin: 0; color: var(--muted); font-size: 15px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Espace des mariés</p>
+    <h1><span>Invitations</span></h1>
+    <p class="lead">Créez un lien personnel pour chaque invité, avec seulement ses dates.</p>
+  </header>
+
+  <form id="new" class="panel" novalidate>
+    <h2>Nouvel invité</h2>
+    <label class="field" for="name">Nom affiché sur l'invitation</label>
+    <input type="text" id="name" placeholder="Ex. : Famille Cohen, ou Sarah et Yoni" maxlength="80">
+    <p class="field">Invité(e)(s) à :</p>
+    <div class="checks" id="checks"></div>
+    <p id="err" class="error" hidden></p>
+    <button type="submit">Créer le lien</button>
+  </form>
+
+  <section class="list" id="list" aria-label="Liens créés"></section>
+  <p class="hint">La liste ci-dessus est gardée seulement dans ce navigateur. Les réponses des invités arrivent dans votre tableau Google Sheets.</p>
+</main>
+
+<script src="config.js"></script>
+<script>
+const base = location.href.replace(/creer-liens\.html.*$/, "");
+
+function encodeInvite(name, keys) {
+  const json = JSON.stringify({ n: name, e: keys.join("") });
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function load() { try { return JSON.parse(localStorage.getItem("invites") || "[]"); } catch (e) { return []; } }
+function save(list) { try { localStorage.setItem("invites", JSON.stringify(list)); } catch (e) {} }
+
+const checks = document.getElementById("checks");
+Object.entries(EVENTS).forEach(([k, ev]) => {
+  const lab = document.createElement("label");
+  const box = document.createElement("input");
+  box.type = "checkbox"; box.value = k; box.id = "ev-" + k; box.checked = true;
+  lab.append(box, document.createTextNode(ev.name + " — " + ev.date));
+  checks.append(lab);
+});
+
+function render() {
+  const list = document.getElementById("list");
+  list.textContent = "";
+  load().forEach((inv, idx) => {
+    const url = base + "?i=" + encodeInvite(inv.name, inv.events);
+    const item = document.createElement("div");
+    item.className = "item";
+    const title = document.createElement("strong"); title.textContent = inv.name;
+    const ev = document.createElement("span"); ev.className = "ev";
+    ev.textContent = inv.events.map(k => EVENTS[k].name).join(" · ");
+    const code = document.createElement("code"); code.textContent = url;
+    const row = document.createElement("div"); row.className = "row";
+
+    const copy = document.createElement("button"); copy.type = "button"; copy.textContent = "Copier le lien";
+    copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(url); copy.textContent = "Copié ✓"; }
+      catch (e) { const r = document.createRange(); r.selectNodeContents(code); getSelection().removeAllRanges(); getSelection().addRange(r); copy.textContent = "Faites Cmd + C"; }
+      setTimeout(() => copy.textContent = "Copier le lien", 2000);
+    });
+
+    const wa = document.createElement("a");
+    wa.textContent = "Envoyer par WhatsApp"; wa.target = "_blank"; wa.rel = "noopener";
+    wa.href = "https://wa.me/?text=" + encodeURIComponent("Emma et David ont la joie de vous inviter à leur mariage 💍\n" + url);
+
+    const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Retirer";
+    del.addEventListener("click", () => { const l = load(); l.splice(idx, 1); save(l); render(); });
+
+    row.append(copy, wa, del);
+    item.append(title, ev, code, row);
+    list.append(item);
+  });
+}
+
+document.getElementById("new").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = document.getElementById("name").value.trim();
+  const keys = [...checks.querySelectorAll("input:checked")].map(b => b.value);
+  const err = document.getElementById("err");
+  if (!name || !keys.length) {
+    err.textContent = !name ? "Indiquez le nom de l'invité." : "Cochez au moins une date.";
+    err.hidden = false; return;
+  }
+  err.hidden = true;
+  const l = load(); l.unshift({ name, events: keys }); save(l);
+  document.getElementById("name").value = "";
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

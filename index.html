@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emma &amp; David</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="intro-open">
+
+<div id="intro" class="intro" role="dialog" aria-label="Ouverture de l'invitation">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="intro-text" id="intro-text">
+    <p class="bh">ב״ה</p>
+    <p class="intro-guest" id="intro-guest"></p>
+    <p class="intro-names">Emma <em>&amp;</em> David</p>
+    <p class="intro-place">Cohav Ayam · Août 2027</p>
+    <button type="button" id="open">Ouvrir l'invitation</button>
+  </div>
+  <button type="button" id="skip" class="skip">Passer</button>
+</div>
+
+<main class="wrap">
+
+  <header class="hero">
+    <p class="bh">ב״ה</p>
+    <p class="eyebrow">Avec la bénédiction de leurs familles</p>
+    <h1><span>Emma</span><em>&amp;</em><span>David</span></h1>
+    <p class="lead">ont la joie de vous convier à leur mariage</p>
+    <p class="guest" id="guest" hidden></p>
+    <p class="when">Août 2027 · Israël</p>
+  </header>
+
+  <section id="events" class="events" aria-label="Les célébrations"></section>
+
+  <section id="rsvp" class="rsvp" hidden>
+    <h2>Votre réponse</h2>
+    <p class="deadline">Merci de répondre avant le <strong>jeudi 15 juillet 2027</strong>.</p>
+    <form id="rsvp-form" novalidate>
+      <div id="questions" class="questions"></div>
+      <label class="field" for="message">Un petit mot pour les mariés <span>(facultatif)</span></label>
+      <textarea id="message" rows="3" maxlength="500"></textarea>
+      <p id="form-error" class="error" hidden></p>
+      <button type="submit" id="submit">Envoyer ma réponse</button>
+    </form>
+    <div id="thanks" class="thanks" hidden>
+      <p class="thanks-title">Merci !</p>
+      <p id="thanks-text">Votre réponse a bien été envoyée.</p>
+      <button type="button" id="edit" class="link">Modifier ma réponse</button>
+    </div>
+  </section>
+
+  <section id="no-invite" class="no-invite" hidden>
+    <p>Cette page s'ouvre avec le lien personnel que vous avez reçu.<br>Si vous l'avez perdu, demandez-le à Emma ou David.</p>
+  </section>
+
+  <footer class="foot">Emma &amp; David · 2027</footer>
+</main>
+
+<script src="config.js"></script>
+<script src="intro.js"></script>
+<script src="invitation.js"></script>
+</body>
+</html>
