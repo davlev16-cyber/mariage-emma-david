@@ -1,5 +1,5 @@
-// Musique du site : une composition originale dans l'esprit de la pop orientale
-// israélienne (mode Hijaz sur ré), jouée directement par le navigateur, sans pub.
+// Musique du site : le fichier MUSIC_URL (config.js) s'il est indiqué, sinon une
+// composition originale d'esprit pop orientale (mode Hijaz sur ré), jouée par le navigateur. Sans pub.
 // Elle tente de démarrer dès l'ouverture ; les téléphones exigent souvent un
 // premier toucher de l'écran, qui la lance alors aussitôt. Le bouton ♪ la coupe.
 
@@ -186,10 +186,9 @@ const Music = (function () {
     if (useYouTube) { ytWant = true; if (ytReady) yt.playVideo(); return; }
     if (started || muted) return;
     if (MUSIC_URL) {
-      started = true;
-      audioEl = new Audio(MUSIC_URL); audioEl.loop = true; audioEl.volume = .6;
-      audioEl.play().catch(() => { started = false; update(); });
-      update(); return;
+      if (!audioEl) { audioEl = new Audio(MUSIC_URL); audioEl.loop = true; audioEl.volume = .75; audioEl.preload = "auto"; }
+      audioEl.play().then(() => { started = true; update(); }).catch(() => { started = false; update(); });
+      return;
     }
     startSynth();
   }
@@ -232,7 +231,7 @@ const Music = (function () {
   };
   GESTURES.forEach(t => addEventListener(t, first, true));
   addEventListener("load", () => {
-    if (YOUTUBE_ID || MUSIC_URL) return;
+    if (YOUTUBE_ID) return;
     start();
     if (ctx) ctx.onstatechange = update;
   });
