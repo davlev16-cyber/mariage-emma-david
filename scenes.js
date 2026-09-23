@@ -171,71 +171,13 @@ function createRenderer(canvas) {
       veil("#fffdf9", 1 - phase(t, 0, 1.4));   // seule l'ouverture naît du blanc
     },
 
-    // Mairie : des branches d'olivier poussent dans une lumière dorée, quelques feuilles s'envolent
-    m(t, rt, dt) {
-      const bg = ctx.createLinearGradient(0, 0, 0, h);
-      bg.addColorStop(0, "#f7efdc"); bg.addColorStop(.6, "#f1e2c0"); bg.addColorStop(1, "#e8d3a8");
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-      glow(w * .8, h * .15, Math.max(w, h) * .7, [[0, "rgba(255,244,210,.9)"], [.3, "rgba(255,232,180,.35)"], [1, "rgba(255,232,180,0)"]]);
-      // Rayons de lumière
-      ctx.save(); ctx.globalCompositeOperation = "lighter";
-      for (let i = 0; i < 5; i++) {
-        const x = w * (.35 + i * .16) + Math.sin(rt * .2 + i) * 10;
-        ctx.fillStyle = "rgba(255,240,200,.05)";
-        ctx.beginPath(); ctx.moveTo(x, -10); ctx.lineTo(x + w * .08, -10); ctx.lineTo(x - w * .35, h); ctx.lineTo(x - w * .43, h); ctx.fill();
-      }
-      ctx.restore();
-      // Poussière dorée
-      st.dust.forEach(d => {
-        const a = (.25 + .35 * Math.sin(rt * d.sp * 3 + d.ph));
-        ctx.fillStyle = "rgba(200,165,90," + Math.max(0, a).toFixed(3) + ")";
-        ctx.beginPath(); ctx.arc(d.x * w + Math.sin(rt * .3 + d.ph) * 8, ((d.y - rt * d.sp * .015) % 1 + 1) % 1 * h, d.s, 0, 6.283); ctx.fill();
-      });
-      // Branches
-      st.branches.forEach(br => {
-        const k = easeIO((t - br.d) / 2.6);
-        if (k <= 0) return;
-        const P = u => {
-          const [a0, a1, a2, a3] = br.p, v = 1 - u;
-          return [v*v*v*a0[0] + 3*v*v*u*a1[0] + 3*v*u*u*a2[0] + u*u*u*a3[0], v*v*v*a0[1] + 3*v*v*u*a1[1] + 3*v*u*u*a2[1] + u*u*u*a3[1]];
-        };
-        ctx.lineCap = "round"; ctx.strokeStyle = "#6f5d40";
-        const steps = 40;
-        for (let i = 0; i < steps * k; i++) {
-          const u0 = i / steps, u1 = Math.min(k, (i + 1) / steps), p0 = P(u0), p1 = P(u1);
-          ctx.lineWidth = br.wd * (1 - u0 * .75);
-          ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-        }
-        br.leaves.forEach(lf => {
-          const g = ease((k - lf.u) / .15);
-          if (g <= 0) return;
-          const p = P(lf.u), q = P(Math.min(1, lf.u + .01)), ang = Math.atan2(q[1] - p[1], q[0] - p[0]) + lf.side * lf.spread;
-          const sway = Math.sin(rt * 1.1 + lf.u * 9) * .06, L = lf.L * g;
-          ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(ang + sway);
-          ctx.fillStyle = lf.c;
-          ctx.beginPath(); ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(L * .5, -L * .2, L, 0); ctx.quadraticCurveTo(L * .5, L * .2, 0, 0); ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,240,.35)"; ctx.lineWidth = .8;
-          ctx.beginPath(); ctx.moveTo(L * .08, 0); ctx.lineTo(L * .9, 0); ctx.stroke();
-          ctx.restore();
-          if (lf.olive) {
-            const o = ease((t - br.d - 2.2 - lf.u) / .6);
-            if (o > 0) {
-              ctx.fillStyle = lf.olive;
-              ctx.beginPath(); ctx.ellipse(p[0] + Math.cos(ang + 1.6) * L * .18, p[1] + Math.sin(ang + 1.6) * L * .18, L * .1 * o, L * .14 * o, ang, 0, 6.283); ctx.fill();
-            }
-          }
-        });
-      });
-      // Feuilles qui s'envolent
-      st.flying.forEach(f => {
-        f.x += (f.vx + Math.sin(rt + f.ph) * 12) * dt; f.y += f.vy * dt; f.r += f.vr * dt;
-        if (f.y > h + 30) { f.y = -30; f.x = Math.random() * w; }
-        ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.r);
-        ctx.globalAlpha = .75 * phase(t, 1.5, 1.5); ctx.fillStyle = "#93a06d";
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(f.L * .5, -f.L * .2, f.L, 0); ctx.quadraticCurveTo(f.L * .5, f.L * .2, 0, 0); ctx.fill();
-        ctx.restore(); ctx.globalAlpha = 1;
-      });
+    // Mairie : un fond écru tout simple, avec une lumière douce
+    m() {
+      ctx.fillStyle = "#f3ecdd"; ctx.fillRect(0, 0, w, h);
+      glow(w / 2, h * .42, Math.max(w, h) * .75, [[0, "rgba(255,252,244,.85)"], [1, "rgba(255,252,244,0)"]]);
+      const v = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .4, w / 2, h / 2, Math.max(w, h) * .8);
+      v.addColorStop(0, "rgba(200,185,150,0)"); v.addColorStop(1, "rgba(200,185,150,.18)");
+      ctx.fillStyle = v; ctx.fillRect(0, 0, w, h);
     },
 
     h(t, rt, dt) {
@@ -387,23 +329,6 @@ function createRenderer(canvas) {
       const W = Math.min(w * .34, 250);
       const geo = houppaGeo({ W, H: Math.min(h * .19, W * .85), ground: h * .6 });
       st = { geo, flowers: houppaFlowers(geo), sparkles: makeSparkles(50) };
-    } else if (name === "m") {
-      seed = 21;
-      const leafCols = ["#7d8a5a", "#93a06d", "#a9b387", "#b8c0a0", "#87945f"];
-      const mk = (pts, d, wd, n) => ({ d, wd, p: pts.map(([x, y]) => [x * w, y * h]),
-        leaves: Array.from({ length: n }, (_, i) => ({
-          u: (i + 1) / (n + 1), side: i % 2 ? 1 : -1, spread: .5 + rand() * .35,
-          L: Math.min(w, h) * .075 * (.7 + rand() * .5) * (1 - (i / n) * .35),
-          c: leafCols[Math.floor(rand() * leafCols.length)], olive: i % 4 === 2 ? (rand() < .5 ? "#5b5f3a" : "#4b3a4a") : null })) });
-      st = {
-        branches: [
-          mk([[-.05, .52], [.25, .4], [.45, .6], [.78, .5]], .2, 7, 22),
-          mk([[1.05, .9], [.75, 1], [.6, .74], [.3, .8]], .8, 6, 18),
-          mk([[1.05, .3], [.9, .27], [.85, .42], [.66, .38]], 1.4, 4, 10)
-        ],
-        dust: Array.from({ length: 50 }, () => ({ x: Math.random(), y: Math.random(), s: .6 + Math.random() * 1.6, sp: .2 + Math.random() * .6, ph: Math.random() * 6.28 })),
-        flying: Array.from({ length: 6 }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: -6 + Math.random() * 12, vy: 18 + Math.random() * 20, r: Math.random() * 6, vr: -.8 + Math.random() * 1.6, L: 12 + Math.random() * 10, ph: Math.random() * 6 }))
-      };
     } else if (name === "fin") {
       st = { sparkles: makeSparkles(80) };
     } else if (name === "h") {

@@ -88,8 +88,9 @@
 
   function buildEvent(p, k) {
     const ev = EVENTS[k];
-    p.append(el("p", "eyebrow", "Emma & David"), el("h2", "ev-title", ev.name), el("p", "ev-tag", ev.tagline),
-      el("p", "ev-date", ev.date), el("p", "ev-place", ev.place + " · " + ev.city), el("p", "ev-intro", ev.intro));
+    // Peu de texte : titre, date, une phrase éventuelle, puis le lieu et l'horaire écrits à la main
+    p.append(el("h2", "ev-title", ev.name), el("p", "ev-tag", ev.tagline), el("p", "ev-date", ev.date));
+    if (ev.intro) p.append(el("p", "ev-intro", ev.intro));
     const list = el("ul", "hand");
     ev.details.forEach(([a, b]) => {
       const li = el("li");
@@ -176,7 +177,7 @@
     const caps = {
       m: [["Mairie", "title", 1.6], ["Mariage civil", "script", 2.1], ["19 juillet · Mairie Bagatelle, Marseille", "small", 2.6]],
       h: [["Henné", "title", 1.6], ["Beach Party", "script", 2.1], ["15 août · Hilton Beach, Tel Aviv", "small", 2.6]],
-      p: [["Houppa", "title", 1.6], ["Face à la mer", "script", 2.1], ["17 août · Cohav Ayam, Césarée", "small", 2.6]],
+      p: [["Houppa", "title", 1.6], ["Face à la mer", "script", 2.1], ["17 août · Cochav Hayam, Césarée", "small", 2.6]],
       s: [["Chabbat", "title", 2.6], ["Chabbat Hatan", "script", 3.1], ["20 & 21 août · Tel Aviv", "small", 3.6]]
     };
     invite.events.forEach(k => {
@@ -282,13 +283,26 @@
     return Math.max(120, innerHeight / 3.2);
   }
 
+  // Pause de lecture : le défilement s'arrête quelques secondes sur chaque page,
+  // le texte bien centré à l'écran, avant de reprendre.
+  const READ = 7000;
+  const readStops = () => [...document.querySelectorAll(".content")]
+    .filter(sec => sec.id !== "s-rsvp")
+    .map(sec => sec.offsetTop + Math.max(0, (sec.offsetHeight - innerHeight) / 2));
+  const reached = new Set();
+
   function autoScroll(now) {
     const dt = last ? Math.min(.05, (now - last) / 1000) : 0; last = now;
     if (!opened || stopped || now < pausedUntil) { pos = scrollY; return; }
     const target = stopAt();
     if (scrollY >= target - 1) { pos = scrollY; return; }
     if (Math.abs(pos - scrollY) > 4) pos = scrollY;
-    pos = Math.min(target, pos + speedHere() * dt);
+    let next = Math.min(target, pos + speedHere() * dt);
+    for (const y of readStops()) {
+      const key = Math.round(y);
+      if (!reached.has(key) && pos < y && next >= y) { next = y; reached.add(key); pausedUntil = now + READ; break; }
+    }
+    pos = next;
     window.scrollTo(0, pos);
   }
 

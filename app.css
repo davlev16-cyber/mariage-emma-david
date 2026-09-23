@@ -21,7 +21,7 @@
 
 /* Chaque page est posée sur son décor : couleurs du texte et halo doux (--scrim) pour la lisibilité */
 .t-cover { --scrim: rgba(251, 247, 238, .82); }
-/* Mairie · mariage civil : olivier et lumière dorée */
+/* Mairie · mariage civil : fond écru, texte olive et or */
 .t-m { --scrim: rgba(251, 246, 234, .84); --card: #f8f2e4; --text: #2f3226; --title: #4f5634; --accent: #a08a4a; --line: #d9cfb4; --soft: #66684f; }
 /* Henné · Beach Party : bordeaux et or */
 .t-h { --scrim: rgba(70, 14, 26, .62); --card: rgba(106, 37, 51, .7); --text: #f8e8e1; --title: #fff3ea; --accent: #efc88a; --line: rgba(255, 220, 200, .35); --soft: #f0d2ca; color-scheme: dark; }

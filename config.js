@@ -20,7 +20,7 @@ const EVENTS = {
     place: "Mairie Bagatelle",
     city: "Marseille",
     map: "Mairie Bagatelle Marseille",
-    intro: "Emma & David se diront un premier « oui » officiel devant M. le Maire, à Marseille, entourés de leurs proches.",
+    intro: "Emma & David se diront oui",
     details: [
       ["Lieu", "Mairie Bagatelle, Marseille"],
       ["Horaire", "Communiqué prochainement"]
@@ -34,7 +34,7 @@ const EVENTS = {
     place: "Hilton Beach",
     city: "Tel Aviv",
     map: "Hilton Beach Tel Aviv",
-    intro: "Pieds dans le sable et henné sur les mains : une soirée de musique, de couleurs et de traditions au bord de la mer pour ouvrir les festivités.",
+    intro: "",
     details: [
       ["Lieu", "Hilton Beach, Tel Aviv"],
       ["Horaire", "Communiqué prochainement"]
@@ -45,14 +45,13 @@ const EVENTS = {
     tagline: "Face à la mer",
     date: "Mardi 17 août 2027",
     shortDate: "Mar. 17 août",
-    place: "Cohav Ayam",
+    place: "Cochav Hayam",
     city: "Césarée",
-    map: "Kochav Hayam Caesarea",
-    intro: "Emma & David s'uniront sous la houppa, entourés de ceux qu'ils aiment.",
+    map: "Cochav Hayam Césarée",
+    intro: "",
     details: [
-      ["Lieu", "Cohav Ayam, Césarée"],
-      ["Horaire", "Communiqué prochainement"],
-      ["Déroulé", "Houppa, puis réception et soirée"]
+      ["Lieu", "Cochav Hayam, Césarée"],
+      ["Horaire", "Communiqué prochainement"]
     ]
   },
   s: {
@@ -63,11 +62,10 @@ const EVENTS = {
     place: "Restaurant Simo & synagogue",
     city: "Tel Aviv",
     map: "Simo restaurant Tel Aviv",
-    intro: "Pour clore la semaine, un Chabbat partagé avec les mariés, entre table de fête et prières.",
+    intro: "",
     details: [
-      ["Vendredi soir", "Dîner de Chabbat au restaurant Simo, Tel Aviv"],
-      ["Samedi", "Office à la synagogue de Tel Aviv"],
-      ["Horaires", "Communiqués prochainement"]
+      ["Vendredi soir", "Restaurant Simo, Tel Aviv"],
+      ["Samedi", "Synagogue de Tel Aviv"]
     ]
   }
 };
