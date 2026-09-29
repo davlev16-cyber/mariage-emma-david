@@ -70,9 +70,17 @@
     return inner;
   }
 
+  // Monogramme E&D en dorure à chaud (voir .mono / .foil dans app.css)
+  function mono(cls) {
+    const m = el("div", "mono " + cls); m.setAttribute("aria-hidden", "true");
+    m.append(el("span", "foil"));
+    return m;
+  }
+  const rule = () => { const r = el("span", "rule"); r.setAttribute("aria-hidden", "true"); return r; };
+
   function buildCover(p) {
     const bh = el("p", "bh", "ב״ה"); bh.lang = "he";
-    p.append(bh, el("p", "eyebrow", "Avec la bénédiction de leurs familles"),
+    p.append(bh, mono("mono-cover"), el("p", "eyebrow", "Avec la bénédiction de leurs familles"),
       el("h1", "names", "Emma & David"),
       el("p", "lead", "ont la joie de vous convier à leur mariage"),
       el("p", "guest", invite.name || null));
@@ -89,7 +97,7 @@
   function buildEvent(p, k) {
     const ev = EVENTS[k];
     // Peu de texte : titre, date, une phrase éventuelle, puis le lieu et l'horaire écrits à la main
-    p.append(el("h2", "ev-title", ev.name), el("p", "ev-tag", ev.tagline), el("p", "ev-date", ev.date));
+    p.append(el("h2", "ev-title", ev.name), el("p", "ev-tag", ev.tagline), rule(), el("p", "ev-date", ev.date));
     if (ev.intro) p.append(el("p", "ev-intro", ev.intro));
     const list = el("ul", "hand");
     ev.details.forEach(([a, b]) => {
@@ -136,7 +144,7 @@
     const thanks = el("div", "thanks"); thanks.hidden = true;
     const tt = el("p", "thanks-text", "Votre réponse a bien été envoyée.");
     const edit = el("button", "link", "Modifier ma réponse"); edit.type = "button";
-    thanks.append(el("p", "thanks-title", "Merci !"), tt, edit, el("p", "sign", "Emma & David"));
+    thanks.append(mono("mono-thanks"), el("p", "thanks-title", "Merci !"), tt, edit, el("p", "sign", "Emma & David"));
     p.append(form, thanks);
 
     const key = "rsvp:" + code;
@@ -234,13 +242,34 @@
   const easeIO = v => { v = clamp(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
   const BLEND = .45;   // part de la cinématique pendant laquelle les décors se mélangent
 
+  // Positions des sections mises en cache (aucune lecture de mise en page dans la boucle)
+  let L = { ch: [], vh: innerHeight };
+  function measure() {
+    L = { vh: innerHeight, ch: chapters.map(c => ({ top: c.sec.offsetTop, span: Math.max(1, c.sec.offsetHeight - innerHeight) })) };
+  }
+  measure();
+  addEventListener("resize", measure);
+  addEventListener("load", measure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(story);
+
+  // Défilement lissé : la cinématique suit la position réelle en douceur, sans saccade
+  let sy = scrollY, lastFrame = 0;
+  const lastCap = new WeakMap();
+
   function frame(now) {
-    const rt = now / 1000, y = scrollY;
+    const rt = now / 1000, dtf = lastFrame ? Math.min(.05, (now - lastFrame) / 1000) : 1 / 60;
+    lastFrame = now;
+    const target = scrollY;
+    sy += (target - sy) * (reduce ? 1 : 1 - Math.pow(1 - .14, dtf * 60));
+    if (Math.abs(target - sy) < .3) sy = target;
+    const y = sy;
+
     // Chapitre courant : le dernier dont la cinématique a commencé
     let i = 0;
-    chapters.forEach((c, j) => { if (y >= c.sec.offsetTop - 1) i = j; });
-    const c = chapters[i], span = c.sec.offsetHeight - innerHeight;
-    const p = clamp((y - c.sec.offsetTop) / span);
+    L.ch.forEach((c, j) => { if (y >= c.top - 1) i = j; });
+    const c = chapters[i], lc = L.ch[i];
+    const p = clamp((y - lc.top) / lc.span);
     const t = p * SCENES[c.name].duration;
 
     sctx.clearRect(0, 0, stage.width, stage.height);
@@ -255,12 +284,15 @@
 
     chapters.forEach((ch, j) => {
       if (Math.abs(j - i) > 1) return;
-      const pj = clamp((y - ch.sec.offsetTop) / (ch.sec.offsetHeight - innerHeight));
+      const pj = clamp((y - L.ch[j].top) / L.ch[j].span);
       const tj = pj * SCENES[ch.name].duration;
       ch.caps.forEach(cap => {
         const e = 1 - Math.pow(1 - clamp((tj - Number(cap.dataset.at)) / 1), 3);
-        cap.style.opacity = e.toFixed(3);
-        cap.style.transform = "translateY(" + ((1 - e) * 14).toFixed(1) + "px)";
+        const q = Math.round(e * 400) / 400;
+        if (lastCap.get(cap) === q) return;          // n'écrit dans le DOM que si ça change
+        lastCap.set(cap, q);
+        cap.style.opacity = q;
+        cap.style.transform = "translate3d(0," + ((1 - q) * 14).toFixed(2) + "px,0)";
       });
     });
     autoScroll(now);
@@ -284,9 +316,9 @@
 
   function speedHere() {
     const y = scrollY;
-    for (const c of chapters) {
-      const top = c.sec.offsetTop, span = c.sec.offsetHeight - innerHeight;
-      if (y >= top - 2 && y < top + span) return span / SCENES[c.name].duration * FAST;
+    for (let j = 0; j < chapters.length; j++) {
+      const { top, span } = L.ch[j];
+      if (y >= top - 2 && y < top + span) return span / SCENES[chapters[j].name].duration * FAST;
     }
     return Math.max(120, innerHeight / 3.2);
   }

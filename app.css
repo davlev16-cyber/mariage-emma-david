@@ -127,7 +127,6 @@ body.locked .tap-hint { display: none; }
 /* ---------- Pages de texte ---------- */
 /* ---------- Pages de texte, posées sur le décor ---------- */
 .content { color: var(--text); }
-.inner { padding-bottom: 46vh; }
 .inner {
   max-width: 600px; min-height: 100vh;
   margin: 0 auto;
@@ -211,3 +210,71 @@ textarea:focus-visible { outline: 2px solid var(--accent); }
   .cap { transition: none !important; }
 }
 .guest:empty, .gate-guest:empty { display: none; }
+
+/* =====================================================================
+   Matières nobles : dorure à chaud, papier coton, filets d'or, gaufrage
+   ===================================================================== */
+:root {
+  --gold: linear-gradient(115deg, #7c5c22 0%, #c9a24f 18%, #f7e7b4 30%, #d7b264 40%, #8f6d2c 55%, #cfae62 72%, #fbf0c8 84%, #a88534 100%);
+}
+
+/* Monogramme E&D : la forme vient du logo (masque), la matière est de l'or brossé
+   qui accroche la lumière. Le reflet glisse lentement. */
+.mono { display: grid; place-items: center; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .7)) drop-shadow(0 3px 6px rgba(90, 66, 24, .22)); }
+.mono .foil {
+  display: block; width: 100%; aspect-ratio: 900 / 889;
+  background: var(--gold); background-size: 260% 100%;
+  -webkit-mask: url("monogramme-masque.png") center / contain no-repeat;
+          mask: url("monogramme-masque.png") center / contain no-repeat;
+  animation: foil-sheen 9s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+@keyframes foil-sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.mono-gate { width: clamp(118px, 34vw, 180px); margin: 6px 0 18px; }
+.mono-cover { width: clamp(84px, 24vw, 120px); margin: 2px 0 10px; }
+.mono-thanks { width: 64px; margin-bottom: 4px; }
+
+/* Papier coton : grain très fin posé sur toute l'invitation */
+.grain {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  background: url("grain-papier.png") repeat; background-size: 240px 240px;
+  opacity: .5;
+}
+.gate { background:
+  url("grain-papier.png") repeat 0 0 / 240px 240px,
+  radial-gradient(ellipse at 50% 42%, #fffdf8 0%, #f8f1e2 55%, #eee3cb 100%); }
+
+/* Gaufrage (letterpress) : les grands noms semblent imprimés en creux dans le papier */
+.gate-names, .t-cover .names, .t-m .ev-title, .t-p .ev-title, .t-s .ev-title, .t-rsvp .ev-title {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .75), 0 -1px 0 rgba(60, 50, 25, .08);
+}
+.gate-names { font-size: clamp(44px, 12vw, 72px); letter-spacing: .01em; }
+.gate-names em { color: #a88534; }
+.gate .bh, .t-cover .bh { color: #a88534; letter-spacing: .08em; }
+
+/* Filet d'or fin avec un losange, sous les titres des célébrations */
+.rule {
+  display: block; position: relative; width: 120px; height: 9px; margin: 8px auto 2px;
+}
+.rule::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 4px; height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a24f 25%, #f3dfa6 50%, #c9a24f 75%, transparent);
+}
+.rule::after {
+  content: ""; position: absolute; left: 50%; top: 1px; width: 7px; height: 7px;
+  transform: translateX(-50%) rotate(45deg); background: var(--gold); background-size: 200% 100%;
+  box-shadow: 0 0 0 2px var(--scrim, transparent);
+}
+.t-h .rule::before { background: linear-gradient(90deg, transparent, #e3bb7e 25%, #fff0cc 50%, #e3bb7e 75%, transparent); }
+
+/* Bords de page en or très fin sur la couverture et la réponse (comme une carte bordée) */
+.t-cover .inner::after, .t-rsvp .inner::after {
+  content: ""; position: absolute; inset: 22px; pointer-events: none;
+  border: 1px solid rgba(201, 162, 79, .35); outline: 1px solid rgba(201, 162, 79, .18); outline-offset: 5px;
+}
+.t-cover .inner, .t-rsvp .inner { position: relative; }
+
+/* Boutons et choix : finitions plus fines */
+.choice span { border-radius: 999px; transition: background .35s ease, color .35s ease, border-color .35s ease; }
+.submit { border-radius: 999px; letter-spacing: .18em; }
+
+@media (prefers-reduced-motion: reduce) { .mono .foil { animation: none; } }

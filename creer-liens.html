@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Espace des mariés</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <meta name="robots" content="noindex">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=1790171223">
+<link rel="stylesheet" href="style.css?v=1790687877">
 <style>
+  .brand { width: 84px; height: auto; margin-bottom: 6px; }
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--stone); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--sand); z-index: 5; padding-top: 8px; }
   .tabs button { flex: 1; background: none; color: var(--muted); padding: 12px 6px; font-size: 12px; border-bottom: 2px solid transparent; }
   .tabs button[aria-selected="true"] { color: var(--kaki-deep); border-bottom-color: var(--kaki-deep); }
@@ -68,6 +70,7 @@
 <body>
 <main class="wrap">
   <header class="hero">
+    <img class="brand" src="monogramme.png" alt="" width="84" height="83">
     <p class="eyebrow">Espace des mariés</p>
     <h1><span>Emma &amp; David</span></h1>
   </header>
@@ -142,7 +145,7 @@
   </section>
 </main>
 
-<script src="config.js?v=1790171223"></script>
+<script src="config.js?v=1790687877"></script>
 <script>
 const base = location.href.replace(/creer-liens\.html.*$/, "");
 const $ = id => document.getElementById(id);
