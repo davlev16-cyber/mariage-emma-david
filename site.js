@@ -62,6 +62,15 @@
     events.append(sec);
   });
 
+  // Illustrations au trait (voir illos.js)
+  document.querySelector("#hero .names").insertAdjacentHTML("beforebegin", ILLOS.hero());
+  invite.events.forEach(k => {
+    const node = document.querySelector("#ev-" + k + " .node");
+    if (ILLOS[k]) node.insertAdjacentHTML("afterend", ILLOS[k]());
+  });
+  document.querySelector("#rsvp .rsvp-title").insertAdjacentHTML("beforebegin", ILLOS.rsvp());
+  prepareIllos(document);
+
   // Prénoms découpés en lettres, qui apparaissent l'une après l'autre
   document.querySelectorAll("[data-split]").forEach((n, j) => {
     const t = n.textContent; n.textContent = "";

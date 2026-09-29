@@ -94,6 +94,28 @@ p { margin: 0; }
 .char { display: inline-block; opacity: 0; transform: translateY(.35em); transition: opacity .9s var(--ease), transform .9s var(--ease); }
 .in .char, .char.in { opacity: 1; transform: none; }
 
+/* ---------- Illustrations au trait ---------- */
+.illo { width: min(240px, 70vw); height: auto; overflow: visible; background: inherit; }
+.hero .illo { width: min(220px, 62vw); margin-bottom: -6px; }
+.rsvp .illo { width: min(180px, 50vw); }
+.event .illo { margin-bottom: 14px; padding: 6px 10px; }
+.illo .ln {
+  fill: none; stroke: var(--kaki); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: var(--len, 400); stroke-dashoffset: var(--len, 400);
+  transition: stroke-dashoffset 2.4s var(--ease) var(--dl, 0s);
+}
+.illo.in .ln { stroke-dashoffset: 0; }
+.illo .ln.soft { stroke: var(--sage-300); stroke-width: .9; }
+.illo .fl { fill: var(--sage-100); stroke: none; opacity: 0; transition: opacity 1.6s ease 1.6s; }
+.illo .olive { fill: var(--kaki); }
+.illo.in .fl { opacity: 1; }
+.illo.in .olive { opacity: .75; }
+.illo .flame { fill: #d9b566; opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; transition: opacity 1s ease 2.2s; }
+.illo.in .flame { opacity: 1; animation: flicker 2.6s ease-in-out 3s infinite; }
+.illo .glow { fill: #f3e3b8; opacity: 0; transition: opacity 1.6s ease 2.4s; }
+.illo.in .glow { opacity: .55; }
+@keyframes flicker { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(.94, 1.07); } 55% { transform: scale(1.04, .95); } 80% { transform: scale(.97, 1.04); } }
+
 /* ---------- Couverture ---------- */
 .hero {
   min-height: 100vh; min-height: 100svh;
@@ -130,6 +152,7 @@ p { margin: 0; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 110px 24px; text-align: center; gap: 12px;
 }
+.event { background: var(--white); }
 .event:nth-child(even) { background: var(--sage-50); }
 .event .node { position: absolute; top: 64px; left: 50%; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--white); border: 1px solid var(--kaki); }
 .event:nth-child(even) .node { background: var(--sage-50); }
@@ -204,6 +227,7 @@ select:focus-visible, textarea:focus-visible { outline: none; border-bottom-colo
 .names-sm { font: 300 56px/1 var(--serif); color: var(--kaki-deep); }
 
 @media (prefers-reduced-motion: reduce) {
+  .illo .ln { stroke-dashoffset: 0; } .illo .fl, .illo .flame { opacity: 1; }
   *, *::before, *::after { animation-duration: .01s !important; animation-delay: 0s !important; transition-duration: .01s !important; }
   [data-reveal], .char { opacity: 1; transform: none; }
 }
