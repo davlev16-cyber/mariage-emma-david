@@ -87,6 +87,9 @@ body.locked .tap-hint { display: none; }
 .gate p { margin: 0; }
 .gate .bh { font-size: 16px; color: #6f6a57; margin-bottom: 10px; }
 .gate-guest { font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: #6f6a57; min-height: 1em; }
+/* Monogramme E&D, discret, sur l'écran d'ouverture */
+.gate-mono { width: clamp(64px, 18vw, 88px); height: auto; margin: 4px 0 14px; opacity: 0; animation: mono-in 1.6s .3s ease-out forwards; }
+@keyframes mono-in { from { opacity: 0; transform: translateY(6px); } to { opacity: .85; transform: none; } }
 .gate-names { font: 400 clamp(56px, 16vw, 104px)/1 "Italiana", "Didot", Georgia, serif; color: #3f4126; margin: 6px 0 !important; }
 .gate-names em { font-style: normal; font-size: .5em; color: #5f6139; }
 .gate-date { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: #5f6139; }
@@ -160,7 +163,7 @@ body.locked .tap-hint { display: none; }
 .hand { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 14px; }
 .hand li { display: grid; gap: 0; }
 .hand .lbl { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
-.hand .val { font: 500 clamp(24px, 6.6vw, 30px)/1.25 "Dancing Script", "Parisienne", cursive; color: var(--title); text-wrap: balance; }
+.hand .val { font: 400 clamp(18px, 4.8vw, 21px)/1.4 "Jost", "Avenir Next", "Helvetica Neue", sans-serif; letter-spacing: .02em; color: var(--title); text-wrap: balance; }
 .map-link {
   margin-top: 14px; color: var(--title);
   font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
