@@ -4,42 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Espace des mariés</title>
-<link rel="icon" type="image/png" href="favicon.png">
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Albert+Sans:wght@300;400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=1790691059">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="style.css?v=1790691317">
 <style>
-  .brand { width: 84px; height: auto; margin-bottom: 6px; }
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--stone); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--sand); z-index: 5; padding-top: 8px; }
-  .tabs button { border-radius: 0; flex: 1; background: none; color: var(--muted); padding: 12px 6px; font-size: 12px; border-bottom: 2px solid transparent; }
+  .tabs button { flex: 1; background: none; color: var(--muted); padding: 12px 6px; font-size: 12px; border-bottom: 2px solid transparent; }
   .tabs button[aria-selected="true"] { color: var(--kaki-deep); border-bottom-color: var(--kaki-deep); }
   .tabs button:hover { background: var(--linen); }
-  .panel { display: grid; gap: 14px; background: var(--linen); border: 1px solid var(--stone); border-radius: 18px; padding: 22px; }
-  .panel h2 { margin: 0; font: 400 30px/1.1 "Cormorant Garamond", Georgia, serif; color: var(--kaki-deep); }
-  input[type=text], input[type=number], input[type=password], select { width: 100%; font: inherit; padding: 11px 14px; border: 1px solid var(--stone); border-radius: 12px; background: var(--sand); color: var(--ink); }
+  .panel { display: grid; gap: 14px; background: var(--linen); border: 1px solid var(--stone); padding: 20px; }
+  .panel h2 { margin: 0; font: 400 30px/1.1 "Italiana", Georgia, serif; color: var(--kaki-deep); }
+  input[type=text], input[type=number], input[type=password], select { width: 100%; font: inherit; padding: 11px 12px; border: 1px solid var(--stone); background: var(--sand); color: var(--ink); }
   input:focus-visible, select:focus-visible { outline: 2px solid var(--kaki); }
   .row2 { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: end; }
   .checks { display: grid; gap: 8px; }
   .checks label { display: flex; gap: 10px; align-items: center; }
   .checks input { width: 20px; height: 20px; accent-color: var(--kaki); }
   .list { display: grid; gap: 10px; }
-  .item { display: grid; gap: 8px; border: 1px solid var(--stone); border-radius: 16px; background: var(--linen); padding: 16px 18px; }
+  .item { display: grid; gap: 8px; border: 1px solid var(--stone); background: var(--linen); padding: 14px 16px; }
   .item strong { font-weight: 500; color: var(--kaki-deep); }
   .muted { color: var(--muted); font-size: 14px; }
   .item code { font-size: 12px; word-break: break-all; color: var(--muted); }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .actions button, .actions a { font-size: 12px; padding: 10px 12px; }
-  .actions a { font: 500 12px "Albert Sans", sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--kaki); color: var(--linen); text-decoration: none; }
+  .actions a { font: 500 12px "Jost", sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--kaki); color: var(--linen); text-decoration: none; }
   button.soft { background: none; color: var(--kaki-deep); border: 1px solid var(--stone); }
   button.del { background: none; color: var(--error); border: 1px solid var(--stone); }
   .hint { margin: 0; color: var(--muted); font-size: 14px; }
   .notice { margin: 0; padding: 14px 16px; border-left: 3px solid var(--kaki); background: var(--linen); font-size: 15px; }
-  .h2 { margin: 0; font: 400 28px "Cormorant Garamond", Georgia, serif; color: var(--kaki-deep); }
+  .h2 { margin: 0; font: 400 28px "Italiana", Georgia, serif; color: var(--kaki-deep); }
   /* Réponses */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-  .stat { background: var(--linen); border: 1px solid var(--stone); border-radius: 16px; padding: 16px; display: grid; gap: 2px; }
+  .stat { background: var(--linen); border: 1px solid var(--stone); padding: 14px; display: grid; gap: 2px; }
   .stat .ev { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--kaki); }
-  .stat .big { font: 400 34px/1 "Cormorant Garamond", Georgia, serif; color: var(--kaki-deep); font-variant-numeric: tabular-nums; }
+  .stat .big { font: 400 34px/1 "Italiana", Georgia, serif; color: var(--kaki-deep); font-variant-numeric: tabular-nums; }
   .stat .sub { font-size: 13px; color: var(--muted); }
   .badges { display: flex; flex-wrap: wrap; gap: 6px; }
   .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--stone); color: var(--muted); }
@@ -51,7 +49,7 @@
   .seg button { background: var(--linen); color: var(--kaki-deep); border: 1px solid var(--stone); font-size: 12px; padding: 10px 12px; }
   .seg button[aria-pressed="true"] { background: var(--kaki-deep); color: var(--linen); border-color: var(--kaki-deep); }
   .tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-  .table { background: var(--linen); border: 1px solid var(--stone); border-radius: 16px; padding: 16px; display: grid; gap: 10px; align-content: start; }
+  .table { background: var(--linen); border: 1px solid var(--stone); padding: 14px; display: grid; gap: 10px; align-content: start; }
   .table.full { border-color: #b9c79a; }
   .table.over { border-color: var(--error); }
   .thead { display: grid; grid-template-columns: 1fr 64px; gap: 8px; }
@@ -70,7 +68,6 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <img class="brand" src="monogramme.png" alt="" width="84" height="83">
     <p class="eyebrow">Espace des mariés</p>
     <h1><span>Emma &amp; David</span></h1>
   </header>
@@ -145,7 +142,7 @@
   </section>
 </main>
 
-<script src="config.js?v=1790691059"></script>
+<script src="config.js?v=1790691317"></script>
 <script>
 const base = location.href.replace(/creer-liens\.html.*$/, "");
 const $ = id => document.getElementById(id);

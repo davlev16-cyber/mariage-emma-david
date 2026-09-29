@@ -1,12 +1,11 @@
 :root {
-  /* Espace des mariés : blanc, sauge et kaki (comme l'invitation) */
-  --sand: #ffffff;
-  --linen: #f2f5ee;
-  --kaki: #5c6240;
-  --kaki-deep: #3c4028;
-  --stone: #dfe5d6;
-  --ink: #2d2f24;
-  --muted: #7a7d6c;
+  --sand: #efe7d8;
+  --linen: #f7f2e8;
+  --kaki: #5f6139;
+  --kaki-deep: #3f4126;
+  --stone: #cbbd9f;
+  --ink: #2f2d22;
+  --muted: #6f6a57;
   --error: #9a3b2a;
   color-scheme: light;
 }
@@ -18,7 +17,7 @@ body {
   margin: 0;
   background: var(--sand);
   color: var(--ink);
-  font: 300 17px/1.6 "Albert Sans", "Avenir Next", "Helvetica Neue", sans-serif;
+  font: 300 17px/1.6 "Jost", "Avenir Next", "Helvetica Neue", sans-serif;
 }
 
 .wrap {
@@ -42,7 +41,7 @@ body {
 }
 h1 {
   margin: 12px 0 4px;
-  font: 400 clamp(56px, 16vw, 96px)/.95 "Cormorant Garamond", "Didot", Georgia, serif;
+  font: 400 clamp(56px, 16vw, 96px)/.95 "Italiana", "Didot", Georgia, serif;
   color: var(--kaki-deep);
   display: grid;
   justify-items: center;
@@ -54,7 +53,7 @@ h1 em {
   margin: 6px 0;
 }
 .lead { margin: 8px 0 4px; font-size: 18px; text-wrap: balance; }
-.guest { margin: 0; font: 400 26px/1.2 "Cormorant Garamond", "Didot", Georgia, serif; color: var(--kaki); text-wrap: balance; }
+.guest { margin: 0; font: 400 26px/1.2 "Italiana", "Didot", Georgia, serif; color: var(--kaki); text-wrap: balance; }
 .when { padding-top: 14px; border-top: 1px solid var(--stone); min-width: 160px; }
 
 /* Célébrations */
@@ -68,7 +67,7 @@ h1 em {
 }
 .event h2 {
   margin: 0 0 6px;
-  font: 400 34px/1.1 "Cormorant Garamond", "Didot", Georgia, serif;
+  font: 400 34px/1.1 "Italiana", "Didot", Georgia, serif;
   color: var(--kaki-deep);
 }
 .event .date { font-weight: 500; color: var(--kaki); }
@@ -88,7 +87,7 @@ h1 em {
 .rsvp { display: grid; gap: 12px; }
 .rsvp h2, .thanks-title {
   margin: 0;
-  font: 400 40px/1.1 "Cormorant Garamond", "Didot", Georgia, serif;
+  font: 400 40px/1.1 "Italiana", "Didot", Georgia, serif;
   color: var(--kaki-deep);
   text-align: center;
 }
@@ -130,7 +129,7 @@ textarea {
 }
 textarea:focus-visible { outline: 2px solid var(--kaki); outline-offset: 1px; }
 button {
-  font: 500 15px "Albert Sans", sans-serif;
+  font: 500 15px "Jost", sans-serif;
   letter-spacing: .12em;
   text-transform: uppercase;
   padding: 16px;
@@ -206,7 +205,7 @@ body.intro-open { overflow: hidden; }
 .intro-text .bh { color: var(--kaki-deep); }
 .intro-guest { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--kaki-deep); }
 .intro-names {
-  font: 400 clamp(46px, 13vw, 84px)/1 "Cormorant Garamond", "Didot", Georgia, serif;
+  font: 400 clamp(46px, 13vw, 84px)/1 "Italiana", "Didot", Georgia, serif;
   color: var(--kaki-deep);
 }
 .intro-names em { font-style: normal; font-size: .5em; color: var(--kaki); }
@@ -245,7 +244,7 @@ body.intro-open { overflow: hidden; }
 .event-hero .place { margin: 0; color: var(--muted); }
 .event-intro {
   margin: 0;
-  font: 400 clamp(24px, 6vw, 30px)/1.35 "Cormorant Garamond", "Didot", Georgia, serif;
+  font: 400 clamp(24px, 6vw, 30px)/1.35 "Italiana", "Didot", Georgia, serif;
   text-align: center;
   text-wrap: balance;
   color: var(--title);
@@ -265,7 +264,7 @@ body.intro-open { overflow: hidden; }
   display: block;
   text-align: center;
   padding: 16px;
-  font: 500 14px "Albert Sans", sans-serif;
+  font: 500 14px "Jost", sans-serif;
   letter-spacing: .12em;
   text-transform: uppercase;
   text-decoration: none;
@@ -279,8 +278,3 @@ body.intro-open { overflow: hidden; }
 .others { display: grid; gap: 8px; }
 .page-event .foot, .page-event .no-invite { color: var(--muted); }
 .page-event .no-invite a { color: var(--title); }
-
-/* Finitions épurées : boutons arrondis, titres fins */
-button { border-radius: 999px; }
-h1 { font-weight: 300; }
-.eyebrow { color: #7f9170; letter-spacing: .32em; }
