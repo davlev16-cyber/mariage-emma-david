@@ -110,7 +110,11 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .film.cadre .passer { opacity: 1; }
 .film.fin .passer { opacity: 0; pointer-events: none; }
 
-/* ---------- 3. l'invitation ---------- */
+/* ---------- 3. l'histoire : un plan de cinéma (zone de défilement avec sa carte), puis sa page ---------- */
+.cine { position: relative; height: calc(var(--h, 230) * 1vh); }
+.cine-cadre { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; pointer-events: none; }
+.fin-carte .fin-date { display: block; margin-top: 16px; font: 500 12px/1.6 var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--or-p); }
+
 .invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; }
 body.page .invitation { opacity: 1; visibility: visible; }
 .chap { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; padding: calc(9vh + env(safe-area-inset-top)) 16px 10vh; text-align: center; }
@@ -228,12 +232,17 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .noms-page { display: block; margin: 16px 0 6px; font: 400 clamp(60px, 17vw, 120px)/.95 var(--display); letter-spacing: .02em; }
 .noms-page span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out infinite; }
 .noms-page em { display: block; margin: 4px 0; font: italic 300 .4em/1 var(--serif); color: var(--or-c); }
+.noms-page { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .5)); }
+.noms-page span { text-shadow: none; }
+/* l'invitation et le programme sont posés sur la mer dorée : un voile chaud et sombre derrière le texte */
+#couverture::before { height: 100%; background: linear-gradient(to bottom, rgba(14, 11, 8, .58), rgba(14, 11, 8, .42) 45%, rgba(14, 11, 8, .22) 80%, rgba(14, 11, 8, 0)); }
 .benediction { margin: 0; font: 400 12px/1.8 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: rgba(251, 248, 241, .85); }
 .lead { margin: 12px auto 0; max-width: 19em; font: italic 300 clamp(19px, 4.9vw, 24px)/1.35 var(--serif); text-wrap: balance; }
 .invite-nom { margin: 16px 0 0; font: 400 clamp(24px, 6.2vw, 30px)/1.2 var(--display); color: var(--or-p); text-wrap: balance; }
 .programme { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; }
 .programme li { display: grid; gap: 1px; }
-.quand { margin: 20px 0 0; font: 500 11px var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--or-c); }
+.quand { margin: 20px auto 0; font: 500 11px/1.9 var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--or-c); }
+.quand span { display: block; }
 .echeance { margin: 14px 0 0; font: italic 300 19px var(--serif); color: rgba(51, 53, 31, .85); }
 .echeance strong { font-weight: 500; font-style: normal; }
 .formulaire.vrai { text-align: left; background: rgba(252, 248, 240, .72); border-color: rgba(95, 97, 57, .25); color: #33351f; }
@@ -277,4 +286,6 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .replique.apercu .eyebrow { margin-bottom: 14px; color: #fff4d8; }
 .replique.apercu .noms-film { filter: drop-shadow(0 1px 1px rgba(70, 42, 12, .45)) drop-shadow(0 3px 16px rgba(70, 42, 12, .45)); }
 .replique.apercu .sous { max-width: 16em; margin-left: auto; margin-right: auto; text-wrap: balance; }
-.replique.apercu-date { top: auto; bottom: calc(8.5vh + 10vh); }
+.replique.apercu-date { top: auto; bottom: calc(8.5vh + 10vh); letter-spacing: .24em; }
+.replique.apercu-date > span:nth-child(2) { white-space: nowrap; }
+.replique.apercu-date .ligne { width: 22px; }
