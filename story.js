@@ -249,6 +249,9 @@
       const prev = chapters[i - 1].name;
       blit(sceneImage(prev, SCENES[prev].duration, rt), 1, 1 + .07 * k);
       blit(sceneImage(c.name, t, rt), k, 1.07 - .07 * k);
+      // fondu enchaîné qui passe par un léger voile de lumière
+      const b = Math.sin(Math.PI * k) * .12;
+      if (b > .004) { sctx.globalAlpha = b; sctx.fillStyle = "#fff8ec"; sctx.fillRect(0, 0, stage.width, stage.height); sctx.globalAlpha = 1; }
     } else {
       blit(sceneImage(c.name, t, rt), 1, 1);
     }
@@ -258,9 +261,11 @@
       const pj = clamp((y - ch.sec.offsetTop) / (ch.sec.offsetHeight - innerHeight));
       const tj = pj * SCENES[ch.name].duration;
       ch.caps.forEach(cap => {
-        const e = 1 - Math.pow(1 - clamp((tj - Number(cap.dataset.at)) / 1), 3);
+        // chaque légende arrive en douceur : elle monte, se pose et devient nette
+        const e = 1 - Math.pow(1 - clamp((tj - Number(cap.dataset.at)) / 1.2), 3);
         cap.style.opacity = e.toFixed(3);
-        cap.style.transform = "translateY(" + ((1 - e) * 14).toFixed(1) + "px)";
+        cap.style.transform = "translateY(" + ((1 - e) * 16).toFixed(1) + "px) scale(" + (1.035 - .035 * e).toFixed(4) + ")";
+        cap.style.filter = e > .01 && e < .99 ? "blur(" + ((1 - e) * 6).toFixed(1) + "px)" : "none";
       });
     });
     autoScroll(now);
@@ -312,6 +317,14 @@
     }
     pos = next;
     window.scrollTo(0, pos);
+  }
+
+  // Les pages de texte apparaissent en douceur quand elles arrivent à l'écran
+  const pages = document.querySelectorAll(".content .inner");
+  if (reduce || !("IntersectionObserver" in window)) pages.forEach(n => n.classList.add("vu"));
+  else {
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("vu"); io.unobserve(e.target); } }), { threshold: .12 });
+    pages.forEach(n => io.observe(n));
   }
 
   history.scrollRestoration = "manual";
