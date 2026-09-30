@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emma &amp; David</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14150e">
+<meta property="og:title" content="Emma & David">
+<meta property="og:description" content="Votre invitation · Marseille & Israël · 2027">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://davlev16-cyber.github.io/mariage-emma-david/cinema/apercu.jpg">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400&text=%D7%91%D7%B4%D7%94&display=swap">
+<link rel="stylesheet" href="cinema.css?v=1790784556">
+</head>
+<body class="verrou">
+
+<canvas class="decor" id="decor-a" aria-hidden="true"></canvas>
+<canvas class="decor" id="decor-b" aria-hidden="true"></canvas>
+<div class="voile" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="cire" cx="38%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#8a9160"/><stop offset=".45" stop-color="#5c6239"/><stop offset="1" stop-color="#2f331c"/>
+    </radialGradient>
+    <linearGradient id="papier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf7ee"/><stop offset="1" stop-color="#efe6d4"/></linearGradient>
+    <linearGradient id="papierRabat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f1e4"/><stop offset=".85" stop-color="#fdfaf3"/><stop offset="1" stop-color="#efe5d2"/></linearGradient>
+    <linearGradient id="orFil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a88a4c"/><stop offset=".5" stop-color="#ead7a4"/><stop offset="1" stop-color="#a88a4c"/></linearGradient>
+  </defs>
+  <symbol id="sceau-dessin" viewBox="0 0 100 100">
+    <path d="M50 3 C60 2 66 6 73 8 C82 11 86 17 91 24 C96 32 97 40 97 49 C98 58 95 66 91 73 C86 81 79 88 70 92 C62 96 55 97 47 97 C38 97 30 94 23 89 C15 84 10 77 6 69 C3 61 2 53 3 45 C4 36 8 28 13 21 C19 14 27 8 35 5 C40 3 45 3 50 3Z" fill="url(#cire)"/>
+    <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="3.2"/>
+    <circle cx="49.2" cy="49.2" r="34" fill="none" stroke="rgba(255,255,230,.14)" stroke-width="1"/>
+    <circle cx="50" cy="50" r="29" fill="rgba(0,0,0,.08)"/>
+    <path d="M22 26 Q30 16 44 13" fill="none" stroke="rgba(255,255,240,.28)" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<!-- ============ 1. L'enveloppe ============ -->
+<section class="porte" id="porte" aria-label="Enveloppe">
+  <div class="porte-fond"><div class="poussiere" id="poussiere"></div></div>
+  <div class="porte-textes">
+    <p class="bh porte-bh" lang="he">ב״ה</p>
+    <p class="porte-haut" id="porte-haut">Une invitation pour</p>
+    <p class="porte-nom" data-invite></p>
+  </div>
+  <div class="enveloppe" id="enveloppe">
+    <div class="env-dos" id="env-dos"></div>
+    <div class="carte" id="carte">
+      <div class="carte-papier">
+        <svg class="carte-cadre" viewBox="0 0 150 100" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="4" y="5" width="142" height="90" fill="none" stroke="#b39457" stroke-width=".5" vector-effect="non-scaling-stroke" opacity=".75"/>
+          <rect x="5.6" y="7.2" width="138.8" height="85.6" fill="none" stroke="#b39457" stroke-width=".3" vector-effect="non-scaling-stroke" opacity=".5"/>
+          <path d="M57 84V36A18 18 0 0 1 93 36V84Z" fill="none" stroke="url(#orFil)" stroke-width="1.3" vector-effect="non-scaling-stroke"/>
+          <path d="M55.4 85.2V36A19.6 19.6 0 0 1 94.6 36V85.2Z" fill="none" stroke="#b39457" stroke-width=".5" vector-effect="non-scaling-stroke" opacity=".6"/>
+        </svg>
+        <span class="carte-nom g">Emma</span>
+        <span class="carte-et">&amp;</span>
+        <span class="carte-nom d">David</span>
+        <span class="carte-bas">Marseille · Israël · 2027</span>
+      </div>
+    </div>
+    <div class="env-poche" id="env-poche">
+      <svg viewBox="0 0 100 68" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0 L50 38 L100 0 V68 H0Z" fill="url(#papier)"/>
+        <path d="M0 68 L44 33 Q50 29 56 33 L100 68" fill="none" stroke="rgba(120,96,60,.2)" stroke-width=".6" vector-effect="non-scaling-stroke"/>
+        <path d="M0 68 L44 33 Q50 29 56 33 L100 68Z" fill="rgba(255,255,255,.35)"/>
+        <path d="M0 0 L50 38 L0 68Z" fill="rgba(120,96,60,.05)"/>
+        <path d="M100 0 L50 38 L100 68Z" fill="rgba(120,96,60,.08)"/>
+      </svg>
+      <span class="env-adresse" data-invite></span>
+    </div>
+    <div class="env-rabat" id="rabat">
+      <div class="rabat-face ext">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 0 H100 L53 37.4 Q50 39.6 47 37.4Z" fill="url(#papierRabat)"/>
+          <path d="M0 0 L47 37.4 Q50 39.6 53 37.4 L100 0" fill="none" stroke="url(#orFil)" stroke-width="1.1" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div class="rabat-face int">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 H100 L53 37.4 Q50 39.6 47 37.4Z" fill="#3a3f24"/></svg>
+        <div class="doublure-motif"></div>
+      </div>
+    </div>
+    <div class="rabat-ombre" id="rabat-ombre"></div>
+    <button class="sceau" id="sceau" type="button" aria-label="Ouvrir l'invitation">
+      <span class="moitie g"><svg viewBox="0 0 100 100"><use href="#sceau-dessin"/></svg><img src="../monogramme.png" alt=""></span>
+      <span class="moitie d"><svg viewBox="0 0 100 100"><use href="#sceau-dessin"/></svg><img src="../monogramme.png" alt=""></span>
+    </button>
+  </div>
+  <div class="porte-bas">
+    <p class="porte-aide">Touchez le sceau pour ouvrir</p>
+    <p class="porte-son"><span aria-hidden="true">♪</span> Montez le son</p>
+  </div>
+</section>
+
+<!-- ============ 2. Le film ============ -->
+<div class="film" id="film" aria-live="polite">
+  <div class="bande haut"></div>
+  <div class="bande bas"></div>
+  <div id="repliques"></div>
+  <button class="replique decouvrir" id="f-decouvrir" type="button">Découvrir l'invitation<span aria-hidden="true">↓</span></button>
+  <button class="passer" id="passer" type="button">Passer <span aria-hidden="true">›</span></button>
+  <div class="flash" id="flash"></div>
+</div>
+
+<!-- ============ 3. L'invitation ============ -->
+<main class="invitation" id="invitation"></main>
+
+<button class="son" id="son" type="button" aria-label="Couper la musique" hidden>
+  <span class="barres"><i></i><i></i><i></i><i></i></span>
+</button>
+<audio id="musique" preload="auto" src="../night-of-gold.mp3" loop></audio>
+
+<script src="../config.js?v=1790784556"></script>
+<script src="moteur.js?v=1790784556"></script>
+<script src="decors.js?v=1790784556"></script>
+<script src="film.js?v=1790784556"></script>
+</body>
+</html>
