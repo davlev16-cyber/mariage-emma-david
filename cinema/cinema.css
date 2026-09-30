@@ -36,17 +36,14 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
     linear-gradient(to bottom, rgba(255, 252, 244, .25), rgba(226, 214, 190, .22) 70%, rgba(210, 196, 168, .3)),
     repeating-linear-gradient(90deg, rgba(255, 253, 247, .95) 0, rgba(246, 239, 226, .93) 1.7vw, rgba(229, 219, 199, .92) 3.3vw, rgba(247, 242, 232, .94) 5vw, rgba(255, 253, 247, .95) 6.6vw);
   background-size: 100% 100%, 6.6vw 100%;
-  animation: brise 7s ease-in-out infinite;
-  transition: transform 2.6s cubic-bezier(.62, 0, .22, 1), opacity 2.6s ease; }
+  animation: brise 7s ease-in-out infinite; }
 .voilage.g { left: 0; transform-origin: 0 50%; }
 .voilage.d { right: 0; transform-origin: 100% 50%; animation-delay: -3.5s; }
 .voilage.g::after, .voilage.d::after { content: ""; position: absolute; top: 0; bottom: 0; width: 18px; }
 .voilage.g::after { right: 0; background: linear-gradient(90deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-right: 1px solid rgba(179, 148, 87, .45); }
 .voilage.d::after { left: 0; background: linear-gradient(270deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-left: 1px solid rgba(179, 148, 87, .45); }
 @keyframes brise { 0%, 100% { background-position: 0 0, 0 0; transform: skewX(0deg); } 50% { background-position: 0 0, 1.2vw 0; transform: skewX(.6deg); } }
-.porte.ouvre .voilage { animation: none; }
-.porte.ouvre .voilage.g { transform: translateX(-100%) scaleX(.5); opacity: .85; }
-.porte.ouvre .voilage.d { transform: translateX(100%) scaleX(.5); opacity: .85; }
+.porte.ouvre { pointer-events: none; }
 .lueur { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(255, 244, 214, .95), rgba(255, 236, 196, .4) 45%, rgba(255, 236, 196, 0) 75%); }
 .porte.ouvre .lueur { animation: lueur 2.4s ease-out forwards; }
 @keyframes lueur { 0% { opacity: 0; } 30% { opacity: .75; } 100% { opacity: 0; } }
@@ -81,8 +78,8 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .bande.haut { top: 0; transform-origin: 50% 0; }
 .bande.bas { bottom: 0; transform-origin: 50% 100%; }
 .film.cadre .bande { transform: scaleY(1); }
-.replique { position: absolute; left: 0; right: 0; padding: 0 24px; text-align: center; opacity: 0; filter: blur(10px); transform: translateY(14px); transition: opacity 1.3s ease, filter 1.5s ease, transform 1.8s var(--ease); text-shadow: 0 2px 24px rgba(0, 0, 0, .55), 0 0 2px rgba(0, 0, 0, .3); }
-.replique.vu { opacity: 1; filter: blur(0); transform: none; }
+.replique { position: absolute; left: 0; right: 0; padding: 0 24px; text-align: center; opacity: 0; filter: blur(6px); transform: translateY(10px); transition: opacity .8s ease, filter .8s ease, transform 1s ease; text-shadow: 0 2px 24px rgba(0, 0, 0, .55), 0 0 2px rgba(0, 0, 0, .3); }
+.replique.vu { opacity: 1; filter: blur(0); transform: none; transition: opacity 1.5s ease, filter 1.4s ease, transform 2.2s var(--ease); }
 .r-haut { top: calc(8.5vh + 7vh); }
 .r-bas { bottom: calc(8.5vh + 5vh); }
 .r-centre { top: 21vh; }
@@ -98,8 +95,13 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .noms-film .n1, .noms-film .n2 { text-shadow: none; }
 .noms-film em { display: block; margin: .1em 0 .06em; font: italic 300 .42em/1 var(--serif); color: var(--or-c); }
 @keyframes reflet { 0%, 100% { background-position: 100% 0 } 50% { background-position: 0 0 } }
-.sous { display: block; margin-top: 12px; font: italic 300 clamp(22px, 5.6vw, 32px) var(--serif); color: var(--ivoire); opacity: 0; transition: opacity 1.4s ease 1.2s; }
+.sous { display: block; margin-top: 12px; font: italic 300 clamp(22px, 5.6vw, 32px) var(--serif); color: var(--ivoire); opacity: 0; transition: opacity 1.4s ease .8s; }
 .replique.vu .sous { opacity: 1; }
+.date-fin { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; font: 500 11px/1.7 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-p); opacity: 0; transition: opacity 1.4s ease 1.6s; }
+.date-fin > span:nth-child(2) > span { display: block; }
+.date-fin .ligne { flex: none; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, var(--or-c)); }
+.date-fin .ligne:last-child { transform: scaleX(-1); }
+.replique.vu .date-fin { opacity: 1; }
 .decouvrir { bottom: calc(8.5vh + 4vh); left: 50%; right: auto; transform: translate(-50%, 14px); display: inline-flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 20px; border: 0; background: none; cursor: pointer; font: 500 11px var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--ivoire); pointer-events: auto; }
 .decouvrir.vu { transform: translate(-50%, 0); }
 .decouvrir span { font-size: 18px; animation: descend 1.8s ease-in-out infinite; }
@@ -107,7 +109,6 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .passer { position: absolute; right: 14px; bottom: calc(8.5vh + 12px + env(safe-area-inset-bottom) * .3); padding: 10px 14px; border: 1px solid rgba(251, 248, 241, .28); border-radius: 999px; background: rgba(10, 10, 12, .55); cursor: pointer; font: 500 10px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(251, 248, 241, .8); pointer-events: auto; opacity: 0; transition: opacity .8s; }
 .film.cadre .passer { opacity: 1; }
 .film.fin .passer { opacity: 0; pointer-events: none; }
-.flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, #fff6dc, #f0cf86 45%, rgba(240, 207, 134, 0) 80%); opacity: 0; }
 
 /* ---------- 3. l'invitation ---------- */
 .invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; }
@@ -254,13 +255,23 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .merci-vrai p { font: italic 300 20px/1.4 var(--serif); margin: 6px 0; }
 .merci-vrai .lien { margin-top: 10px; border: 0; background: none; cursor: pointer; font: 500 12px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: #3f4126; text-decoration: underline; text-underline-offset: 5px; }
 .signature-mariage { position: relative; padding: 10vh 16px calc(8vh + env(safe-area-inset-bottom)); text-align: center; font: 500 12px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(251, 248, 241, .7); background: linear-gradient(to bottom, rgba(14, 15, 10, 0), rgba(14, 15, 10, .85) 40%); }
-.replique .eyebrow { display: block; font: 500 11px var(--sans); letter-spacing: .42em; text-transform: uppercase; color: var(--or-c); margin-bottom: 10px; }
+.replique .eyebrow { display: block; font: 500 11px/1.7 var(--sans); letter-spacing: .42em; text-transform: uppercase; color: var(--or-c); margin-bottom: 10px; text-wrap: balance; }
 .replique .titre-ev { display: block; font: 400 clamp(60px, 17vw, 124px)/.95 var(--display); letter-spacing: .03em; color: var(--ivoire); }
 .replique .tag-ev { display: block; margin-top: 8px; font: italic 300 clamp(26px, 7vw, 40px)/1.1 var(--serif); color: var(--or-p); }
 .replique.sombre .titre-ev { color: #3f4126; }
 .replique.sombre .tag-ev { color: #8a7442; }
 .replique.sombre .eyebrow { color: #8a7442; }
 .replique.sombre { text-shadow: 0 1px 16px rgba(255, 252, 244, .9); }
+/* lieu et horaire dans la carte de chaque célébration */
+.replique .infos-ev { display: block; margin: 14px auto 0; max-width: 22em; }
+.replique .infos-ev::before { content: ""; display: block; width: 44px; height: 1px; margin: 0 auto 12px; background: linear-gradient(90deg, rgba(226, 201, 143, 0), var(--or-c), rgba(226, 201, 143, 0)); }
+.replique .i-lieu { display: block; font: italic 400 clamp(20px, 5.2vw, 26px)/1.3 var(--serif); color: var(--ivoire); text-wrap: balance; }
+.replique .i-lieu + .i-lieu { margin-top: 4px; }
+.replique .i-lieu small { display: block; font: 500 10px/1.8 var(--sans); font-style: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--or-c); }
+.replique .i-heure { display: block; margin: 6px 0 4px; font: 500 12px/1.6 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-p); }
+.replique.sombre .i-lieu { color: #3f4126; }
+.replique.sombre .i-heure, .replique.sombre .i-lieu small { color: #8a7442; }
+.replique.sombre .infos-ev::before { background: linear-gradient(90deg, rgba(179, 148, 87, 0), #b39457, rgba(179, 148, 87, 0)); }
 
 .replique.apercu { text-shadow: 0 1px 2px rgba(70, 42, 12, .35), 0 2px 18px rgba(70, 42, 12, .4); }
 .replique.apercu .eyebrow { margin-bottom: 14px; color: #fff4d8; }

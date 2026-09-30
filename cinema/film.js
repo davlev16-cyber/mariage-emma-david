@@ -31,7 +31,7 @@ if (!REDUIT) {
 /* ---------- décors ---------- */
 MF.demarre();
 const feux = new MF.Feux();
-MF.surcouche = (ctx, W, H, t, dt, scene) => { if (feux.b.length && scene === MF.scenes.houppa) feux.dessine(ctx, dt, Math.min(W, H) / 420); };
+MF.surcouche = (ctx, W, H, t, dt, scene, toile) => { if (feux.b.length && scene === MF.scenes.houppa && toile.cv.style.zIndex === '2') feux.dessine(ctx, dt, Math.min(W, H) / 420); };
 
 /* ---------- musique : « Night of Gold », comme sur le premier site ---------- */
 const audio = $('#musique'), btnSon = $('#son');
@@ -55,15 +55,26 @@ btnSon.addEventListener('click', () => musique(sonCoupe));
    1. L'ouverture : un toucher, et les deux pans de voile s'écartent sur le film
    ===================================================================== */
 let etat = 'porte', T0 = 0;
-const DEBUT = 1.1;                 // le film commence 1,1 s après le toucher, pendant que le voile s'ouvre
+const DEBUT = .5;                  // le film commence une demi-seconde après le toucher, pendant que le voile s'ouvre
 const porte = $('#porte'), film = $('#film');
 function ouvrir() {
   if (etat !== 'porte') return;
   etat = 'ouverture'; T0 = maintenant();
   musique(true);
   porte.classList.add('ouvre');
-  if (REDUIT) { setTimeout(versPage, 400); return; }
-  setTimeout(() => { if (document.getElementById('porte')) porte.remove(); }, 3000);
+  if (REDUIT) { porte.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' }); setTimeout(versPage, 400); return; }
+  // les deux pans glissent vers les côtés : le haut part le premier, le bas traîne un peu, les plis se resserrent
+  const OUV = 3400;
+  $$('.voilage').forEach((v, i) => {
+    const s = i === 0 ? 1 : -1, depart = getComputedStyle(v).transform;
+    v.animate([
+      { offset: 0, transform: depart === 'none' ? 'translateX(0) scaleX(1) skewX(0deg)' : depart },
+      { offset: .45, transform: `translateX(${-s * 16}%) scaleX(.8) skewX(${s * 3}deg)` },
+      { offset: 1, transform: `translateX(${-s * 64}%) scaleX(.44) skewX(${s * 1}deg)` },
+    ], { duration: OUV, easing: 'cubic-bezier(.45, .05, .35, 1)', fill: 'forwards' });
+  });
+  porte.animate([{ opacity: 1 }, { opacity: 1, offset: .85 }, { opacity: 0 }], { duration: OUV + 200, fill: 'forwards' });
+  setTimeout(() => { if (document.getElementById('porte')) porte.remove(); }, OUV + 300);
 }
 porte.addEventListener('click', ouvrir);
 porte.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
@@ -72,21 +83,29 @@ porte.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ')
    2. Le film : un plan par célébration de l'invité, puis les prénoms
    ===================================================================== */
 const sine = ease.sine, io = ease.io;
+// fondu enchaîné entre deux plans ; pendant ce temps les deux caméras continuent de bouger
+const FONDU = 2.2;
+// mouvement « doux » : démarre et finit sans jamais s'arrêter net
+const doux = k => (k = clamp(k), .4 * k + .6 * sine(k));
+// u : temps depuis le début du plan ; D : durée totale à l'écran (plan + fondu de sortie)
 const PLANS_FILM = {
   // plan d'aperçu : vue du ciel sur la mer à l'heure dorée ; la caméra descend vers le rivage
-  apercu: { scene: 'plage', duree: 8, pose: u => {
-    const e = io(u / 8);
-    return { variante: 2, rivage: 0, camX: lerp(6, 0, sine(u / 8)), camY: lerp(-38, -3, e), camZ: lerp(-80, 0, sine(u / 8)), focale: MF.W > MF.H ? 1.05 : .9, tilt: lerp(-.24, .05, e), soleil: lerp(.07, .04, u / 8) };
+  apercu: { scene: 'plage', duree: 8, pose: (u, D) => {
+    const e = io(u / D), k = doux(u / D);
+    return { variante: 2, rivage: 0, camX: lerp(6, 0, k), camY: lerp(-38, -2.6, e), camZ: lerp(-80, 4, k), focale: MF.W > MF.H ? 1.05 : .9, tilt: lerp(-.24, .06, e), soleil: lerp(.07, .038, u / D) };
   } },
-  m: { scene: 'soie', sombre: true, duree: 6, pose: u => ({ zoom: lerp(1.2, 1.02, io(u / 6)), derive: u * .014 }) },
-  h: { scene: 'plage', duree: 6.5, pose: u => ({ variante: 0, rivage: 1, camX: lerp(-2.4, 1.3, sine(u / 6.5)), camY: lerp(-1.1, -1.55, io(u / 6.5)), camZ: lerp(-1.4, .5, sine(u / 6.5)), focale: .95, tilt: .06, soleil: lerp(.036, .014, u / 6.5) }) },
-  p: { scene: 'houppa', duree: 7, pose: u => {
-    const e = io(u / 7), camY = lerp(-7.5, -1.7, e), camZ = lerp(-5, 2, sine(u / 7)), paysage = MF.W > MF.H ? 1.15 : 1;
+  m: { scene: 'soie', sombre: true, duree: 6.5, pose: (u, D) => ({ zoom: lerp(1.24, 1, doux(u / D)), derive: u * .014 }) },
+  h: { scene: 'plage', duree: 7, pose: (u, D) => { const k = doux(u / D);
+    return { variante: 0, rivage: 1, camX: lerp(-2.4, 1.3, k), camY: lerp(-1.1, -1.55, k), camZ: lerp(-1.4, .5, k), focale: .95, tilt: .06, soleil: lerp(.036, .014, u / D) }; } },
+  p: { scene: 'houppa', sombre: true, duree: 7.5, pose: (u, D) => {
+    const e = doux(u / D), camY = lerp(-7.5, -1.7, e), camZ = lerp(-5, 2, e), paysage = MF.W > MF.H ? 1.15 : 1;
     const k = .95 * paysage / (15 - camZ), hor = .62 - (-1.3 - camY) * k;
-    return { camX: lerp(.9, 0, e), camY, camZ, focale: .95 * paysage, tilt: clamp(hor - .5, -.25, .12), tod: lerp(.45, 1.05, u / 7), allee: 1 };
+    return { camX: lerp(.9, 0, e), camY, camZ, focale: .95 * paysage, tilt: clamp(hor - .5, -.25, .12), tod: lerp(.45, 1.05, u / D), allee: 1 };
   } },
-  s: { scene: 'chabbat', duree: 6.5, pose: u => ({ camX: lerp(-.22, .12, sine(u / 6.5)), camY: -.46, camZ: lerp(-1.05, -.7, sine(u / 6.5)), focale: MF.W > MF.H ? 1.05 : .82, tilt: .08, nuit: lerp(.15, .7, u / 6.5), allume: clamp((u - 1.3) / 1.3) }) },
-  fin: { scene: 'houppa', duree: 8, pose: u => ({ camX: lerp(-.6, .3, sine(u / 8)), camY: lerp(-3.2, -2.6, sine(u / 8)), camZ: lerp(-7, -4.5, sine(u / 8)), focale: MF.W > MF.H ? 1.1 : .95, tilt: .1, tod: lerp(2.1, 2.85, io(u / 6)), allee: 1 }) },
+  s: { scene: 'chabbat', duree: 7, pose: (u, D) => { const k = doux(u / D);
+    return { camX: lerp(-.22, .12, k), camY: -.46, camZ: lerp(-1.05, -.7, k), focale: MF.W > MF.H ? 1.05 : .82, tilt: .08, nuit: lerp(.15, .7, u / D), allume: clamp((u - 1.6) / 1.4) }; } },
+  fin: { scene: 'houppa', duree: 8, pose: u => { const k = doux(u / 9);
+    return { camX: lerp(-.6, .3, k), camY: lerp(-3.2, -2.6, k), camZ: lerp(-7.2, -4.5, k), focale: MF.W > MF.H ? 1.1 : .95, tilt: .1, tod: lerp(2.1, 2.85, io(u / 6)), allee: 1 }; } },
 };
 const CHIFFRES = ['I', 'II', 'III', 'IV'];
 const chapitres = [];
@@ -108,37 +127,48 @@ for (const ch of chapitres) {
     const d = el('div', 'replique r-date apercu-date');
     d.append(el('span', 'ligne'), el('span', '', 'Marseille & Israël'), el('span', 'ligne'));
     zone.append(n, d);
-    ch.textes = [[n, 1.6, 7.2], [d, 2.8, 7.2]];
+    ch.textes = [[n, 1.4, ch.duree - .35], [d, 2.4, ch.duree - .35]];
   } else if (ch.k === 'fin') {
     const n = el('div', 'replique r-centre'); n.id = 'f-noms';
     const s = el('span', 'noms-film'); s.innerHTML = '<span class="n1">Emma</span> <em>&amp;</em> <span class="n2">David</span>';
-    n.append(s, el('span', 'sous', 'se marient'));
-    const d = el('div', 'replique r-date'); d.id = 'f-date';
-    d.append(el('span', 'ligne'), el('span', '', 'Juillet & août 2027 · Marseille & Israël'), el('span', 'ligne'));
-    zone.append(n, d);
-    ch.textes = [[n, ch.t0 + .7, 1e9], [d, ch.t0 + 2.2, 1e9], [$('#f-decouvrir'), ch.t0 + 4.4, 1e9]];
+    const d = el('span', 'date-fin'); d.id = 'f-date';
+    const dt = el('span'); dt.append(el('span', '', 'Juillet & août 2027'), el('span', '', 'Marseille & Israël'));
+    d.append(el('span', 'ligne'), dt, el('span', 'ligne'));
+    n.append(s, el('span', 'sous', 'se marient'), d);
+    zone.append(n);
+    ch.textes = [[n, ch.t0 + .5, 1e9], [$('#f-decouvrir'), ch.t0 + 4.2, 1e9]];
   } else {
     const ev = EVENTS[ch.k], n = el('div', 'replique r-haut' + (ch.sombre ? ' sombre' : ''));
     n.append(el('span', 'eyebrow', ev.date), el('span', 'titre-ev', ev.name), el('span', 'tag-ev', ev.tagline));
+    // lieu et horaire, en même temps que le décor
+    const infos = el('span', 'infos-ev');
+    for (const [a, b] of ev.details) {
+      const l = el('span', a === 'Horaire' ? 'i-heure' : 'i-lieu');
+      if (a !== 'Lieu' && a !== 'Horaire') l.append(el('small', '', a));
+      l.append(document.createTextNode(b));
+      infos.append(l);
+    }
+    n.append(infos);
     zone.append(n);
-    ch.textes = [[n, ch.t0 + .6, ch.t0 + ch.duree - .7]];
+    ch.textes = [[n, ch.t0 + .25, ch.t0 + ch.duree - .35]];
   }
 }
 const TIRS = [[2.6, .3, .2], [3.3, .72, .15], [4, .5, .1], [4.9, .22, .24], [5.8, .78, .22]].map(([d, x, y]) => [chapitres[chapitres.length - 1].t0 + d, x, y]);
 let filmDemarre = false, tirs = 0, chapCourant = -1;
 
+// chaque plan a ses propres réglages sur sa toile : deux plans du même décor peuvent se fondre l'un dans l'autre
+const poseDe = (ch, f) => ch.pose(Math.max(0, f - ch.t0), ch.duree + FONDU);
 function poseFilm(f) {
   let i = 0;
   for (let j = 0; j < chapitres.length; j++) if (f >= chapitres[j].t0) i = j;
-  const ch = chapitres[i];
   if (i !== chapCourant) {
-    const debut = chapCourant < 0;
+    const debut = chapCourant < 0, ch = chapitres[i];
     chapCourant = i;
-    Object.assign(MF.scenes[ch.scene].p, ch.pose(Math.max(0, f - ch.t0)));
-    MF.montre(ch.scene, debut ? .001 : .9);
-    if (!debut) $('#flash').animate([{ opacity: 0 }, { opacity: .45, offset: .35 }, { opacity: 0 }], { duration: 1000, easing: 'ease-out' });
+    ch.p = { ...MF.scenes[ch.scene].p, ...poseDe(ch, f) };
+    ch.toile = MF.montre(ch.scene, debut ? .001 : FONDU, { nouvelle: !debut, p: ch.p });
   }
-  Object.assign(MF.scenes[ch.scene].p, ch.pose(f - ch.t0));
+  // le plan qui s'efface continue son mouvement pendant que le suivant apparaît
+  for (const ch of chapitres) if (ch.toile && ch.toile.p === ch.p && ch.toile.alpha > 0) Object.assign(ch.p, poseDe(ch, f));
 }
 function demarreFilm() { filmDemarre = true; etat = 'film'; film.classList.add('on'); requestAnimationFrame(() => film.classList.add('cadre')); }
 function repliques(f) {
@@ -312,6 +342,7 @@ function versPage() {
   scrollTo(0, 0);
   btnSon.hidden = SILENCE;
   planActif = null;
+  for (const o of MF.toiles) o.p = null;   // la page reprend la main sur les réglages des décors
   if (!depuisFilm) Object.assign(MF.scenes.houppa.p, PLANS.couverture.pose(0));
   activer('couverture');
   $$('[data-apparait]').forEach(n => apparitions.observe(n));

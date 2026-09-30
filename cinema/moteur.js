@@ -295,18 +295,22 @@ function taille(force) {
 }
 MF.taille = taille;
 
-MF.montre = (id, fondu = 1.2) => {
+// montre une scène en fondu. opts.nouvelle : toujours sur l'autre toile (même décor, autre plan) ;
+// opts.p : réglages propres à cette toile, recopiés dans la scène juste avant de la dessiner
+MF.montre = (id, fondu = 1.2, opts = {}) => {
   const s = MF.scenes[id];
-  let t = MF.toiles.find(o => o.scene === s && o.alpha > 0);
+  let t = opts.nouvelle ? null : MF.toiles.find(o => o.scene === s && o.alpha > 0);
   if (!t) {
     t = MF.toiles.reduce((a, b) => a.alpha <= b.alpha ? a : b);
     t.scene = s; t.alpha = 0;
     s.entree && s.entree();
   }
+  t.p = opts.p || null;
   for (const o of MF.toiles) o.cv.style.zIndex = o === t ? 2 : 1;
   t.cible = 1; t.duree = Math.max(.001, fondu); t.debut = performance.now() / 1000; t.alpha0 = t.alpha;
   if (fondu <= .001) t.alpha = 1;
   MF.actif = s;
+  return t;
 };
 MF.visible = s => MF.toiles.some(o => o.scene === s && o.alpha > 0);
 
@@ -334,13 +338,14 @@ function rendu(t, dt = .016) {
     }
   }
   for (const o of MF.toiles) {
-    o.cv.style.opacity = o.alpha;
+    o.cv.style.opacity = MF.ease.sine(o.alpha);   // fondu adouci au début et à la fin
     if (o.alpha > 0 && o.scene) {
       const ctx = o.ctx;
+      if (o.p) Object.assign(o.scene.p, o.p);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
       MF.ecran(ctx);
       o.scene.dessine(ctx, MF.W, MF.H, t, dt);
-      if (MF.surcouche) { MF.ecran(ctx); MF.surcouche(ctx, MF.W, MF.H, t, dt, o.scene); }
+      if (MF.surcouche) { MF.ecran(ctx); MF.surcouche(ctx, MF.W, MF.H, t, dt, o.scene, o); }
     }
   }
   for (const f of MF.apres) f(t, dt);
