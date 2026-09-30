@@ -1,5 +1,5 @@
 /* Emma & David · version cinéma
-   film.js : l'enveloppe, le film de chaque célébration (seulement celles de l'invité), puis l'invitation
+   film.js : l'ouverture (un voilage qui s'écarte), le film de chaque célébration (seulement celles de l'invité), puis l'invitation
    qui défile et la réponse (enregistrée dans le même tableau Google que le premier site). */
 (function () {
 'use strict';
@@ -17,9 +17,8 @@ const code = inviteCode(), invite = decodeInvite(code);
 const nom = invite ? invite.name : '';
 const evs = invite ? invite.events : [];
 $$('[data-invite]').forEach(n => { n.textContent = nom; });
-if (!nom) $('#porte-haut').classList.add('vide');
 
-/* ---------- poussière d'or autour de l'enveloppe ---------- */
+/* ---------- poussière d'or devant le voilage ---------- */
 if (!REDUIT) {
   const box = $('#poussiere');
   for (let i = 0; i < 30; i++) {
@@ -53,65 +52,34 @@ function musique(on) {
 btnSon.addEventListener('click', () => musique(sonCoupe));
 
 /* =====================================================================
-   1. L'enveloppe
+   1. L'ouverture : un toucher, et les deux pans de voile s'écartent sur le film
    ===================================================================== */
 let etat = 'porte', T0 = 0;
-const DEBUT = 4.3;
-const porte = $('#porte'), env = $('#enveloppe'), carte = $('#carte'), rabat = $('#rabat'), sceau = $('#sceau'), film = $('#film');
-
-function etincelles() {
-  const r = sceau.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  for (let i = 0; i < 28; i++) {
-    const e = document.createElement('i'); e.className = 'etincelle';
-    e.style.left = cx + 'px'; e.style.top = cy + 'px';
-    document.body.append(e);
-    const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 110;
-    e.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + 30}px) scale(.2)`, opacity: 0 }],
-      { duration: 700 + Math.random() * 700, easing: 'cubic-bezier(.1,.7,.3,1)', fill: 'forwards' }).onfinish = () => e.remove();
-  }
-}
-async function ouvrir() {
+const DEBUT = 1.1;                 // le film commence 1,1 s après le toucher, pendant que le voile s'ouvre
+const porte = $('#porte'), film = $('#film');
+function ouvrir() {
   if (etat !== 'porte') return;
   etat = 'ouverture'; T0 = maintenant();
   musique(true);
-  sceau.classList.add('casse'); sceau.disabled = true;
   porte.classList.add('ouvre');
-  etincelles();
-  if (REDUIT) { await attendre(600); return versPage(); }
-  await attendre(240);
-  env.classList.add('ouvert');
-  rabat.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(180deg)' }], { duration: 1050, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
-  await attendre(540);
-  env.classList.add('rabat-derriere');
-  await attendre(480);
-  carte.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-62%)' }], { duration: 1100, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'forwards' });
-  await attendre(1150);
-  const r = carte.getBoundingClientRect();
-  const dx = innerWidth / 2 - (r.left + r.width / 2), dy = innerHeight / 2 - (r.top + r.height / 2);
-  const s = Math.min(innerWidth * .9 / r.width, innerHeight * .6 / r.height, 1.9);
-  const chute = { duration: 1200, easing: 'cubic-bezier(.55,0,.8,.3)', fill: 'forwards' };
-  $('#env-dos').animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(75vh) rotate(3deg)', opacity: 0 }], chute);
-  $('#env-poche').animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(75vh) rotate(3deg)', opacity: 0 }], chute);
-  $('#rabat-ombre').style.display = 'none';
-  rabat.animate([{ transform: 'rotateX(180deg)', opacity: 1 }, { transform: 'translateY(75vh) rotateX(180deg)', opacity: 0 }], chute);
-  const pose = `translate(${dx}px, calc(-62% + ${dy}px))`;
-  carte.animate([{ transform: 'translateY(-62%) scale(1)' }, { transform: `${pose} scale(${s})` }], { duration: 1150, easing: 'cubic-bezier(.3,.1,.2,1)', fill: 'forwards' });
-  porte.classList.add('transparente');
-  await attendre(Math.max(0, (T0 + DEBUT - maintenant()) * 1000));
-  carte.animate([{ transform: `${pose} scale(${s})`, opacity: 1 }, { transform: `${pose} scale(${s * 3})`, opacity: 1, offset: .55 }, { transform: `${pose} scale(${s * 11})`, opacity: 0 }],
-    { duration: 1500, easing: 'cubic-bezier(.55,0,.75,.4)', fill: 'forwards' });
-  await attendre(1500);
-  if (document.getElementById('porte')) porte.remove();
+  if (REDUIT) { setTimeout(versPage, 400); return; }
+  setTimeout(() => { if (document.getElementById('porte')) porte.remove(); }, 3000);
 }
-sceau.addEventListener('click', ouvrir);
+porte.addEventListener('click', ouvrir);
+porte.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
 
 /* =====================================================================
    2. Le film : un plan par célébration de l'invité, puis les prénoms
    ===================================================================== */
 const sine = ease.sine, io = ease.io;
 const PLANS_FILM = {
+  // plan d'aperçu : vue du ciel sur la mer à l'heure dorée ; la caméra descend vers le rivage
+  apercu: { scene: 'plage', duree: 8, pose: u => {
+    const e = io(u / 8);
+    return { variante: 2, rivage: 0, camX: lerp(6, 0, sine(u / 8)), camY: lerp(-38, -3, e), camZ: lerp(-80, 0, sine(u / 8)), focale: MF.W > MF.H ? 1.05 : .9, tilt: lerp(-.24, .05, e), soleil: lerp(.07, .04, u / 8) };
+  } },
   m: { scene: 'soie', sombre: true, duree: 6, pose: u => ({ zoom: lerp(1.2, 1.02, io(u / 6)), derive: u * .014 }) },
-  h: { scene: 'plage', duree: 6.5, pose: u => ({ variante: 0, camX: lerp(-2.4, 1.3, sine(u / 6.5)), camY: lerp(-1.1, -1.55, io(u / 6.5)), camZ: lerp(-1.4, .5, sine(u / 6.5)), focale: .95, tilt: .06, soleil: lerp(.036, .014, u / 6.5) }) },
+  h: { scene: 'plage', duree: 6.5, pose: u => ({ variante: 0, rivage: 1, camX: lerp(-2.4, 1.3, sine(u / 6.5)), camY: lerp(-1.1, -1.55, io(u / 6.5)), camZ: lerp(-1.4, .5, sine(u / 6.5)), focale: .95, tilt: .06, soleil: lerp(.036, .014, u / 6.5) }) },
   p: { scene: 'houppa', duree: 7, pose: u => {
     const e = io(u / 7), camY = lerp(-7.5, -1.7, e), camZ = lerp(-5, 2, sine(u / 7)), paysage = MF.W > MF.H ? 1.15 : 1;
     const k = .95 * paysage / (15 - camZ), hor = .62 - (-1.3 - camY) * k;
@@ -124,6 +92,7 @@ const CHIFFRES = ['I', 'II', 'III', 'IV'];
 const chapitres = [];
 {
   let t = 0;
+  chapitres.push({ k: 'apercu', t0: 0, ...PLANS_FILM.apercu }); t = PLANS_FILM.apercu.duree;
   evs.forEach((k, i) => { chapitres.push({ k, t0: t, ...PLANS_FILM[k], num: i }); t += PLANS_FILM[k].duree; });
   chapitres.push({ k: 'fin', t0: t, ...PLANS_FILM.fin });
 }
@@ -131,7 +100,16 @@ const FIN = chapitres[chapitres.length - 1].t0 + 7.6;
 // les textes du film
 const zone = $('#repliques');
 for (const ch of chapitres) {
-  if (ch.k === 'fin') {
+  if (ch.k === 'apercu') {
+    const n = el('div', 'replique r-centre apercu');
+    n.append(el('span', 'eyebrow', 'Juillet & août 2027'));
+    const s = el('span', 'noms-film'); s.innerHTML = '<span class="n1">Emma</span> <em>&amp;</em> <span class="n2">David</span>';
+    n.append(s, el('span', 'sous', 'ont la joie de vous convier à leur mariage'));
+    const d = el('div', 'replique r-date apercu-date');
+    d.append(el('span', 'ligne'), el('span', '', 'Marseille & Israël'), el('span', 'ligne'));
+    zone.append(n, d);
+    ch.textes = [[n, 1.6, 7.2], [d, 2.8, 7.2]];
+  } else if (ch.k === 'fin') {
     const n = el('div', 'replique r-centre'); n.id = 'f-noms';
     const s = el('span', 'noms-film'); s.innerHTML = '<span class="n1">Emma</span> <em>&amp;</em> <span class="n2">David</span>';
     n.append(s, el('span', 'sous', 'se marient'));
@@ -177,10 +155,10 @@ $('#f-decouvrir').addEventListener('click', () => versPage());
 const PLANS = {
   couverture: { scene: 'houppa', pose: u => ({ camX: Math.sin(u * .05) * .5, camY: -2.6, camZ: -4.5 - 2 * sine(clamp(u / 30)), focale: MF.W > MF.H ? 1.1 : .95, tilt: MF.W > MF.H ? .12 : .24, tod: 2.85, allee: 1 }) },
   m: { scene: 'soie', clair: true, pose: u => ({ zoom: 1.12 - .06 * sine(clamp(u / 20)), derive: u * .01 }) },
-  h: { scene: 'plage', pose: u => ({ variante: 0, camX: Math.sin(u * .07) * 1.6, camY: -1.4, camZ: lerp(-1.5, 0, sine(clamp(u / 12))), focale: .95, tilt: .08, soleil: lerp(.03, .016, clamp(u / 20)) }) },
+  h: { scene: 'plage', pose: u => ({ variante: 0, rivage: 1, camX: Math.sin(u * .07) * 1.6, camY: -1.4, camZ: lerp(-1.5, 0, sine(clamp(u / 12))), focale: .95, tilt: .08, soleil: lerp(.03, .016, clamp(u / 20)) }) },
   p: { scene: 'houppa', pose: u => ({ camX: Math.sin(u * 1.1) * .04, camY: -1.55 + Math.sin(u * 2.2) * .015, camZ: lerp(-1.8, 3.8, io(clamp(u / 11))), focale: MF.W > MF.H ? 1.1 : .95, tilt: MF.W > MF.H ? .04 : .12, tod: lerp(.35, 1.1, clamp(u / 16)), allee: 1 }) },
   s: { scene: 'chabbat', pose: u => ({ camX: Math.sin(u * .06) * .2, camY: -.46, camZ: lerp(-1, -.72, sine(clamp(u / 14))), focale: MF.W > MF.H ? 1.05 : .82, tilt: .12, nuit: lerp(.45, .9, clamp(u / 14)), allume: 1 }) },
-  reponse: { scene: 'plage', clair: true, pose: u => ({ variante: 1, camX: Math.sin(u * .05) * .6, camY: lerp(-1.1, -1.6, sine(clamp(u / 16))), camZ: -.6, focale: .95, tilt: .1, soleil: .025 + .05 * sine(clamp(u / 25)) }) },
+  reponse: { scene: 'plage', clair: true, pose: u => ({ variante: 1, rivage: 1, camX: Math.sin(u * .05) * .6, camY: lerp(-1.1, -1.6, sine(clamp(u / 16))), camZ: -.6, focale: .95, tilt: .1, soleil: .025 + .05 * sine(clamp(u / 25)) }) },
 };
 let planActif = null, tPlan = 0, depart = null;
 function activer(nom) {
@@ -195,7 +173,7 @@ function posePage(t) {
   if (!planActif) return;
   const pl = PLANS[planActif], sc = MF.scenes[pl.scene], u = t - tPlan, cible = pl.pose(u);
   const m = depart ? io(u / 2.2) : 1;
-  for (const k in cible) sc.p[k] = depart && k in depart && k !== 'variante' ? lerp(depart[k], cible[k], m) : cible[k];
+  for (const k in cible) sc.p[k] = depart && k in depart && k !== 'variante' && k !== 'rivage' ? lerp(depart[k], cible[k], m) : cible[k];
 }
 
 // ----- construction des pages -----
@@ -344,11 +322,14 @@ MF.avant.push(t => {
   if (etat === 'ouverture' || etat === 'film') {
     if (gel !== null) T0 = t - DEBUT - gel;
     const u = t - T0, f = u - DEBUT;
-    if (u > 2.1) poseFilm(Math.max(0, f));
+    poseFilm(Math.max(0, f));
     if (f >= 0 && !filmDemarre) demarreFilm();
     if (etat === 'film') repliques(f);
   } else if (etat === 'page') posePage(t);
 });
+
+// le premier décor du film se dessine déjà derrière le voilage
+poseFilm(0);
 
 /* ---------- raccourcis d'essai : #page, #page&solo&s=ev-h&u=8, #f=12&gel ---------- */
 const h = location.hash;

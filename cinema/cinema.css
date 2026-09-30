@@ -28,63 +28,51 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .grain { position: fixed; inset: -60px; z-index: 4; pointer-events: none; opacity: .045; background-image: var(--bruit); animation: grain 1s steps(6) infinite; will-change: transform; }
 @keyframes grain { 0% { transform: translate(0, 0) } 20% { transform: translate(-22px, 14px) } 40% { transform: translate(18px, -26px) } 60% { transform: translate(-12px, 30px) } 80% { transform: translate(26px, 8px) } 100% { transform: translate(0, 0) } }
 
-/* ---------- 1. l'enveloppe ---------- */
-.porte { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(18px, 4vh, 34px); padding: calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); text-align: center; }
-.porte-fond { position: absolute; inset: 0; background: radial-gradient(90% 60% at 50% 46%, #3b3f27 0%, #25281a 42%, #101109 100%); transition: opacity 1.3s ease; }
-.porte-fond::after { content: ""; position: absolute; inset: 0; background-image: var(--bruit); opacity: .16; }
-.porte.transparente .porte-fond { opacity: 0; }
-.poussiere { position: absolute; inset: 0; overflow: hidden; }
-.poussiere i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #f0dca2; box-shadow: 0 0 10px 2px rgba(240, 220, 162, .55); opacity: 0; animation: flotte linear infinite; }
-@keyframes flotte { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: .9 } 85% { opacity: .7 } 100% { transform: translate(var(--dx), -38vh); opacity: 0 } }
-.porte-textes, .porte-bas { position: relative; transition: opacity .8s ease, transform 1s var(--ease); }
-.porte.ouvre .porte-textes { opacity: 0; transform: translateY(-16px); }
-.porte.ouvre .porte-bas { opacity: 0; transform: translateY(16px); }
-.porte-bh { margin: 0 0 14px; font: 400 16px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: var(--or-c); }
-.porte-haut { margin: 0 0 10px; font: 500 11px/1 var(--sans); letter-spacing: .42em; text-transform: uppercase; color: var(--or-c); }
-.porte-nom { margin: 0; font: italic 300 clamp(32px, 8.4vw, 46px)/1.1 var(--serif); color: var(--ivoire); }
-.porte-aide { margin: 0; font: italic 300 19px var(--serif); color: var(--or-p); animation: respire 2.8s ease-in-out infinite; }
-.porte-son { margin: 8px 0 0; font: 400 10px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(251, 248, 241, .45); }
-@keyframes respire { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
-
-.enveloppe { --ew: min(84vw, 460px, 58vh); --eh: calc(var(--ew) * .68); position: relative; width: var(--ew); height: var(--eh); perspective: 1600px; flex: none; }
-.env-dos { position: absolute; inset: 0; border-radius: 5px; background: var(--doublure) center/13% auto, radial-gradient(circle at 50% 30%, #4a5030, #2c301a); box-shadow: 0 34px 60px -24px rgba(0, 0, 0, .85), 0 12px 24px -12px rgba(0, 0, 0, .6); }
-.carte { position: absolute; left: 5%; top: 5%; width: 90%; height: 88%; z-index: 2; transform-origin: 50% 51%; will-change: transform; }
-.carte-papier { position: absolute; inset: 0; border-radius: 3px; background: linear-gradient(170deg, #fdfaf3, #f3ebdb); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .5);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 100' preserveAspectRatio='none'%3E%3Cpath fill-rule='evenodd' d='M0 0H150V100H0Z M57 84V36A18 18 0 0 1 93 36V84Z'/%3E%3C/svg%3E") center/100% 100% no-repeat;
-          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 100' preserveAspectRatio='none'%3E%3Cpath fill-rule='evenodd' d='M0 0H150V100H0Z M57 84V36A18 18 0 0 1 93 36V84Z'/%3E%3C/svg%3E") center/100% 100% no-repeat; }
-.carte-papier::after { content: ""; position: absolute; inset: 0; background-image: var(--bruit); opacity: .1; }
-.carte-cadre { position: absolute; inset: 0; width: 100%; height: 100%; }
-.carte-nom { position: absolute; top: 44%; width: 38%; text-align: center; font: 400 calc(var(--ew) * .068)/1 var(--display); color: #3b3f25; letter-spacing: .02em; }
-.carte-nom.g { left: 0; }
-.carte-nom.d { right: 0; }
-.carte-et { position: absolute; left: 0; right: 0; top: 5.5%; text-align: center; font: italic 300 calc(var(--ew) * .05)/1 var(--serif); color: var(--or); }
-.carte-bas { position: absolute; left: 0; right: 0; bottom: 5.5%; text-align: center; font: 500 calc(var(--ew) * .019)/1 var(--sans); letter-spacing: .34em; text-transform: uppercase; color: #8a7442; }
-.env-poche { position: absolute; inset: 0; z-index: 3; }
-.env-poche svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, .4)); }
-.env-poche::after { content: ""; position: absolute; inset: 0; background-image: var(--bruit); opacity: .1; clip-path: polygon(0 0, 50% 56%, 100% 0, 100% 100%, 0 100%); pointer-events: none; }
-.env-adresse { position: absolute; left: 0; right: 0; bottom: 13%; text-align: center; font: italic 300 calc(var(--ew) * .058)/1 var(--serif); color: #4a4a34; opacity: .85; }
-.env-rabat { position: absolute; left: 0; top: 0; width: 100%; height: 58.8%; z-index: 4; transform-origin: 50% 0; transform-style: preserve-3d; }
-.enveloppe.rabat-derriere .env-rabat { z-index: 1; }
-.rabat-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.rabat-face svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.rabat-face.int { transform: rotateX(180deg); }
-.doublure-motif { position: absolute; inset: 0; background: var(--doublure) center/13% auto; clip-path: polygon(0 0, 100% 0, 52% 94%, 50% 99%, 48% 94%); }
-.rabat-ombre { position: absolute; left: 0; top: 0; width: 100%; height: 64%; z-index: 3; pointer-events: none; background: linear-gradient(to bottom, rgba(60, 44, 20, .18), rgba(60, 44, 20, 0)); clip-path: polygon(0 0, 100% 0, 50% 100%); transition: opacity .5s; }
-.enveloppe.ouvert .rabat-ombre { opacity: 0; }
-.sceau { position: absolute; z-index: 6; left: 50%; top: 58.2%; width: calc(var(--ew) * .22); aspect-ratio: 1; height: auto; transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35)); transition: transform .25s var(--ease); }
-.sceau:hover { transform: translate(-50%, -50%) scale(1.04); }
-.sceau:active { transform: translate(-50%, -50%) scale(.94); }
-.sceau::after { content: ""; position: absolute; inset: -10%; border-radius: 50%; border: 1px solid rgba(240, 220, 162, .6); animation: onde 2.4s ease-out infinite; }
-@keyframes onde { 0% { transform: scale(.85); opacity: .9 } 100% { transform: scale(1.5); opacity: 0 } }
-.sceau.casse::after { display: none; }
-.sceau .moitie { position: absolute; inset: 0; transition: transform 1s cubic-bezier(.35, 0, .65, 1), opacity 1s ease; }
-.sceau .moitie svg { width: 100%; height: 100%; display: block; }
-.sceau .moitie img { position: absolute; left: 22%; top: 21%; width: 56%; height: auto; filter: brightness(0) invert(.94) sepia(.28) drop-shadow(0 1px 0 rgba(0,0,0,.35)); opacity: .92; }
-.sceau .g { clip-path: polygon(0 0, 52% 0, 47% 21%, 55% 40%, 45% 61%, 53% 81%, 48% 100%, 0 100%); }
-.sceau .d { clip-path: polygon(52% 0, 100% 0, 100% 100%, 48% 100%, 53% 81%, 45% 61%, 55% 40%, 47% 21%); }
-.sceau.casse .g { transform: translate(-46%, 90%) rotate(-38deg); opacity: 0; }
-.sceau.casse .d { transform: translate(44%, 100%) rotate(30deg); opacity: 0; }
-.etincelle { position: fixed; z-index: 30; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #fff3cc; box-shadow: 0 0 8px 2px rgba(255, 214, 140, .8); pointer-events: none; }
+/* ---------- 1. l'ouverture : un voilage ivoire qui s'écarte ---------- */
+.porte { position: fixed; inset: 0; z-index: 20; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); text-align: center; color: #3f4126; }
+.porte:focus-visible { outline: none; }
+.voilage { position: absolute; top: -3%; bottom: -3%; width: 53%; will-change: transform;
+  background:
+    linear-gradient(to bottom, rgba(255, 252, 244, .25), rgba(226, 214, 190, .22) 70%, rgba(210, 196, 168, .3)),
+    repeating-linear-gradient(90deg, rgba(255, 253, 247, .95) 0, rgba(246, 239, 226, .93) 1.7vw, rgba(229, 219, 199, .92) 3.3vw, rgba(247, 242, 232, .94) 5vw, rgba(255, 253, 247, .95) 6.6vw);
+  background-size: 100% 100%, 6.6vw 100%;
+  animation: brise 7s ease-in-out infinite;
+  transition: transform 2.6s cubic-bezier(.62, 0, .22, 1), opacity 2.6s ease; }
+.voilage.g { left: 0; transform-origin: 0 50%; }
+.voilage.d { right: 0; transform-origin: 100% 50%; animation-delay: -3.5s; }
+.voilage.g::after, .voilage.d::after { content: ""; position: absolute; top: 0; bottom: 0; width: 18px; }
+.voilage.g::after { right: 0; background: linear-gradient(90deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-right: 1px solid rgba(179, 148, 87, .45); }
+.voilage.d::after { left: 0; background: linear-gradient(270deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-left: 1px solid rgba(179, 148, 87, .45); }
+@keyframes brise { 0%, 100% { background-position: 0 0, 0 0; transform: skewX(0deg); } 50% { background-position: 0 0, 1.2vw 0; transform: skewX(.6deg); } }
+.porte.ouvre .voilage { animation: none; }
+.porte.ouvre .voilage.g { transform: translateX(-100%) scaleX(.5); opacity: .85; }
+.porte.ouvre .voilage.d { transform: translateX(100%) scaleX(.5); opacity: .85; }
+.lueur { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(255, 244, 214, .95), rgba(255, 236, 196, .4) 45%, rgba(255, 236, 196, 0) 75%); }
+.porte.ouvre .lueur { animation: lueur 2.4s ease-out forwards; }
+@keyframes lueur { 0% { opacity: 0; } 30% { opacity: .75; } 100% { opacity: 0; } }
+.poussiere { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.poussiere i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #e2c98f; box-shadow: 0 0 10px 2px rgba(226, 201, 143, .5); opacity: 0; animation: flotte linear infinite; }
+@keyframes flotte { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: .8 } 85% { opacity: .6 } 100% { transform: translate(var(--dx), -38vh); opacity: 0 } }
+.porte-contenu, .porte-bas { position: relative; transition: opacity .9s ease, filter .9s ease, transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.porte.ouvre .porte-contenu, .porte.ouvre .porte-bas { opacity: 0; filter: blur(6px); transform: scale(1.04); }
+.porte.ouvre .poussiere { opacity: 0; transition: opacity 1s; }
+.porte-contenu > * { animation: porte-in 1.5s cubic-bezier(.2, .7, .2, 1) both; }
+.porte-contenu > :nth-child(2) { animation-delay: .25s; } .porte-contenu > :nth-child(3) { animation-delay: .7s; }
+.porte-contenu > :nth-child(4) { animation-delay: .9s; } .porte-contenu > :nth-child(5) { animation-delay: 1.2s; }
+@keyframes porte-in { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.porte .bh { margin: 0 0 10px; font: 400 16px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: #6f6a57; }
+.porte-mono { display: block; width: clamp(64px, 18vw, 88px); height: auto; margin: 4px auto 14px; opacity: .85; }
+.porte-contenu > .porte-mono { animation-name: mono-in; }
+@keyframes mono-in { from { opacity: 0; transform: translateY(6px); } to { opacity: .85; transform: none; } }
+.porte-invite { margin: 0; font: 500 12px/1.5 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: #6f6a57; }
+.porte-invite:empty { display: none; }
+.porte-noms { margin: 8px 0 !important; font: 400 clamp(56px, 16vw, 104px)/1 var(--display); color: #3f4126; }
+.porte-noms em { font-style: normal; font-size: .5em; color: #5f6139; }
+.porte-date { margin: 0; font: 500 12px var(--sans); letter-spacing: .24em; text-transform: uppercase; color: #5f6139; }
+.porte-bas { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 8vh); }
+.porte-aide { margin: 0; font: italic 300 clamp(20px, 5.4vw, 24px) var(--serif); color: #5f6139; animation: respire 2.8s ease-in-out infinite; }
+.porte-son { margin: 8px 0 0; font: 400 10px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(63, 65, 38, .5); }
+@keyframes respire { 0%, 100% { opacity: .5 } 50% { opacity: 1 } }
 
 /* ---------- 2. le film ---------- */
 .film { position: fixed; inset: 0; z-index: 15; pointer-events: none; visibility: hidden; }
@@ -106,6 +94,8 @@ canvas.decor { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .r-bas p { margin: 0 auto; max-width: 30em; font: italic 300 clamp(21px, 5.4vw, 30px)/1.35 var(--serif); color: var(--ivoire); }
 .noms-film { display: block; font: 400 clamp(56px, 16vw, 132px)/1 var(--display); letter-spacing: .02em; }
 .noms-film .n1, .noms-film .n2 { background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 5s ease-in-out infinite; }
+.noms-film { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .45)); }
+.noms-film .n1, .noms-film .n2 { text-shadow: none; }
 .noms-film em { display: block; margin: .1em 0 .06em; font: italic 300 .42em/1 var(--serif); color: var(--or-c); }
 @keyframes reflet { 0%, 100% { background-position: 100% 0 } 50% { background-position: 0 0 } }
 .sous { display: block; margin-top: 12px; font: italic 300 clamp(22px, 5.6vw, 32px) var(--serif); color: var(--ivoire); opacity: 0; transition: opacity 1.4s ease 1.2s; }
@@ -271,3 +261,9 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .replique.sombre .tag-ev { color: #8a7442; }
 .replique.sombre .eyebrow { color: #8a7442; }
 .replique.sombre { text-shadow: 0 1px 16px rgba(255, 252, 244, .9); }
+
+.replique.apercu { text-shadow: 0 1px 2px rgba(70, 42, 12, .35), 0 2px 18px rgba(70, 42, 12, .4); }
+.replique.apercu .eyebrow { margin-bottom: 14px; color: #fff4d8; }
+.replique.apercu .noms-film { filter: drop-shadow(0 1px 1px rgba(70, 42, 12, .45)) drop-shadow(0 3px 16px rgba(70, 42, 12, .45)); }
+.replique.apercu .sous { max-width: 16em; margin-left: auto; margin-right: auto; text-wrap: balance; }
+.replique.apercu-date { top: auto; bottom: calc(8.5vh + 10vh); }

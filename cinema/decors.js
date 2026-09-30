@@ -229,9 +229,10 @@ function mer(ctx, c, M, t, o) {
   const g = ctx.createLinearGradient(0, top, 0, bas);
   o.cols.forEach((col, i) => g.addColorStop(i / (o.cols.length - 1), MF.rgba(col)));
   ctx.fillStyle = g; ctx.fillRect(0, top, c.W, bas - top);
-  const hz = ctx.createLinearGradient(0, top, 0, top + (bas - top) * .22);
+  const hh = Math.min((bas - top) * .22, c.H * .07);
+  const hz = ctx.createLinearGradient(0, top, 0, top + hh);
   hz.addColorStop(0, o.teinte + '.5)'); hz.addColorStop(1, o.teinte + '0)');
-  ctx.fillStyle = hz; ctx.fillRect(0, top, c.W, (bas - top) * .22);
+  ctx.fillStyle = hz; ctx.fillRect(0, top, c.W, hh);
   const [sx] = infini(c, o.az, 0);
   if (o.reflet > 0) {
     ctx.save(); ctx.translate(sx, top + (bas - top) * .18); ctx.scale(1, 3.2);
@@ -239,7 +240,8 @@ function mer(ctx, c, M, t, o) {
     gc.addColorStop(0, o.teinte + (o.reflet * .5).toFixed(3) + ')'); gc.addColorStop(1, o.teinte + '0)');
     ctx.fillStyle = gc; ctx.fillRect(-rr, -rr, rr * 2, rr * 2); ctx.restore();
   }
-  const zMin = Math.max(.8, o.zMin), zMax = 700;
+  // distance la plus proche réellement visible (utile quand la caméra vole haut)
+  const zMin = Math.max(.8, o.zMin, haut * c.f / Math.max(1, bas - top) * .95), zMax = 700;
   ctx.lineCap = 'round';
   for (const v of M.vagues) {
     const d = 1 / (1 / zMax + v.u * (1 / zMin - 1 / zMax)), k = c.f / d;
@@ -356,15 +358,18 @@ MF.scenes.soie = (() => {
    PLAGE — le henné en bordeaux au coucher du soleil, ou la mer calme à l'aube (réponse)
    ===================================================================== */
 MF.scenes.plage = (() => {
-  const p = { camX: 0, camY: -1.3, camZ: 0, focale: .95, tilt: .05, variante: 0, soleil: .03 };
+  const p = { camX: 0, camY: -1.3, camZ: 0, focale: .95, tilt: .05, variante: 0, soleil: .03, rivage: 1 };
   const V = [
     { ciel: ['#2a0812', '#561427', '#8e2a3a', '#c9504c', '#f09a66'], coeur: '#ffdcae', halo: 'rgba(255,184,140,', mer: ['#c56a55', '#8a2c38', '#4e1220', '#2e0810'], teinte: 'rgba(255,196,160,',
       sable: ['#b9786a', '#5e2830'], mouille: 'rgba(110,24,38,.34)', nappe: 'rgba(150,50,60,.32)', ecume: 'rgba(255,232,214,', reflet: 'rgba(255,190,150,.32)', vig: '40,6,14' },
     { ciel: ['#dde2e3', '#ebe9df', '#f6ead4', '#fbe3bf'], coeur: '#fff6e2', halo: 'rgba(255,240,208,', mer: ['#d7d8c6', '#b3b99f', '#93a088'], teinte: 'rgba(255,246,225,',
       sable: ['#f0e5cd', '#d6c2a0'], mouille: 'rgba(150,150,120,.18)', nappe: 'rgba(200,205,185,.35)', ecume: 'rgba(255,253,246,', reflet: 'rgba(255,244,215,.4)', vig: '140,120,80' },
+    // heure dorée, pour le plan d'aperçu vu du ciel
+    { ciel: ['#34507e', '#6f85ab', '#c9b3a0', '#f2c48e', '#fbd9a2'], coeur: '#fff2d2', halo: 'rgba(255,228,176,', mer: ['#d9b48c', '#9a9282', '#56626a', '#2f3d4a'], teinte: 'rgba(255,232,192,',
+      sable: ['#ead5b0', '#b99b74'], mouille: 'rgba(120,110,100,.22)', nappe: 'rgba(170,165,150,.35)', ecume: 'rgba(255,250,238,', reflet: 'rgba(255,226,180,.4)', vig: '60,50,40' },
   ];
-  const nuagesH = makeNuages(8, 'henne', '255,170,140', '90,20,40', .34, 3), nuagesA = makeNuages(6, 'aube', '255,250,238', '215,205,180', .3, 5);
-  const M = makeMer(110, 130, 7);
+  const nuagesH = makeNuages(8, 'henne', '255,170,140', '90,20,40', .34, 3), nuagesA = makeNuages(6, 'aube', '255,250,238', '215,205,180', .3, 5), nuagesD = makeNuages(9, 'dore', '255,222,176', '110,100,120', .4, 9);
+  const M = makeMer(130, 200, 7);
   // lanternes orientales posées sur le sable, pétales rouges autour
   const r = MF.rng(21);
   const lanternes = [];
@@ -377,12 +382,22 @@ MF.scenes.plage = (() => {
   return {
     p, nom: 'plage',
     dessine(ctx, W, H, t) {
-      const c = MF.camera(p, W, H), P = V[p.variante], henne = p.variante === 0;
+      const c = MF.camera(p, W, H), P = V[p.variante], henne = p.variante === 0, dore = p.variante === 2;
       ciel(ctx, c, P.ciel.map(MF.hex), .75);
-      nuages(ctx, c, henne ? nuagesH : nuagesA, t, henne ? .85 : .55);
-      soleil(ctx, c, 0, p.soleil, henne ? .046 : .028, P.coeur, P.halo, 1, henne);
-      mer(ctx, c, M, t, { niveau: .05, cols: P.mer.map(MF.hex), teinte: P.teinte, az: 0, bas: H, zMin: 5, eclat: 1, reflet: henne ? .75 : .5 });
-      rivage(ctx, c, t, { Zs: henne ? 6.2 : 6.5, montee: 1.3, sable: P.sable.map(MF.hex), mouille: P.mouille, nappe: P.nappe, ecume: P.ecume, refletSoleil: P.reflet, az: 0 });
+      nuages(ctx, c, henne ? nuagesH : dore ? nuagesD : nuagesA, t, henne ? .85 : dore ? .9 : .55);
+      soleil(ctx, c, 0, p.soleil, henne ? .046 : dore ? .036 : .028, P.coeur, P.halo, 1, henne);
+      mer(ctx, c, M, t, { niveau: .05, cols: P.mer.map(MF.hex), teinte: P.teinte, az: 0, bas: H, zMin: 5, eclat: 1, reflet: henne || dore ? .75 : .5 });
+      if (dore) {
+        // une côte lointaine, basse, où s'allument quelques lumières
+        ctx.fillStyle = 'rgba(70,72,92,.55)'; ctx.beginPath();
+        const pts = [];
+        for (let i = 0; i <= 24; i++) { const az = -1.6 + i * .06, el = .006 + .004 * Math.sin(i * 1.7) + .003 * Math.sin(i * 4.1); pts.push(infini(c, az, el)); }
+        ctx.moveTo(pts[0][0], c.hor + 1); for (const q of pts) ctx.lineTo(q[0], q[1]); ctx.lineTo(pts[pts.length - 1][0], c.hor + 1); ctx.fill();
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 40; i++) { const [x, y] = infini(c, -1.55 + (i * .618 % 1) * 1.3, .002 + (i * .37 % 1) * .005); MF.poseHalo(ctx, haloAmbre, x, y, 2.2, .35 + .25 * Math.sin(t * 2 + i)); }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      if (p.rivage) rivage(ctx, c, t, { Zs: henne ? 6.2 : 6.5, montee: 1.3, sable: P.sable.map(MF.hex), mouille: P.mouille, nappe: P.nappe, ecume: P.ecume, refletSoleil: P.reflet, az: 0 });
       if (henne) {
         // pétales rouges sur le sable
         for (const q of petalesSable) {
