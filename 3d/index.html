@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emma &amp; David</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14150e">
+<meta property="og:title" content="Emma & David">
+<meta property="og:description" content="Votre invitation · Marseille & Israël · 2027">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://davlev16-cyber.github.io/mariage-emma-david/cinema/apercu.jpg">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400&text=%D7%91%D7%B4%D7%94&display=swap">
+<link rel="stylesheet" href="style.css?v=1790858650">
+</head>
+<body class="verrou">
+
+<canvas class="monde" id="monde" aria-hidden="true"></canvas>
+<div class="voile" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ 1. L'ouverture : deux pans de voile qui s'écartent ============ -->
+<section class="porte" id="porte" role="button" tabindex="0" aria-label="Ouvrir l'invitation">
+  <div class="voilage g" aria-hidden="true"></div>
+  <div class="voilage d" aria-hidden="true"></div>
+  <div class="lueur" aria-hidden="true"></div>
+  <div class="poussiere" id="poussiere" aria-hidden="true"></div>
+  <div class="porte-contenu">
+    <p class="bh" lang="he">ב״ה</p>
+    <img class="porte-mono" src="../monogramme.png" alt="" width="84" height="84">
+    <p class="porte-invite" data-invite></p>
+    <p class="porte-noms">Emma <em>&amp;</em> David</p>
+    <p class="porte-date">Marseille &amp; Israël · 2027</p>
+  </div>
+  <div class="porte-bas">
+    <p class="porte-aide">Touchez l'écran pour ouvrir l'invitation</p>
+    <p class="porte-son"><span aria-hidden="true">♪</span> Montez le son</p>
+  </div>
+</section>
+
+<!-- ============ 2. Les bandes noires du cinéma, pendant les plans ============ -->
+<div class="film" id="film" aria-hidden="true">
+  <div class="bande haut"></div>
+  <div class="bande bas"></div>
+</div>
+
+<!-- ============ 3. L'histoire : plans de cinéma et pages, dans l'ordre du premier site ============ -->
+<main class="invitation" id="invitation"></main>
+
+<button class="son" id="son" type="button" aria-label="Couper la musique" hidden>
+  <span class="barres"><i></i><i></i><i></i><i></i></span>
+</button>
+<audio id="musique" preload="auto" src="../night-of-gold.mp3" loop></audio>
+
+<script src="../config.js?v=1790858650"></script>
+<script type="module" src="moteur3d.js?v=1790858650"></script>
+<script type="module" src="decors3d.js?v=1790858650"></script>
+<script type="module" src="film3d.js?v=1790858650"></script>
+</body>
+</html>

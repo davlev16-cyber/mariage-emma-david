@@ -1,0 +1,291 @@
+/* Emma & David · version 3D (mêmes styles que la version cinéma) */
+:root {
+  --ivoire: #fbf8f1;
+  --creme: #f3ecdd;
+  --olive: #5c6240;
+  --olive-f: #33371f;
+  --or: #b39457;
+  --or-c: #dcc890;
+  --or-p: #efe0b4;
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --display: "Italiana", "Didot", Georgia, serif;
+  --sans: "Jost", "Helvetica Neue", Arial, sans-serif;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --bruit: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --doublure: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cpath d='M13 5 L15.6 13 L13 21 L10.4 13Z' fill='none' stroke='%23d2b675' stroke-width='.6' opacity='.55'/%3E%3Ccircle cx='0' cy='0' r='1.1' fill='%23d2b675' opacity='.55'/%3E%3Ccircle cx='26' cy='0' r='1.1' fill='%23d2b675' opacity='.55'/%3E%3Ccircle cx='0' cy='26' r='1.1' fill='%23d2b675' opacity='.55'/%3E%3Ccircle cx='26' cy='26' r='1.1' fill='%23d2b675' opacity='.55'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: #07080c; -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100%; background: #07080c; color: var(--ivoire); font: 300 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body.verrou { overflow: hidden; height: 100%; position: fixed; inset: 0; }
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+
+/* ---------- toiles et voile ---------- */
+canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; pointer-events: none; }
+.voile { position: fixed; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(0, 0, 0, .42) 100%); }
+.grain { position: fixed; inset: -60px; z-index: 4; pointer-events: none; opacity: .045; background-image: var(--bruit); animation: grain 1s steps(6) infinite; will-change: transform; }
+@keyframes grain { 0% { transform: translate(0, 0) } 20% { transform: translate(-22px, 14px) } 40% { transform: translate(18px, -26px) } 60% { transform: translate(-12px, 30px) } 80% { transform: translate(26px, 8px) } 100% { transform: translate(0, 0) } }
+
+/* ---------- 1. l'ouverture : un voilage ivoire qui s'écarte ---------- */
+.porte { position: fixed; inset: 0; z-index: 20; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); text-align: center; color: #3f4126; }
+.porte:focus-visible { outline: none; }
+.voilage { position: absolute; top: -3%; bottom: -3%; width: 53%; will-change: transform;
+  background:
+    linear-gradient(to bottom, rgba(255, 252, 244, .25), rgba(226, 214, 190, .22) 70%, rgba(210, 196, 168, .3)),
+    repeating-linear-gradient(90deg, rgba(255, 253, 247, .95) 0, rgba(246, 239, 226, .93) 1.7vw, rgba(229, 219, 199, .92) 3.3vw, rgba(247, 242, 232, .94) 5vw, rgba(255, 253, 247, .95) 6.6vw);
+  background-size: 100% 100%, 6.6vw 100%;
+  animation: brise 7s ease-in-out infinite; }
+.voilage.g { left: 0; transform-origin: 0 50%; }
+.voilage.d { right: 0; transform-origin: 100% 50%; animation-delay: -3.5s; }
+.voilage.g::after, .voilage.d::after { content: ""; position: absolute; top: 0; bottom: 0; width: 18px; }
+.voilage.g::after { right: 0; background: linear-gradient(90deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-right: 1px solid rgba(179, 148, 87, .45); }
+.voilage.d::after { left: 0; background: linear-gradient(270deg, rgba(190, 172, 130, 0), rgba(190, 172, 130, .28)); border-left: 1px solid rgba(179, 148, 87, .45); }
+@keyframes brise { 0%, 100% { background-position: 0 0, 0 0; transform: skewX(0deg); } 50% { background-position: 0 0, 1.2vw 0; transform: skewX(.6deg); } }
+.porte.ouvre { pointer-events: none; }
+.lueur { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(255, 244, 214, .95), rgba(255, 236, 196, .4) 45%, rgba(255, 236, 196, 0) 75%); }
+.porte.ouvre .lueur { animation: lueur 2.4s ease-out forwards; }
+@keyframes lueur { 0% { opacity: 0; } 30% { opacity: .75; } 100% { opacity: 0; } }
+.poussiere { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.poussiere i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #e2c98f; box-shadow: 0 0 10px 2px rgba(226, 201, 143, .5); opacity: 0; animation: flotte linear infinite; }
+@keyframes flotte { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: .8 } 85% { opacity: .6 } 100% { transform: translate(var(--dx), -38vh); opacity: 0 } }
+.porte-contenu, .porte-bas { position: relative; transition: opacity .9s ease, filter .9s ease, transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.porte.ouvre .porte-contenu, .porte.ouvre .porte-bas { opacity: 0; filter: blur(6px); transform: scale(1.04); }
+.porte.ouvre .poussiere { opacity: 0; transition: opacity 1s; }
+.porte-contenu > * { animation: porte-in 1.5s cubic-bezier(.2, .7, .2, 1) both; }
+.porte-contenu > :nth-child(2) { animation-delay: .25s; } .porte-contenu > :nth-child(3) { animation-delay: .7s; }
+.porte-contenu > :nth-child(4) { animation-delay: .9s; } .porte-contenu > :nth-child(5) { animation-delay: 1.2s; }
+@keyframes porte-in { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.porte .bh { margin: 0 0 10px; font: 400 16px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: #6f6a57; }
+.porte-mono { display: block; width: clamp(64px, 18vw, 88px); height: auto; margin: 4px auto 14px; opacity: .85; }
+.porte-contenu > .porte-mono { animation-name: mono-in; }
+@keyframes mono-in { from { opacity: 0; transform: translateY(6px); } to { opacity: .85; transform: none; } }
+.porte-invite { margin: 0; font: 500 12px/1.5 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: #6f6a57; }
+.porte-invite:empty { display: none; }
+.porte-noms { margin: 8px 0 !important; font: 400 clamp(56px, 16vw, 104px)/1 var(--display); color: #3f4126; }
+.porte-noms em { font-style: normal; font-size: .5em; color: #5f6139; }
+.porte-date { margin: 0; font: 500 12px var(--sans); letter-spacing: .24em; text-transform: uppercase; color: #5f6139; }
+.porte-bas { position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 8vh); }
+.porte-aide { margin: 0; font: italic 300 clamp(20px, 5.4vw, 24px) var(--serif); color: #5f6139; animation: respire 2.8s ease-in-out infinite; }
+.porte-son { margin: 8px 0 0; font: 400 10px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(63, 65, 38, .5); }
+@keyframes respire { 0%, 100% { opacity: .5 } 50% { opacity: 1 } }
+
+/* ---------- 2. le film ---------- */
+.film { position: fixed; inset: 0; z-index: 15; pointer-events: none; visibility: hidden; }
+.film.on { visibility: visible; }
+.bande { position: absolute; left: 0; right: 0; height: 8.5vh; background: #000; transform: scaleY(0); transition: transform 1.4s var(--ease); }
+.bande.haut { top: 0; transform-origin: 50% 0; }
+.bande.bas { bottom: 0; transform-origin: 50% 100%; }
+.film.cadre .bande { transform: scaleY(1); }
+.replique { position: absolute; left: 0; right: 0; padding: 0 24px; text-align: center; opacity: 0; filter: blur(6px); transform: translateY(10px); transition: opacity .8s ease, filter .8s ease, transform 1s ease; text-shadow: 0 2px 24px rgba(0, 0, 0, .55), 0 0 2px rgba(0, 0, 0, .3); }
+.replique.vu { opacity: 1; filter: blur(0); transform: none; transition: opacity 1.5s ease, filter 1.4s ease, transform 2.2s var(--ease); }
+.r-haut { top: calc(8.5vh + 7vh); }
+.r-bas { bottom: calc(8.5vh + 5vh); }
+.r-centre { top: 21vh; }
+.r-date { top: calc(21vh + clamp(118px, 22vw, 190px)); display: flex; align-items: center; justify-content: center; gap: 14px; font: 500 11px var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--or-p); }
+.r-date .ligne { width: 34px; height: 1px; background: linear-gradient(90deg, transparent, var(--or-c)); }
+.r-date .ligne:last-child { transform: scaleX(-1); }
+.chapitre { display: block; font: 500 11px var(--sans); letter-spacing: .5em; text-transform: uppercase; color: var(--or-c); margin-bottom: 10px; }
+.ville { display: block; font: 400 clamp(54px, 15vw, 118px)/.95 var(--display); letter-spacing: .04em; color: var(--ivoire); }
+.r-bas p { margin: 0 auto; max-width: 30em; font: italic 300 clamp(21px, 5.4vw, 30px)/1.35 var(--serif); color: var(--ivoire); }
+.noms-film { display: block; font: 400 clamp(56px, 16vw, 132px)/1 var(--display); letter-spacing: .02em; }
+.noms-film .n1, .noms-film .n2 { background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 5s ease-in-out infinite; }
+.noms-film { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .45)); }
+.noms-film .n1, .noms-film .n2 { text-shadow: none; }
+.noms-film em { display: block; margin: .1em 0 .06em; font: italic 300 .42em/1 var(--serif); color: var(--or-c); }
+@keyframes reflet { 0%, 100% { background-position: 100% 0 } 50% { background-position: 0 0 } }
+.sous { display: block; margin-top: 12px; font: italic 300 clamp(22px, 5.6vw, 32px) var(--serif); color: var(--ivoire); opacity: 0; transition: opacity 1.4s ease .8s; }
+.replique.vu .sous { opacity: 1; }
+.date-fin { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; font: 500 11px/1.7 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-p); opacity: 0; transition: opacity 1.4s ease 1.6s; }
+.date-fin > span:nth-child(2) > span { display: block; }
+.date-fin .ligne { flex: none; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, var(--or-c)); }
+.date-fin .ligne:last-child { transform: scaleX(-1); }
+.replique.vu .date-fin { opacity: 1; }
+.decouvrir { bottom: calc(8.5vh + 4vh); left: 50%; right: auto; transform: translate(-50%, 14px); display: inline-flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 20px; border: 0; background: none; cursor: pointer; font: 500 11px var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--ivoire); pointer-events: auto; }
+.decouvrir.vu { transform: translate(-50%, 0); }
+.decouvrir span { font-size: 18px; animation: descend 1.8s ease-in-out infinite; }
+@keyframes descend { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(6px) } }
+.passer { position: absolute; right: 14px; bottom: calc(8.5vh + 12px + env(safe-area-inset-bottom) * .3); padding: 10px 14px; border: 1px solid rgba(251, 248, 241, .28); border-radius: 999px; background: rgba(10, 10, 12, .55); cursor: pointer; font: 500 10px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(251, 248, 241, .8); pointer-events: auto; opacity: 0; transition: opacity .8s; }
+.film.cadre .passer { opacity: 1; }
+.film.fin .passer { opacity: 0; pointer-events: none; }
+
+/* ---------- 3. l'histoire : un plan de cinéma (zone de défilement avec sa carte), puis sa page ---------- */
+.cine { position: relative; height: calc(var(--h, 230) * 1vh); }
+.cine-cadre { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; pointer-events: none; }
+.fin-carte .fin-date { display: block; margin-top: 16px; font: 500 12px/1.6 var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--or-p); }
+
+.invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; }
+body.page .invitation { opacity: 1; visibility: visible; }
+.chap { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; padding: calc(9vh + env(safe-area-inset-top)) 16px 10vh; text-align: center; }
+.chap + .chap { min-height: 118vh; min-height: 118svh; }
+.chap::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 70%; pointer-events: none; background: linear-gradient(to bottom, rgba(4, 5, 10, .42), rgba(4, 5, 10, .18) 55%, rgba(4, 5, 10, 0)); }
+.contenu { position: relative; width: 100%; max-width: 620px; text-shadow: 0 2px 22px rgba(0, 0, 0, .6), 0 0 2px rgba(0, 0, 0, .35); }
+[data-apparait] { opacity: 0; transform: translateY(18px); filter: blur(6px); transition: opacity 1.2s ease, transform 1.4s var(--ease), filter 1.4s ease; transition-delay: var(--d, 0s); }
+[data-apparait].vu { opacity: 1; transform: none; filter: none; }
+.bh { margin: 0 0 18px; font: 400 17px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: var(--or-c); }
+.parents { margin: 0; font: 400 12px/1.9 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: rgba(251, 248, 241, .86); }
+.annonce { margin: 14px auto 0; max-width: 19em; text-wrap: balance; font: italic 300 clamp(19px, 4.9vw, 24px)/1.35 var(--serif); color: var(--ivoire); }
+.noms { margin: 20px 0 6px; font: 400 clamp(58px, 16.5vw, 120px)/.95 var(--display); letter-spacing: .02em; }
+.noms span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out infinite; }
+.noms em { display: block; margin: 4px 0; font: italic 300 .4em/1 var(--serif); color: var(--or-c); }
+.date-grande { margin: 18px 0 0; font: 400 clamp(15px, 3.8vw, 18px)/1.5 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--ivoire); }
+.date-grande span { display: block; margin-top: 2px; font: italic 300 clamp(22px, 5.6vw, 28px)/1.3 var(--serif); letter-spacing: 0; text-transform: none; color: var(--or-p); }
+.compte { margin: 22px 0 0; font: 400 11px var(--sans); letter-spacing: .32em; text-transform: uppercase; color: rgba(251, 248, 241, .75); }
+.compte b { font: 400 22px var(--sans); letter-spacing: .06em; color: var(--or-p); margin: 0 4px; }
+.perso { margin: 22px auto 0; max-width: 24em; font: italic 300 clamp(18px, 4.6vw, 22px)/1.4 var(--serif); color: var(--ivoire); text-shadow: 0 1px 3px rgba(0, 0, 0, .7), 0 2px 24px rgba(0, 0, 0, .8); }
+.defiler { position: absolute; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); width: 30px; height: 46px; margin-left: -15px; border: 1px solid rgba(251, 248, 241, .45); border-radius: 16px; }
+.defiler span { position: absolute; left: 50%; top: 9px; width: 2px; height: 8px; margin-left: -1px; border-radius: 1px; background: var(--or-p); animation: roule 2s ease-in-out infinite; }
+@keyframes roule { 0% { transform: translateY(0); opacity: 0 } 30% { opacity: 1 } 100% { transform: translateY(16px); opacity: 0 } }
+.surtitre { margin: 0 0 12px; font: 500 11px/1.6 var(--sans); letter-spacing: .4em; text-transform: uppercase; color: var(--or-c); }
+h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spacing: .02em; color: var(--ivoire); text-wrap: balance; }
+.recit { margin: 20px auto 0; max-width: 26em; text-wrap: pretty; font: italic 300 clamp(19px, 4.8vw, 23px)/1.45 var(--serif); color: var(--ivoire); }
+.frise { list-style: none; display: flex; justify-content: center; gap: clamp(14px, 6vw, 44px); margin: 26px 0 0; padding: 0; }
+.frise li { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.frise b { font: 400 24px var(--sans); letter-spacing: .08em; color: var(--or-p); font-weight: 300; }
+.frise span { font: italic 300 17px var(--serif); color: rgba(251, 248, 241, .9); }
+.heure { margin: 18px 0 0; font: 400 clamp(14px, 3.7vw, 17px)/1.8 var(--sans); letter-spacing: .12em; color: var(--ivoire); }
+.lieu { margin: 16px 0 0; font: italic 300 clamp(22px, 5.6vw, 28px)/1.3 var(--serif); color: var(--or-p); }
+.lieu sup { text-transform: none; font-size: .75em; }
+.sous-titre { margin: 6px 0 0; font: italic 300 clamp(22px, 5.6vw, 28px)/1.2 var(--serif); color: var(--or-p); }
+.lieu span { display: block; margin-top: 4px; font: 400 12px/1.6 var(--sans); font-style: normal; letter-spacing: .22em; text-transform: uppercase; color: rgba(251, 248, 241, .8); }
+.note { margin: 14px 0 0; font: italic 300 18px var(--serif); color: rgba(251, 248, 241, .88); }
+.lien-carte { display: inline-block; margin-top: 22px; padding: 11px 22px; border: 1px solid rgba(220, 200, 144, .6); border-radius: 999px; background: rgba(10, 10, 14, .45); font: 500 11px var(--sans); letter-spacing: .3em; text-transform: uppercase; text-decoration: none; color: var(--ivoire); text-shadow: none; transition: background .4s, border-color .4s; }
+.lien-carte:hover { background: rgba(220, 200, 144, .18); border-color: var(--or-c); }
+
+/* réponse */
+.reponse .contenu { max-width: 460px; }
+.formulaire { margin: 26px auto 0; padding: 22px 18px 20px; border-radius: 18px; background: rgba(8, 9, 16, .72); border: 1px solid rgba(220, 200, 144, .22); text-align: left; text-shadow: none; }
+.champ { display: block; margin-bottom: 16px; }
+.champ > span, .choix legend { display: block; margin-bottom: 8px; font: 500 10px var(--sans); letter-spacing: .28em; text-transform: uppercase; color: var(--or-c); }
+.champ input, .champ textarea { width: 100%; padding: 12px 14px; border: 1px solid rgba(251, 248, 241, .2); border-radius: 12px; background: rgba(255, 255, 255, .06); color: var(--ivoire); font: 300 16px var(--sans); outline: none; resize: none; transition: border-color .3s; }
+.champ input:focus, .champ textarea:focus { border-color: var(--or-c); }
+.champ textarea::placeholder { color: rgba(251, 248, 241, .4); }
+.choix { margin: 0 0 16px; padding: 0; border: 0; display: grid; gap: 8px; }
+.choix label { display: block; cursor: pointer; }
+.choix input { position: absolute; opacity: 0; pointer-events: none; }
+.choix span { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid rgba(251, 248, 241, .2); border-radius: 12px; font: 400 15px var(--sans); transition: background .3s, border-color .3s; }
+.choix span::before { content: ""; width: 16px; height: 16px; flex: none; border: 1px solid rgba(251, 248, 241, .5); border-radius: 50%; transition: background .3s, border-color .3s, box-shadow .3s; }
+.choix i { font: italic 300 16px var(--serif); color: rgba(251, 248, 241, .7); }
+.choix input:checked + span { background: rgba(220, 200, 144, .14); border-color: rgba(220, 200, 144, .6); }
+.choix input:checked + span::before { background: var(--or-c); border-color: var(--or-c); box-shadow: inset 0 0 0 3px #1a1b14; }
+.choix input:focus-visible + span { outline: 2px solid var(--or-c); outline-offset: 2px; }
+.nombre .pas { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(251, 248, 241, .2); border-radius: 999px; padding: 4px; }
+.pas button { width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); cursor: pointer; font: 300 20px/1 var(--sans); }
+.pas output { min-width: 40px; text-align: center; font: 400 18px var(--sans); }
+.envoyer { display: block; width: 100%; margin-top: 6px; padding: 15px; border: 0; border-radius: 999px; background: linear-gradient(100deg, #b39457, #e9d59e 50%, #b39457); background-size: 200% 100%; color: #1f2014; cursor: pointer; font: 500 12px var(--sans); letter-spacing: .26em; text-transform: uppercase; transition: background-position .6s; }
+.envoyer:hover { background-position: 100% 0; }
+.merci { margin-top: 26px; }
+.merci-titre { margin: 0 0 6px; font: 400 clamp(38px, 10vw, 60px)/1.05 var(--display); background: linear-gradient(100deg, #b8995a, #f6e8bf 45%, #b39457); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.merci p { font: italic 300 20px/1.4 var(--serif); }
+.merci .demo-note { margin-top: 14px; font: 400 11px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: rgba(251, 248, 241, .6); }
+
+/* signature Maison Faire-Part */
+.signature { position: relative; padding: 16vh 16px calc(12vh + env(safe-area-inset-bottom)); text-align: center; background: linear-gradient(to bottom, rgba(10, 11, 8, 0), rgba(14, 15, 10, .92) 26%, #0f100b); }
+.signature .contenu { margin: 0 auto; text-shadow: none; }
+.marque { margin: 8px 0 0; font: 400 clamp(40px, 11vw, 66px)/1 var(--display); letter-spacing: .04em; color: var(--ivoire); }
+.marque span { color: var(--or-c); }
+.pitch { margin: 18px auto 0; max-width: 30em; font: italic 300 clamp(18px, 4.6vw, 21px)/1.5 var(--serif); color: rgba(251, 248, 241, .88); }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 28px; }
+.bouton { display: inline-flex; align-items: center; justify-content: center; min-width: 210px; padding: 15px 24px; border: 1px solid rgba(220, 200, 144, .55); border-radius: 999px; font: 500 12px var(--sans); letter-spacing: .22em; text-transform: uppercase; text-decoration: none; color: var(--ivoire); transition: background .4s, color .4s, border-color .4s; }
+.bouton.plein { background: var(--or-c); border-color: var(--or-c); color: #1f2014; }
+.bouton:hover { background: rgba(220, 200, 144, .16); }
+.bouton.plein:hover { background: var(--or-p); }
+.revoir { margin-top: 26px; padding: 8px 12px; border: 0; background: none; cursor: pointer; font: 400 12px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: rgba(251, 248, 241, .7); }
+.revoir:hover { color: var(--ivoire); }
+.fictif { margin: 22px 0 0; font: 300 12px var(--sans); color: rgba(251, 248, 241, .45); }
+
+/* bouton du son */
+.son { position: fixed; z-index: 25; top: calc(12px + env(safe-area-inset-top)); right: 12px; width: 42px; height: 42px; border: 1px solid rgba(251, 248, 241, .25); border-radius: 50%; background: rgba(8, 9, 14, .55); cursor: pointer; display: grid; place-items: center; }
+.son[hidden] { display: none; }
+.son .barres { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.son i { width: 2px; height: 100%; background: var(--or-p); border-radius: 1px; animation: eq 1s ease-in-out infinite; transform-origin: bottom; }
+.son i:nth-child(2) { animation-delay: -.3s } .son i:nth-child(3) { animation-delay: -.6s } .son i:nth-child(4) { animation-delay: -.15s }
+.son.muet i { animation: none; transform: scaleY(.2); }
+@keyframes eq { 0%, 100% { transform: scaleY(.3) } 50% { transform: scaleY(1) } }
+
+@media (min-width: 900px) {
+  .chap { padding-top: 12vh; }
+  .r-haut { top: calc(8.5vh + 9vh); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grain, .poussiere { display: none; }
+  [data-apparait] { transition-duration: .01s; filter: none; }
+}
+
+/* ---------- invitation d'Emma & David ---------- */
+.porte-nom:empty, .env-adresse:empty, .porte-haut.vide { display: none; }
+.chap.clair { color: #33351f; }
+.chap.clair::before { background: linear-gradient(to bottom, rgba(252, 248, 240, .55), rgba(252, 248, 240, .2) 55%, rgba(252, 248, 240, 0)); }
+.chap.clair .contenu { text-shadow: 0 1px 14px rgba(255, 252, 244, .9); }
+.chap.clair h2, .chap.clair .noms-page { color: #3f4126; }
+.chap.clair .surtitre, .chap.clair .lbl { color: #8a7442; }
+.chap.clair .tagline { color: #7a6a3e; }
+.chap.clair .val, .chap.clair .intro { color: #33351f; }
+.chap.clair .lien-carte { color: #3f4126; border-color: rgba(95, 97, 57, .45); background: rgba(255, 252, 244, .5); }
+.tagline { margin: 4px 0 0; font: italic 300 clamp(26px, 7vw, 36px)/1.15 var(--serif); color: var(--or-p); }
+.intro { margin: 18px auto 0; max-width: 20em; font: italic 300 clamp(20px, 5.2vw, 25px)/1.4 var(--serif); text-wrap: balance; }
+.infos { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 14px; }
+.infos li { display: grid; gap: 2px; }
+.lbl { font: 500 11px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-c); }
+.val { font: 400 clamp(18px, 4.8vw, 21px)/1.45 var(--sans); letter-spacing: .02em; color: var(--ivoire); text-wrap: balance; }
+.noms-page { display: block; margin: 16px 0 6px; font: 400 clamp(60px, 17vw, 120px)/.95 var(--display); letter-spacing: .02em; }
+.noms-page span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out infinite; }
+.noms-page em { display: block; margin: 4px 0; font: italic 300 .4em/1 var(--serif); color: var(--or-c); }
+.noms-page { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .5)); }
+.noms-page span { text-shadow: none; }
+/* l'invitation et le programme sont posés sur la mer dorée : un voile chaud et sombre derrière le texte */
+#couverture::before { height: 100%; background: linear-gradient(to bottom, rgba(14, 11, 8, .58), rgba(14, 11, 8, .42) 45%, rgba(14, 11, 8, .22) 80%, rgba(14, 11, 8, 0)); }
+.benediction { margin: 0; font: 400 12px/1.8 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: rgba(251, 248, 241, .85); }
+.lead { margin: 12px auto 0; max-width: 19em; font: italic 300 clamp(19px, 4.9vw, 24px)/1.35 var(--serif); text-wrap: balance; }
+.invite-nom { margin: 16px 0 0; font: 400 clamp(24px, 6.2vw, 30px)/1.2 var(--display); color: var(--or-p); text-wrap: balance; }
+.programme { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; }
+.programme li { display: grid; gap: 1px; }
+.quand { margin: 20px auto 0; font: 500 11px/1.9 var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--or-c); }
+.quand span { display: block; }
+.echeance { margin: 14px 0 0; font: italic 300 19px var(--serif); color: rgba(51, 53, 31, .85); }
+.echeance strong { font-weight: 500; font-style: normal; }
+.formulaire.vrai { text-align: left; background: rgba(252, 248, 240, .72); border-color: rgba(95, 97, 57, .25); color: #33351f; }
+.vrai legend { color: #5c6239; }
+.vrai .choix-ligne { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.vrai .choix-ligne label { cursor: pointer; }
+.vrai .choix-ligne input { position: absolute; opacity: 0; pointer-events: none; }
+.vrai .choix-ligne span { display: block; text-align: center; padding: 12px 6px; border: 1px solid rgba(95, 97, 57, .35); border-radius: 12px; font: 400 15px var(--sans); color: #33351f; transition: background .3s, color .3s, border-color .3s; }
+.vrai .choix-ligne input:checked + span { background: #5c6239; border-color: #5c6239; color: #fbf8f1; }
+.vrai .choix-ligne input:focus-visible + span { outline: 2px solid #5c6239; outline-offset: 2px; }
+.vrai .champ > span { color: #5c6239; }
+.vrai .champ textarea, .vrai .champ select { width: 100%; padding: 12px 14px; border: 1px solid rgba(95, 97, 57, .3); border-radius: 12px; background: rgba(255, 255, 255, .6); color: #33351f; font: 300 16px var(--sans); }
+.vrai .champ select { width: 7em; }
+.vrai .erreur { margin: 0 0 12px; color: #9a3b2a; font-size: 15px; }
+.vrai .envoyer { background: #3f4126; color: #fbf8f1; }
+.vrai .envoyer:disabled { opacity: .6; cursor: wait; }
+.merci-vrai { margin-top: 24px; color: #33351f; }
+.merci-vrai .merci-titre { background: none; color: #3f4126; -webkit-text-fill-color: #3f4126; }
+.merci-vrai p { font: italic 300 20px/1.4 var(--serif); margin: 6px 0; }
+.merci-vrai .lien { margin-top: 10px; border: 0; background: none; cursor: pointer; font: 500 12px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: #3f4126; text-decoration: underline; text-underline-offset: 5px; }
+.signature-mariage { position: relative; padding: 10vh 16px calc(8vh + env(safe-area-inset-bottom)); text-align: center; font: 500 12px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: rgba(251, 248, 241, .7); background: linear-gradient(to bottom, rgba(14, 15, 10, 0), rgba(14, 15, 10, .85) 40%); }
+.replique .eyebrow { display: block; font: 500 11px/1.7 var(--sans); letter-spacing: .42em; text-transform: uppercase; color: var(--or-c); margin-bottom: 10px; text-wrap: balance; }
+.replique .titre-ev { display: block; font: 400 clamp(60px, 17vw, 124px)/.95 var(--display); letter-spacing: .03em; color: var(--ivoire); }
+.replique .tag-ev { display: block; margin-top: 8px; font: italic 300 clamp(26px, 7vw, 40px)/1.1 var(--serif); color: var(--or-p); }
+.replique.sombre .titre-ev { color: #3f4126; }
+.replique.sombre .tag-ev { color: #8a7442; }
+.replique.sombre .eyebrow { color: #8a7442; }
+.replique.sombre { text-shadow: 0 1px 16px rgba(255, 252, 244, .9); }
+/* lieu et horaire dans la carte de chaque célébration */
+.replique .infos-ev { display: block; margin: 14px auto 0; max-width: 22em; }
+.replique .infos-ev::before { content: ""; display: block; width: 44px; height: 1px; margin: 0 auto 12px; background: linear-gradient(90deg, rgba(226, 201, 143, 0), var(--or-c), rgba(226, 201, 143, 0)); }
+.replique .i-lieu { display: block; font: italic 400 clamp(20px, 5.2vw, 26px)/1.3 var(--serif); color: var(--ivoire); text-wrap: balance; }
+.replique .i-lieu + .i-lieu { margin-top: 4px; }
+.replique .i-lieu small { display: block; font: 500 10px/1.8 var(--sans); font-style: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--or-c); }
+.replique .i-heure { display: block; margin: 6px 0 4px; font: 500 12px/1.6 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-p); }
+.replique.sombre .i-lieu { color: #3f4126; }
+.replique.sombre .i-heure, .replique.sombre .i-lieu small { color: #8a7442; }
+.replique.sombre .infos-ev::before { background: linear-gradient(90deg, rgba(179, 148, 87, 0), #b39457, rgba(179, 148, 87, 0)); }
+
+.replique.apercu { text-shadow: 0 1px 2px rgba(70, 42, 12, .35), 0 2px 18px rgba(70, 42, 12, .4); }
+.replique.apercu .eyebrow { margin-bottom: 14px; color: #fff4d8; }
+.replique.apercu .noms-film { filter: drop-shadow(0 1px 1px rgba(70, 42, 12, .45)) drop-shadow(0 3px 16px rgba(70, 42, 12, .45)); }
+.replique.apercu .sous { max-width: 16em; margin-left: auto; margin-right: auto; text-wrap: balance; }
+.replique.apercu-date { top: auto; bottom: calc(8.5vh + 10vh); letter-spacing: .24em; }
+.replique.apercu-date > span:nth-child(2) { white-space: nowrap; }
+.replique.apercu-date .ligne { width: 22px; }
