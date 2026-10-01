@@ -310,19 +310,35 @@ MF.taille = taille;
 
 // montre une scène en fondu. opts.nouvelle : toujours sur l'autre toile (même décor, autre plan) ;
 // opts.p : réglages propres à cette toile, recopiés dans la scène juste avant de la dessiner
+// ordre des toiles : la dernière montrée est au-dessus (rangs 0, 1, 2 : toujours sous le voile et les textes)
+let zHaut = 0;
+function ordonne() {
+  [...MF.toiles].sort((a, b) => a.z - b.z).forEach((o, i) => { o.cv.style.zIndex = String(i); });
+}
 MF.montre = (id, fondu = 1.2, opts = {}) => {
   const s = MF.scenes[id];
   let t = opts.nouvelle ? null : MF.toiles.find(o => o.scene === s && o.alpha > 0);
   if (!t) {
+    // une toile libre (ou la moins visible) reçoit le nouveau décor
     t = MF.toiles.reduce((a, b) => a.alpha <= b.alpha ? a : b);
-    t.scene = s; t.alpha = 0;
+    t.scene = s; t.alpha = 0; t.sortie = false;
     s.entree && s.entree();
   }
   t.p = opts.p || null;
-  for (const o of MF.toiles) o.cv.style.zIndex = o === t ? 2 : 1;
-  t.cible = 1; t.duree = Math.max(.001, fondu); t.debut = performance.now() / 1000; t.alpha0 = t.alpha;
+  t.z = ++zHaut; ordonne();
+  t.cible = 1; t.sortie = false; t.duree = Math.max(.001, fondu); t.debut = performance.now() / 1000; t.alpha0 = t.alpha;
   if (fondu <= .001) t.alpha = 1;
   MF.actif = s;
+  return t;
+};
+// (même vitesse qu'un fondu normal, dans un sens comme dans l'autre)
+// revenir à une toile encore visible (l'invité remonte pendant un fondu) : tout ce qui est au-dessus s'efface
+// doucement depuis là où il en est, au lieu de disparaître d'un coup
+MF.ramene = (t, fondu = 1.2) => {
+  const now = performance.now() / 1000;
+  for (const o of MF.toiles) if (o !== t && o.z > t.z && o.alpha > 0) { o.cible = 0; o.sortie = true; o.alpha0 = o.alpha; o.debut = now; o.duree = fondu; }
+  if (t.alpha < 1) { t.cible = 1; t.sortie = false; t.alpha0 = t.alpha; t.debut = now; t.duree = fondu; }
+  MF.actif = t.scene;
   return t;
 };
 MF.visible = s => MF.toiles.some(o => o.scene === s && o.alpha > 0);
@@ -351,15 +367,21 @@ function rendu(t, dt = .016) {
   for (const o of MF.toiles) {
     if (o.cible === 1 && o.alpha < 1) {
       o.alpha = Math.min(1, o.alpha0 + (performance.now() / 1000 - o.debut) / o.duree);
-      if (o.alpha >= 1) for (const u of MF.toiles) if (u !== o) { u.alpha = 0; u.cible = 0; u.cv.style.opacity = 0; }
+      // une toile entièrement visible cache celles qui sont en dessous (et seulement celles-là)
+      if (o.alpha >= 1) for (const u of MF.toiles) if (u !== o && u.z < o.z) { u.alpha = 0; u.cible = 0; u.sortie = false; u.cv.style.opacity = 0; }
+    } else if (o.sortie && o.alpha > 0) {
+      o.alpha = Math.max(0, o.alpha0 - (performance.now() / 1000 - o.debut) / o.duree);
+      if (o.alpha <= 0) o.sortie = false;
     }
   }
-  const deux = MF.toiles.filter(o => o.alpha > 0 && o.scene).length > 1;
+  const vis = MF.toiles.filter(o => o.alpha > 0 && o.scene), haut = vis.reduce((a, b) => (!a || b.z > a.z ? b : a), null);
+  for (const o of MF.toiles) o.dessus = o === haut;
+  const deux = vis.length > 1;
   for (const o of MF.toiles) {
     const op = String(MF.ease.sine(o.alpha));   // fondu adouci au début et à la fin
     if (o.cv.style.opacity !== op) o.cv.style.opacity = op;
     if (o.alpha > 0 && o.scene) {
-      if (deux && o.cv.style.zIndex !== '2' && tour % 2) continue;
+      if (deux && !o.dessus && tour % 2) continue;
       const ctx = o.ctx;
       if (o.p) Object.assign(o.scene.p, o.p);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -389,7 +411,7 @@ MF.prechauffe = liste => {
   requestAnimationFrame(suivant);
 };
 MF.demarre = () => {
-  for (const cv of document.querySelectorAll('canvas.decor')) MF.toiles.push({ cv, ctx: cv.getContext('2d'), scene: null, alpha: 0, cible: 0, duree: 1, debut: 0, alpha0: 0 });
+  for (const cv of document.querySelectorAll('canvas.decor')) MF.toiles.push({ cv, ctx: cv.getContext('2d'), scene: null, alpha: 0, cible: 0, duree: 1, debut: 0, alpha0: 0, z: 0 });
   taille(true);
   let attente;
   addEventListener('resize', () => { clearTimeout(attente); attente = setTimeout(() => taille(), 120); });

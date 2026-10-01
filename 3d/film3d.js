@@ -276,16 +276,19 @@ function continuite(it, toile) {
   return !('variante' in c) || c.variante === toile.p.variante;
 }
 function activer(it, y, t) {
-  const avant = courant, toile = avant && avant.toile;
+  const avant = courant;
   courant = it; it.t0 = t;
-  if (continuite(it, toile)) {
-    it.toile = toile; it.p = toile.p; it.depart = { ...toile.p };
+  // une vue encore à l'écran montre déjà cet élément (ou la suite de son plan) : on revient dessus en douceur
+  // (au doigt, on remonte souvent pendant un fondu : l'image ne doit jamais changer d'un coup)
+  const vue = MF.toiles.filter(o => o.alpha > 0 && o.proprio && (o.proprio === it || continuite(it, o))).sort((a, b) => b.z - a.z)[0];
+  if (vue) {
+    it.toile = vue; it.p = vue.p; it.depart = vue.proprio === it ? null : { ...vue.p };
+    MF.ramene(vue, FONDU);
   } else {
     it.p = { ...MF.scenes[it.scene].p, ...cible(it, y, t) }; it.depart = null;
     it.toile = MF.montre(it.scene, avant ? FONDU : .001, { nouvelle: !!avant, p: it.p });
   }
   it.toile.proprio = it;
-  film.classList.toggle('cadre', ouvert && it.type === 'cine');
 }
 function poser(it, y, t) {
   const c = cible(it, y, t);
@@ -379,7 +382,6 @@ function commencer() {
   document.body.classList.remove('verrou'); document.body.classList.add('page');
   btnSon.hidden = SILENCE;
   film.classList.add('on');
-  requestAnimationFrame(() => film.classList.toggle('cadre', !!courant && courant.type === 'cine'));
   $$('[data-apparait]').forEach(n => apparitions.observe(n));
 }
 function ouvrir() {

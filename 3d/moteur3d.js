@@ -453,8 +453,18 @@ MF.Feux = class {
    Les deux vues et le fondu enchaîné.
    Chaque vue montre une scène avec ses propres réglages (deux plans du même décor peuvent se fondre).
    ===================================================================== */
-let renderer = null, canvas = null, cible = null, compoScene = null, compoCam = null, compoMat = null;
-MF.toiles = [0, 1].map(() => ({ scene: null, alpha: 0, cible: 0, duree: 1, debut: 0, alpha0: 0, p: null, proprio: null, z: 1 }));
+let renderer = null, canvas = null, compoScene = null, compoCam = null, compoMat = null;
+const cibles = [];
+function cibleN(i) {
+  if (!cibles[i]) {
+    cibles[i] = new THREE.WebGLRenderTarget(Math.round(MF.W * MF.DPR), Math.round(MF.H * MF.DPR), { samples: TELEPHONE ? 0 : 4 });
+    cibles[i].texture.colorSpace = THREE.SRGBColorSpace;
+  }
+  return cibles[i];
+}
+// trois vues : si l'invité enchaîne vite deux passages, le troisième décor arrive par-dessus en fondu, sans rien couper
+MF.toiles = [0, 1, 2].map(() => ({ scene: null, alpha: 0, cible: 0, duree: 1, debut: 0, alpha0: 0, p: null, proprio: null, z: 0, sortie: false }));
+let zHaut = 0;
 MF.montre = (id, fondu = 1.2, opts = {}) => {
   const s = MF.scenes[id];
   let t = opts.nouvelle ? null : MF.toiles.find(o => o.scene === s && o.alpha > 0);
@@ -464,10 +474,19 @@ MF.montre = (id, fondu = 1.2, opts = {}) => {
     s.entree && s.entree();
   }
   t.p = opts.p || null;
-  for (const o of MF.toiles) o.z = o === t ? 2 : 1;
-  t.cible = 1; t.duree = Math.max(.001, fondu); t.debut = performance.now() / 1000; t.alpha0 = t.alpha;
+  t.z = ++zHaut;
+  t.cible = 1; t.sortie = false; t.duree = Math.max(.001, fondu); t.debut = performance.now() / 1000; t.alpha0 = t.alpha;
   if (fondu <= .001) t.alpha = 1;
   MF.actif = s;
+  return t;
+};
+// (même vitesse qu'un fondu normal, dans un sens comme dans l'autre)
+// revenir à une vue encore visible (l'invité remonte pendant un fondu) : ce qui est au-dessus s'efface doucement
+MF.ramene = (t, fondu = 1.2) => {
+  const now = performance.now() / 1000;
+  for (const o of MF.toiles) if (o !== t && o.z > t.z && o.alpha > 0) { o.cible = 0; o.sortie = true; o.alpha0 = o.alpha; o.debut = now; o.duree = fondu; }
+  if (t.alpha < 1) { t.cible = 1; t.sortie = false; t.alpha0 = t.alpha; t.debut = now; t.duree = fondu; }
+  MF.actif = t.scene;
   return t;
 };
 MF.visible = s => MF.toiles.some(o => o.scene === s && o.alpha > 0);
@@ -483,7 +502,7 @@ function taille(force) {
   if (!force && w === MF.W && Math.abs(h - MF.H) < 2 && dpr === MF.DPR) return;
   MF.W = w; MF.H = h; MF.DPR = dpr;
   renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
-  if (cible) cible.setSize(Math.round(w * dpr), Math.round(h * dpr));
+  for (const c of cibles) c.setSize(Math.round(w * dpr), Math.round(h * dpr));
 }
 MF.taille = taille;
 
@@ -533,20 +552,23 @@ function rendu(t, dt = .016) {
   for (const o of MF.toiles) {
     if (o.cible === 1 && o.alpha < 1) {
       o.alpha = Math.min(1, o.alpha0 + (performance.now() / 1000 - o.debut) / o.duree);
-      if (o.alpha >= 1) for (const u of MF.toiles) if (u !== o) { u.alpha = 0; u.cible = 0; }
+      // une vue entièrement visible cache celles qui sont en dessous (et seulement celles-là)
+      if (o.alpha >= 1) for (const u of MF.toiles) if (u !== o && u.z < o.z) { u.alpha = 0; u.cible = 0; u.sortie = false; }
+    } else if (o.sortie && o.alpha > 0) {
+      o.alpha = Math.max(0, o.alpha0 - (performance.now() / 1000 - o.debut) / o.duree);
+      if (o.alpha <= 0) o.sortie = false;
     }
   }
   const vis = MF.toiles.filter(o => o.alpha > 0 && o.scene).sort((a, b) => a.z - b.z);
+  for (const o of MF.toiles) o.dessus = o === vis[vis.length - 1];
   if (!vis.length) { renderer.setRenderTarget(null); renderer.clear(); return; }
   dessine(vis[0], null, t, dt);
-  if (vis.length > 1) {
-    if (!cible) {
-      cible = new THREE.WebGLRenderTarget(Math.round(MF.W * MF.DPR), Math.round(MF.H * MF.DPR), { samples: TELEPHONE ? 0 : 4 });
-      cible.texture.colorSpace = THREE.SRGBColorSpace;
-      compoMat.map = cible.texture; compoMat.needsUpdate = true;
-    }
-    dessine(vis[1], cible, t, dt);
-    compoMat.opacity = MF.ease.sine(vis[1].alpha);
+  // chaque vue au-dessus est dessinée à part, puis posée par-dessus avec sa transparence
+  for (let k = 1; k < vis.length; k++) {
+    const rt = cibleN(k - 1);
+    dessine(vis[k], rt, t, dt);
+    compoMat.map = rt.texture;
+    compoMat.opacity = MF.ease.sine(vis[k].alpha);
     renderer.setRenderTarget(null);
     renderer.autoClear = false; renderer.render(compoScene, compoCam); renderer.autoClear = true;
   }
@@ -571,11 +593,11 @@ MF.demarre = () => {
   // file d'attente : d'abord les reflets de chaque décor, puis un premier dessin de chaque décor, puis le fondu
   for (const s of Object.values(MF.scenes)) for (const f of (s.taches || [])) taches.push(f);
   for (const s of Object.values(MF.scenes)) taches.push(() => prechauffe(s));
+  // les deux images de fondu sont préparées à l'avance, et le petit dessin qui les pose est compilé
   taches.push(() => {
-    cible = new THREE.WebGLRenderTarget(Math.round(MF.W * MF.DPR), Math.round(MF.H * MF.DPR), { samples: TELEPHONE ? 0 : 4 });
-    cible.texture.colorSpace = THREE.SRGBColorSpace;
-    compoMat.map = cible.texture; compoMat.needsUpdate = true;
-    renderer.setRenderTarget(cible); renderer.clear(); renderer.setRenderTarget(null);
+    for (const i of [0, 1]) { const c = cibleN(i); renderer.setRenderTarget(c); renderer.clear(); }
+    renderer.setRenderTarget(null);
+    compoMat.map = cibleN(0).texture; compoMat.needsUpdate = true;
     compoMat.opacity = 0; renderer.autoClear = false; renderer.render(compoScene, compoCam); renderer.autoClear = true;
   });
   requestAnimationFrame(image);
