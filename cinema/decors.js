@@ -183,11 +183,23 @@ function ciel(ctx, c, cols, span) {
 const infini = (c, az, el) => [c.W / 2 + az * c.f, c.hor - el * c.f];
 const demiLargeur = (c, Z) => (c.W * .5 + 60) * Math.max(.03, Z - c.z) / c.f;
 const Q = (c, X, Yh, Z) => MF.proj(c, X, -Yh, Z);    // Yh : hauteur au-dessus du sol (vers le haut)
-function glow(ctx, x, y, r, stops) {
-  if (r <= 0) return;
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+const degrades = new Map();
+function degrade(stops) {
+  const cle = stops.join(';');
+  let c = degrades.get(cle);
+  if (c) return c;
+  if (degrades.size > 60) degrades.clear();
+  c = MF.toile(256, 256); const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
   for (const [o, col] of stops) g.addColorStop(o, col);
-  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  degrades.set(cle, c);
+  return c;
+}
+function glow(ctx, x, y, r, stops, alpha = 1) {
+  if (r <= 0 || alpha <= .003) return;
+  const ga = ctx.globalAlpha; ctx.globalAlpha = ga * alpha;
+  ctx.drawImage(degrade(stops), x - r, y - r, r * 2, r * 2);
+  ctx.globalAlpha = ga;
 }
 function makeNuages(n, cle, clair, ombre, elMax, graine) {
   const r = MF.rng(graine);
@@ -206,13 +218,23 @@ function nuages(ctx, c, L, t, alpha) {
 }
 function soleil(ctx, c, az, el, r, coeur, halo, force, coupe) {
   const [x, y] = infini(c, az, el), R = r * c.f;
-  glow(ctx, x, y, R * 11, [[0, halo + (.5 * force).toFixed(3) + ')'], [.1, halo + (.3 * force).toFixed(3) + ')'], [.35, halo + (.09 * force).toFixed(3) + ')'], [1, halo + '0)']]);
+  glow(ctx, x, y, R * 11, [[0, halo + '.5)'], [.1, halo + '.3)'], [.35, halo + '.09)'], [1, halo + '0)']], Math.min(1, force));
   ctx.save();
   if (coupe) { ctx.beginPath(); ctx.rect(0, 0, c.W, c.hor); ctx.clip(); }
   const g = ctx.createRadialGradient(x, y, 0, x, y, R * 1.18);
   g.addColorStop(0, coeur); g.addColorStop(.8, coeur); g.addColorStop(1, halo + '0)');
   ctx.globalAlpha = clamp(force * 1.5); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 1.18, 0, TAU); ctx.fill();
   ctx.restore(); ctx.globalAlpha = 1;
+}
+const tirets = new Map();
+function tiret(col) {
+  let c = tirets.get(col);
+  if (c) return c;
+  c = MF.toile(64, 8); const x = c.getContext('2d');
+  x.strokeStyle = col; x.lineWidth = 5; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(4, 5); x.quadraticCurveTo(32, 2.6, 60, 5); x.stroke();
+  tirets.set(col, c);
+  return c;
 }
 function makeMer(n, m, graine) {
   const r = MF.rng(graine);
@@ -236,25 +258,30 @@ function mer(ctx, c, M, t, o) {
   const [sx] = infini(c, o.az, 0);
   if (o.reflet > 0) {
     ctx.save(); ctx.translate(sx, top + (bas - top) * .18); ctx.scale(1, 3.2);
-    const rr = Math.max(40, (bas - top) * .3), gc = ctx.createRadialGradient(0, 0, 0, 0, 0, rr);
-    gc.addColorStop(0, o.teinte + (o.reflet * .5).toFixed(3) + ')'); gc.addColorStop(1, o.teinte + '0)');
-    ctx.fillStyle = gc; ctx.fillRect(-rr, -rr, rr * 2, rr * 2); ctx.restore();
+    glow(ctx, 0, 0, Math.max(40, (bas - top) * .3), [[0, o.teinte + '1)'], [1, o.teinte + '0)']], o.reflet * .5);
+    ctx.restore();
   }
   // distance la plus proche réellement visible (utile quand la caméra vole haut)
   const zMin = Math.max(.8, o.zMin, haut * c.f / Math.max(1, bas - top) * .95), zMax = 700;
-  ctx.lineCap = 'round';
-  for (const v of M.vagues) {
+  const tClair = tiret(o.teinte + '1)'), tSombre = tiret('rgba(20,14,24,1)');
+  for (let i = 0; i < M.vagues.length; i++) {
+    const v = M.vagues[i];
+    if (!MF.garde(i)) continue;
     const d = 1 / (1 / zMax + v.u * (1 / zMin - 1 / zMax)), k = c.f / d;
     const y = top + haut * k + Math.sin(t * .9 + v.ph) * k * .03;
     if (y > bas - 1 || y < top + .5) continue;
     const half = demiLargeur(c, c.z + d), per = 2 * half, X = (((v.x + t * v.v - c.x) % per) + per) % per - half;
     const x = c.W / 2 + X * k, L = Math.min(c.W * .3, v.len * k * .9), near = (y - top) / (bas - top);
+    if (L < 1.5 || x + L < 0 || x - L > c.W) continue;
     const a = (v.clair ? .08 + .16 * near : .05 + .1 * near) * (.65 + .35 * Math.sin(t * 1.2 + v.ph));
-    ctx.strokeStyle = v.clair ? o.teinte + a.toFixed(3) + ')' : 'rgba(20,14,24,' + a.toFixed(3) + ')';
-    ctx.lineWidth = clamp(.018 * k, .5, 1.6);
-    ctx.beginPath(); ctx.moveTo(x - L / 2, y); ctx.quadraticCurveTo(x, y - .02 * k, x + L / 2, y); ctx.stroke();
+    const w = clamp(.018 * k, .5, 1.6), D = L * 64 / 56;
+    ctx.globalAlpha = a;
+    ctx.drawImage(v.clair ? tClair : tSombre, x - D / 2, y - w * .9, D, w * 1.6);
   }
-  if (o.eclat > 0) for (const s of M.paillettes) {
+  ctx.globalAlpha = 1;
+  if (o.eclat > 0) for (let i = 0; i < M.paillettes.length; i++) {
+    const s = M.paillettes[i];
+    if (!MF.garde(i)) continue;
     const d = zMin * Math.pow(zMax / zMin, 1 - s.u), k = c.f / d, y = top + haut * k;
     if (y > bas - 1 || y < top + .5) continue;
     const a = Math.pow(Math.max(0, Math.sin(t * s.sp + s.ph)), 5) * o.eclat;
@@ -289,15 +316,27 @@ function rivage(ctx, c, t, o) {
   trait(lig(Zs + 5 - cc * 4.6, .08), 1.4, o.ecume + (.5 * Math.sin(cc * Math.PI)).toFixed(3) + ')');
   return yS;
 }
+const vignettes = new Map();
 function vignette(ctx, W, H, rgbc, force) {
-  const g = ctx.createRadialGradient(W / 2, H * .48, Math.min(W, H) * .36, W / 2, H * .48, Math.hypot(W, H) * .62);
-  g.addColorStop(0, 'rgba(' + rgbc + ',0)'); g.addColorStop(1, 'rgba(' + rgbc + ',' + force + ')');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  force = Math.round(force * 40) / 40;
+  const cle = Math.round(W) + 'x' + Math.round(H) + ':' + rgbc + ':' + force;
+  let v = vignettes.get(cle);
+  if (!v) {
+    if (vignettes.size > 30) vignettes.clear();
+    const w = Math.max(24, Math.round(W / 4)), h = Math.max(24, Math.round(H / 4));
+    v = MF.toile(w, h); const x = v.getContext('2d');
+    x.scale(w / W, h / H);
+    const g = x.createRadialGradient(W / 2, H * .48, Math.min(W, H) * .36, W / 2, H * .48, Math.hypot(W, H) * .62);
+    g.addColorStop(0, 'rgba(' + rgbc + ',0)'); g.addColorStop(1, 'rgba(' + rgbc + ',' + force + ')');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    vignettes.set(cle, v);
+  }
+  ctx.drawImage(v, 0, 0, W, H);
 }
 function flamme(ctx, x, y, h, w, t, i, force = 1) {
   const fl = 1 + Math.sin(t * 13 + i) * .06 + Math.sin(t * 7.3 + i * 2) * .05;
   const fh = h * fl * force, fw = w * force, sw = Math.sin(t * 5 + i) * fw * .25;
-  glow(ctx, x, y - fh * .5, fh * 2.3, [[0, 'rgba(255,236,190,' + (.5 * force).toFixed(3) + ')'], [1, 'rgba(255,200,120,0)']]);
+  glow(ctx, x, y - fh * .5, fh * 2.3, [[0, 'rgba(255,236,190,.5)'], [1, 'rgba(255,200,120,0)']], force);
   ctx.save(); ctx.translate(x + sw, y);
   const fg = ctx.createRadialGradient(0, -fh * .32, 0, 0, -fh * .38, fh);
   fg.addColorStop(0, '#fffdf0'); fg.addColorStop(.3, '#ffe08a'); fg.addColorStop(.7, 'rgba(255,160,70,.8)'); fg.addColorStop(1, 'rgba(255,140,60,0)');
@@ -312,7 +351,7 @@ function flamme(ctx, x, y, h, w, t, i, force = 1) {
    ===================================================================== */
 MF.scenes.soie = (() => {
   const p = { zoom: 1.1, derive: 0, lumiere: 1 };
-  let buf = null, bctx = null, im = null, bw = 0, bh = 0;
+  let buf = null, bctx = null, im = null, bw = 0, bh = 0, tBuf = -1, cleBuf = '';
   const ondes = [[1, 1.1, .55, .16, 0], [.7, 1.7, 1.2, -.12, 1.7], [.5, .6, 1.5, .1, 3.1], [.18, 3.3, 2.2, .22, .6], [.08, 5.1, 3.9, -.3, 2.2]];
   const n3 = (x, y, z) => { const l = Math.hypot(x, y, z); return [x / l, y / l, z / l]; };
   const L = n3(-.45, -.62, .64), Hv = n3(L[0], L[1], L[2] + 1);
@@ -321,25 +360,27 @@ MF.scenes.soie = (() => {
   return {
     p, nom: 'soie',
     dessine(ctx, W, H, t) {
-      const cw = 100, ch = Math.round(clamp(100 * H / W, 60, 240));
-      if (!buf || bw !== cw || bh !== ch) { bw = cw; bh = ch; buf = MF.toile(bw, bh); bctx = buf.getContext('2d'); im = bctx.createImageData(bw, bh); }
+      const cw = 90, ch = Math.round(clamp(90 * H / W, 54, 216));
+      if (!buf || bw !== cw || bh !== ch) { bw = cw; bh = ch; buf = MF.toile(bw, bh); bctx = buf.getContext('2d'); im = bctx.createImageData(bw, bh); tBuf = -1; }
       const d = im.data, z = p.zoom, m = Math.max(W, H);
+      const cle = z.toFixed(4) + ':' + p.derive.toFixed(4);
+      if (Math.abs(t - tBuf) >= 1 / 30 || (cle !== cleBuf && Math.abs(t - tBuf) >= 1 / 60)) { tBuf = t; cleBuf = cle;
       for (let j = 0; j < bh; j++) {
         const v = ((j + .5) / bh - .5) * z * H / m;
         for (let i = 0; i < bw; i++) {
           let u = ((i + .5) / bw - .5) * z * W / m + p.derive;
           u += Math.sin(v * 4.2 + t * .1) * .05;
           let dx = 0, dy = 0;
-          for (const [a, kx, ky, w, ph] of ondes) { const cph = Math.cos((kx * u + ky * v) * TAU + w * t + ph) * a * TAU; dx += cph * kx; dy += cph * ky; }
-          const nn = n3(-dx * .026, -dy * .026, 1);
-          const diff = Math.max(0, nn[0] * L[0] + nn[1] * L[1] + nn[2] * L[2]);
-          const spec = Math.pow(Math.max(0, nn[0] * Hv[0] + nn[1] * Hv[1] + nn[2] * Hv[2]), 26);
+          for (let q = 0; q < ondes.length; q++) { const o5 = ondes[q], kx = o5[1], ky = o5[2], cph = Math.cos((kx * u + ky * v) * TAU + o5[3] * t + o5[4]) * o5[0] * TAU; dx += cph * kx; dy += cph * ky; }
+          let nx = -dx * .026, ny = -dy * .026; const il = 1 / Math.sqrt(nx * nx + ny * ny + 1); nx *= il; ny *= il;
+          const diff = Math.max(0, nx * L[0] + ny * L[1] + il * L[2]);
+          const hv = Math.max(0, nx * Hv[0] + ny * Hv[1] + il * Hv[2]), h2 = hv * hv, h8 = h2 * h2 * h2 * h2, spec = h8 * h8 * h8 * h2;
           const sh = .6 + .46 * diff, o = (j * bw + i) * 4;
           d[o] = Math.min(255, 238 * sh + 70 * spec); d[o + 1] = Math.min(255, 229 * sh + 66 * spec); d[o + 2] = Math.min(255, 213 * sh + 58 * spec); d[o + 3] = 255;
         }
       }
       bctx.putImageData(im, 0, 0);
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      }
       ctx.drawImage(buf, 0, 0, W, H);
       // lumière douce qui passe, et poussière dorée en trois plans
       glow(ctx, W * (.35 + .1 * Math.sin(t * .11)), H * (.3 + .05 * Math.cos(t * .09)), Math.max(W, H) * .7, [[0, 'rgba(255,252,242,.42)'], [1, 'rgba(255,252,242,0)']]);
@@ -400,7 +441,9 @@ MF.scenes.plage = (() => {
       if (p.rivage) rivage(ctx, c, t, { Zs: henne ? 6.2 : 6.5, montee: 1.3, sable: P.sable.map(MF.hex), mouille: P.mouille, nappe: P.nappe, ecume: P.ecume, refletSoleil: P.reflet, az: 0 });
       if (henne) {
         // pétales rouges sur le sable
-        for (const q of petalesSable) {
+        for (let i = 0; i < petalesSable.length; i++) {
+          const q = petalesSable[i];
+          if (!MF.garde(i)) continue;
           const d = q.Z - c.z; if (d < .4) continue;
           const [x, y, k] = MF.proj(c, q.X, 0, q.Z), s = .04 * k * q.s;
           if (s < .5 || x < -s || x > W + s) continue;
@@ -463,21 +506,26 @@ MF.scenes.houppa = (() => {
     add(X, .12, ZH - .1, 6, s * 4, s * 1.1);
   }
   // allée
-  const petales = Array.from({ length: 170 }, () => ({ X: (r() * 2 - 1) * ALLEE * .9, Z: Z0 + r() * (ZH - .3 - Z0), v: (r() * 3) | 0, s: .7 + r() * .6, rot: r() * TAU }));
+  const petales = Array.from({ length: 140 }, () => ({ X: (r() * 2 - 1) * ALLEE * .9, Z: Z0 + r() * (ZH - .3 - Z0), v: (r() * 3) | 0, s: .7 + r() * .6, rot: r() * TAU }));
   const bords = []; for (let i = 0; i < 18; i++) for (const e of [-1, 1]) bords.push({ X: e * (ALLEE + .04), Z: Z0 + (i + .5) * (ZH - Z0) / 18, s: .8 + r() * .4, rot: r() * 3, leaf: r() < .5 });
   const rangs = Array.from({ length: 7 }, (_, i) => ZH - 1.8 - i * 1.25);
   const grains = Array.from({ length: 220 }, () => ({ X: (r() - .5) * 26, Z: -8 + r() * 27, c: r() < .5 }));
 
+  let ctx_ = null, base = 1, bx = 0, by = 0;
+  // matrice « déplacer, écraser en hauteur, tourner », multipliée par l'échelle de l'écran
+  function matrice(x, y, rot, sy = 1) {
+    const co = Math.cos(rot) * base, si = Math.sin(rot) * base;
+    ctx_.setTransform(co, sy * si, -si, sy * co, base * x + bx, base * y + by);
+  }
   function fleur3D(c, f, t) {
     if (f.Z - c.z < .3) return;
     const [x, y, k] = Q(c, f.X, f.Y, f.Z), rr = f.r * k;
-    if (rr < .4 || x < -rr * 3 || x > c.W + rr * 3) return;
-    ctx_.save(); ctx_.translate(x, y); ctx_.rotate(f.rot + Math.sin(t * .8 + f.X * 3) * .05);
-    if (f.leaf) ctx_.drawImage(feuille(), rr * .2, -rr * .1, rr * 2.2, rr * .9);
+    if (rr < .5 || x < -rr * 3 || x > c.W + rr * 3) return;
+    matrice(x, y, f.rot + Math.sin(t * .8 + f.X * 3) * .05);
+    if (f.leaf && rr > 1.5) ctx_.drawImage(feuille(), rr * .2, -rr * .1, rr * 2.2, rr * .9);
     ctx_.drawImage(fleur(), -rr * 1.1, -rr * 1.1, rr * 2.2, rr * 2.2);
-    ctx_.restore();
+    ctx_.setTransform(base, 0, 0, base, bx, by);
   }
-  let ctx_ = null;
   function poteau(c, X, Z) {
     if (Z - c.z < .3) return;
     const [x0, y0, k] = Q(c, X, 0, Z), [, y1] = Q(c, X, HP.H, Z), lw = Math.max(1.6, .07 * k);
@@ -485,9 +533,28 @@ MF.scenes.houppa = (() => {
     g.addColorStop(0, '#f2ebdc'); g.addColorStop(.35, '#ffffff'); g.addColorStop(1, '#d6ccb6');
     ctx_.fillStyle = g; ctx_.fillRect(x0 - lw / 2, y1, lw, y0 - y1);
   }
+  const PR = 180, PX0 = -HP.X - .6, PX1 = HP.X + .6, PY0 = -.3, PY1 = HP.H + .5, plansFleurs = {};
+  function planFleurs(arriere) {
+    if (plansFleurs[arriere]) return plansFleurs[arriere];
+    const cv = MF.toile((PX1 - PX0) * PR, (PY1 - PY0) * PR), x = cv.getContext('2d');
+    for (const f of fleurs) {
+      if ((f.Z > ZH + 1) !== arriere) continue;
+      const rr = f.r * PR;
+      x.setTransform(Math.cos(f.rot), Math.sin(f.rot), -Math.sin(f.rot), Math.cos(f.rot), (f.X - PX0) * PR, (PY1 - f.Y) * PR);
+      if (f.leaf) x.drawImage(feuille(), rr * .2, -rr * .1, rr * 2.2, rr * .9);
+      x.drawImage(fleur(), -rr * 1.1, -rr * 1.1, rr * 2.2, rr * 2.2);
+    }
+    return (plansFleurs[arriere] = cv);
+  }
+  function poseFleurs(c, arriere) {
+    const Z = arriere ? ZH + HP.prof : ZH - .04;
+    if (Z - c.z < .5) return;
+    const [x0, y0, k] = Q(c, PX0, PY1, Z);
+    ctx_.drawImage(planFleurs(arriere), x0, y0, (PX1 - PX0) * k, (PY1 - PY0) * k);
+  }
   function dais(c, t, P) {
     const Zb = ZH + HP.prof, tissu = P.tissu;
-    for (const f of fleurs) if (f.Z > ZH + 1) fleur3D(c, f, t);
+    poseFleurs(c, true);
     poteau(c, -HP.X, Zb); poteau(c, HP.X, Zb);
     const vent = u => Math.sin(t * 1.5 + u) * .03 + Math.sin(t * 2.7 + u * 2) * .012;
     const q = [Q(c, -HP.X, HP.H, ZH), Q(c, HP.X, HP.H, ZH), Q(c, HP.X, HP.H, Zb), Q(c, -HP.X, HP.H, Zb)];
@@ -511,7 +578,7 @@ MF.scenes.houppa = (() => {
       ctx_.quadraticCurveTo(a[0] - sd * 2, (a[1] + r2[1]) / 2, a[0], a[1]); ctx_.fill();
     }
     poteau(c, -HP.X, ZH); poteau(c, HP.X, ZH);
-    for (const f of fleurs) if (f.Z <= ZH + 1) fleur3D(c, f, t);
+    poseFleurs(c, false);
     // bougies au pied de la houppa, le soir
     if (P.lampes > .5) {
       ctx_.globalCompositeOperation = 'lighter';
@@ -525,13 +592,16 @@ MF.scenes.houppa = (() => {
     const g = ctx_.createLinearGradient(0, q[2][1], 0, q[0][1]);
     g.addColorStop(0, MF.rgba(MF.mix(MF.hex('#efe3c9'), MF.hex(P.s1 ? '#8a8090' : '#efe3c9'), clamp(P.etoiles)))); g.addColorStop(1, MF.rgba(MF.mix(MF.hex('#f6eedd'), [120, 110, 125], clamp(P.etoiles * .8))));
     ctx_.fillStyle = g; ctx_.beginPath(); q.forEach((pt, i) => i ? ctx_.lineTo(pt[0], pt[1]) : ctx_.moveTo(pt[0], pt[1])); ctx_.fill();
-    for (const pe of petales) {
+    for (let i = 0; i < petales.length; i++) {
+      const pe = petales[i];
+      if (!MF.garde(i)) continue;
       const dd = pe.Z - c.z; if (dd < .35) continue;
       const [x, y, kk] = Q(c, pe.X, .002, pe.Z), sz = .035 * kk * pe.s;
-      if (sz < .4) continue;
-      ctx_.save(); ctx_.translate(x, y); ctx_.scale(1, clamp(-c.y / dd * 1.4, .18, 1)); ctx_.rotate(pe.rot);
-      ctx_.drawImage(petale(pe.v), -sz, -sz, sz * 2, sz * 2); ctx_.restore();
+      if (sz < 1) continue;
+      matrice(x, y, pe.rot, clamp(-c.y / dd * 1.4, .18, 1));
+      ctx_.drawImage(petale(pe.v), -sz, -sz, sz * 2, sz * 2);
     }
+    ctx_.setTransform(base, 0, 0, base, bx, by);
   }
   const lueurs = [];
   function rangees(c, t, P) {
@@ -558,6 +628,7 @@ MF.scenes.houppa = (() => {
     p, nom: 'houppa',
     dessine(ctx, W, H, t) {
       ctx_ = ctx;
+      const m = ctx.getTransform(); base = m.a; bx = m.e; by = m.f;
       const c = MF.camera(p, W, H), P = pal(p.tod);
       ciel(ctx, c, [P.c0, P.c1, P.c2, P.c3], .75);
       etoiles.dessine(ctx, c, t, P.etoiles);
@@ -579,10 +650,14 @@ MF.scenes.houppa = (() => {
       const gs = ctx.createLinearGradient(0, yMin, 0, H); gs.addColorStop(0, MF.rgba(P.s0)); gs.addColorStop(1, MF.rgba(P.s1));
       ctx.fillStyle = gs; ctx.beginPath(); ctx.moveTo(-10, H + 10); for (const pt of pts) ctx.lineTo(pt[0], pt[1]); ctx.lineTo(W + 10, H + 10); ctx.fill();
       ctx.strokeStyle = MF.rgba(MF.mix(P.s0, [255, 250, 235], .5), .7); ctx.lineWidth = 1.3; ctx.beginPath(); pts.forEach((pt, i) => i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1])); ctx.stroke();
-      for (const g of grains) {
-        if (g.Z - c.z < .6) continue;
-        const [x, y, k] = MF.proj(c, g.X, 0, g.Z); if (x < -5 || x > W + 5 || y > H + 5) continue;
-        const rr = Math.max(.5, .018 * k); ctx.fillStyle = g.c ? 'rgba(255,250,236,.4)' : 'rgba(110,90,60,.16)'; ctx.fillRect(x - rr, y - rr * .4, rr * 2, rr * .8);
+      for (const clair of [true, false]) {
+        ctx.fillStyle = clair ? 'rgba(255,250,236,.4)' : 'rgba(110,90,60,.16)'; ctx.beginPath();
+        for (const g of grains) {
+          if (g.c !== clair || g.Z - c.z < .6) continue;
+          const [x, y, k] = MF.proj(c, g.X, 0, g.Z); if (x < -5 || x > W + 5 || y > H + 5) continue;
+          const rr = Math.max(.5, .018 * k); ctx.rect(x - rr, y - rr * .4, rr * 2, rr * .8);
+        }
+        ctx.fill();
       }
       // ombres longues des poteaux au soleil couchant
       if (P.soleil > .05) {
@@ -603,7 +678,7 @@ MF.scenes.houppa = (() => {
       ctx.globalCompositeOperation = 'lighter';
       for (const [lx, ly, lh, fl] of lueurs) {
         MF.poseHalo(ctx, haloChaud, lx, ly - lh * .5, lh * (1.4 + ombre), (.12 + .3 * P.lampes) * fl);
-        MF.poseHalo(ctx, haloChaud, lx, ly, lh * 1.1, .18 * P.lampes * fl);
+        if (MF.detail >= 1) MF.poseHalo(ctx, haloChaud, lx, ly, lh * 1.1, .18 * P.lampes * fl);
         MF.poseHalo(ctx, haloBlanc, lx, ly - lh * .47, lh * .3, .9 * fl);
       }
       if (ombre > 0) { const [x, y, k] = Q(c, 0, 1.2, ZH + .8); MF.poseHalo(ctx, haloChaud, x, y, 3 * k, .22 * ombre); }
@@ -628,6 +703,15 @@ MF.scenes.chabbat = (() => {
   const villes = Array.from({ length: 70 }, () => ({ az: -1.1 + Math.pow(r(), 1.6) * .75, el: .002 + r() * .006, s: r(), ph: r() * 9 }));
   const bougies = [[-.09, .95], [.09, .98]];
   const votives = [[-.52, 1.15], [-.36, .8], [.38, .82], [.55, 1.18], [-.8, .95], [.82, 1]];
+  const AZ0 = -1.16, EL1 = .012, MG = 8, groupesVilles = {};
+  function villesImg(g, f) {
+    const R = MF.DPR || 1, cle = g + ':' + Math.round(f) + ':' + R;
+    if (groupesVilles[cle]) return groupesVilles[cle];
+    const w = (-.3 - AZ0) * f + MG * 2, h = EL1 * f + MG * 2, cv = MF.toile(w * R, h * R), x = cv.getContext('2d');
+    x.scale(R, R); x.globalCompositeOperation = 'lighter';
+    villes.forEach((v, i) => { if (i % 3 === g) MF.poseHalo(x, haloVille, (v.az - AZ0) * f + MG, (EL1 - v.el) * f + MG, 2 + v.s * 3, .5); });
+    return (groupesVilles[cle] = { cv, w, h });
+  }
   const bouquet = Array.from({ length: 9 }, () => ({ X: (r() - .5) * .2, Y: .04 + r() * .07, Z: 1.34 + (r() - .5) * .08, rr: .024 + r() * .012, rot: r() * 3, leaf: r() < .4 }));
   return {
     p, nom: 'chabbat',
@@ -642,7 +726,9 @@ MF.scenes.chabbat = (() => {
       mer(ctx, c, M, t, { niveau: 14, cols: [P.m0, P.m1, P.m2], teinte: 'rgba(220,226,255,', az: .28, bas: H, zMin: 30, eclat: .7, reflet: .3 });
       // lumières lointaines de la côte
       ctx.globalCompositeOperation = 'lighter';
-      for (const v of villes) { const [x, y] = infini(c, v.az, v.el); MF.poseHalo(ctx, haloVille, x, y, 2 + v.s * 3, (.25 + .2 * Math.sin(t * 2 + v.ph)) * (.4 + .6 * p.nuit)); }
+      const [vx, vy] = infini(c, AZ0, EL1);
+      for (let g = 0; g < 3; g++) { const im = villesImg(g, f); ctx.globalAlpha = 2 * (.25 + .2 * Math.sin(t * 2 + g * 2.1)) * (.4 + .6 * p.nuit); ctx.drawImage(im.cv, vx - MG, vy - MG, im.w, im.h); }
+      ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
       // la nappe blanche en perspective
       const [, yB] = MF.proj(c, 0, 0, 1.5);

@@ -80,7 +80,7 @@ MF.couche = (ctx, c, Z) => {
   ctx.setTransform(D * k, 0, 0, D * k, D * (c.W / 2 - c.x * k + MF.orbDx(c, Z)), D * (c.hor - c.y * k));
   return k;
 };
-MF.ecran = ctx => ctx.setTransform(MF.DPR, 0, 0, MF.DPR, 0, 0);
+MF.ecran = ctx => { ctx.setTransform(MF.DPR, 0, 0, MF.DPR, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'low'; };
 
 /* Couche mise en cache : dessin vectoriel en coordonnées monde rendu une fois dans une image,
    éventuellement en plusieurs éclairages (variantes). */
@@ -128,8 +128,12 @@ MF.Etoiles = class {
   }
   dessine(ctx, c, t, alpha) {
     if (alpha <= .01) return;
-    const W = c.W, H = c.H, f = c.f, dx = f * c.orb;
-    for (const s of this.e) {
+    const W = c.W, H = c.H, f = c.f, dx = f * c.orb, NIV = 8;
+    const niveaux = this.niveaux || (this.niveaux = Array.from({ length: NIV }, () => []));
+    for (const L of niveaux) L.length = 0;
+    for (let i = 0; i < this.e.length; i++) {
+      const s = this.e[i];
+      if (!MF.garde(i)) continue;
       const y = c.hor - s.el * f;
       if (y < -4 || y > c.hor) continue;
       let x = W / 2 + s.az * f + dx;
@@ -138,11 +142,16 @@ MF.Etoiles = class {
       const fondu = clamp((c.hor - y) / (H * .18));
       const sc = .55 + .45 * Math.sin(t * s.v + s.ph);
       const a = alpha * s.a * fondu * (.55 + .45 * sc);
+      if (a < .02) continue;
       if (s.t > 1.3) MF.poseHalo(ctx, this.halo, x, y, s.t * 3.2, a * .5);
-      ctx.globalAlpha = a;
-      ctx.fillStyle = '#f4f1ff';
-      ctx.fillRect(x - s.t / 2, y - s.t / 2, s.t, s.t);
+      niveaux[Math.min(NIV - 1, Math.round(a * NIV))].push(x - s.t / 2, y - s.t / 2, s.t);
     }
+    ctx.fillStyle = '#f4f1ff';
+    niveaux.forEach((L, i) => {
+      if (!L.length || !i) return;
+      ctx.globalAlpha = i / NIV;
+      for (let j = 0; j < L.length; j += 3) ctx.fillRect(L[j], L[j + 1], L[j + 2], L[j + 2]);
+    });
     ctx.globalAlpha = 1;
   }
 };
@@ -277,6 +286,10 @@ MF.reflet = (() => {
 
 /* ---------- toiles, boucle et fondus ---------- */
 MF.W = 0; MF.H = 0; MF.DPR = 1; MF.qualite = 1;
+// niveau de détail : sur un appareil qui peine, on dessine moins de petites choses (pétales, étoiles, vagues)
+MF.detail = 1;
+MF.garde = i => MF.detail >= 1 || (i * .618034) % 1 < MF.detail;
+const TELEPHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700;
 MF.scenes = {};
 MF.toiles = [];
 MF.avant = [];      // fonctions appelées avant chaque image (mise en scène)
@@ -287,7 +300,7 @@ function taille(force) {
   const r = MF.toiles[0].cv.getBoundingClientRect();
   const w = Math.round(r.width), h = Math.round(r.height);
   // au plus ~2,6 millions de pixels par toile : net sur téléphone, raisonnable sur grand écran
-  const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(2.6e6 / Math.max(1, w * h))) * MF.qualite;
+  const dpr = Math.min(window.devicePixelRatio || 1, TELEPHONE ? 1.6 : 2, Math.sqrt(2.6e6 / Math.max(1, w * h))) * MF.qualite;
   if (!force && w === MF.W && Math.abs(h - MF.H) < 2 && dpr === MF.DPR) return;
   MF.W = w; MF.H = h; MF.DPR = dpr;
   for (const t of MF.toiles) { t.cv.width = Math.round(w * dpr); t.cv.height = Math.round(h * dpr); }
@@ -315,21 +328,25 @@ MF.montre = (id, fondu = 1.2, opts = {}) => {
 MF.visible = s => MF.toiles.some(o => o.scene === s && o.alpha > 0);
 
 let dernier = 0, lent = 0;
-let images = 0;
+let images = 0, tour = 0;
 function image(now) {
   requestAnimationFrame(image);
   const t = now / 1000, brut = dernier ? t - dernier : .016, dt = Math.min(.05, brut);
   dernier = t;
-  rendu(t, dt);
   // qualité adaptative : si les images arrivent trop lentement (téléphone modeste), on baisse la résolution
-  if (MF.toiles.some(o => o.alpha > 0) && brut < .2 && ++images > 90) {
-    lent = lent * .97 + (brut > .027 ? 1 : 0) * .03;
-    if (lent > .55 && MF.qualite > .55) { MF.qualite = Math.max(.55, MF.qualite - .15); lent = 0; images = 0; taille(true); }
+  if (MF.toiles.some(o => o.alpha > 0) && brut < .2 && ++images > 40) {
+    lent = lent * .94 + (brut > .024 ? 1 : 0) * .06;
+    if (lent > .5 && (MF.qualite > .6 || MF.detail > .5)) {
+      MF.detail = Math.max(.5, MF.detail - .17);
+      if (MF.qualite > .6) { MF.qualite = Math.max(.6, MF.qualite - .13); taille(true); }
+      lent = 0; images = 0;
+    }
   }
+  rendu(t, dt);
 }
 // dessine une image (appelée par la boucle, ou à la main pour les essais)
 function rendu(t, dt = .016) {
-  MF.temps = t;
+  MF.temps = t; tour++;
   for (const f of MF.avant) f(t, dt);
   for (const o of MF.toiles) {
     if (o.cible === 1 && o.alpha < 1) {
@@ -337,9 +354,12 @@ function rendu(t, dt = .016) {
       if (o.alpha >= 1) for (const u of MF.toiles) if (u !== o) { u.alpha = 0; u.cible = 0; u.cv.style.opacity = 0; }
     }
   }
+  const deux = MF.toiles.filter(o => o.alpha > 0 && o.scene).length > 1;
   for (const o of MF.toiles) {
-    o.cv.style.opacity = MF.ease.sine(o.alpha);   // fondu adouci au début et à la fin
+    const op = String(MF.ease.sine(o.alpha));   // fondu adouci au début et à la fin
+    if (o.cv.style.opacity !== op) o.cv.style.opacity = op;
     if (o.alpha > 0 && o.scene) {
+      if (deux && o.cv.style.zIndex !== '2' && tour % 2) continue;
       const ctx = o.ctx;
       if (o.p) Object.assign(o.scene.p, o.p);
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';

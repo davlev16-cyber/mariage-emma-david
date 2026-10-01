@@ -296,14 +296,17 @@ function poser(it, y, t) {
     if (m >= 1) it.depart = null;
   } else Object.assign(it.p, c);
 }
+// la caméra suit le défilement avec un très léger amorti : les à-coups du doigt ne se voient pas
+let yLisse = null, tPrec = 0;
 function histoire(t) {
-  const y = scrollY;
+  const y = scrollY, dt = tPrec ? clamp(t - tPrec, 0, .1) : 0; tPrec = t;
+  yLisse = yLisse === null || Math.abs(y - yLisse) > innerHeight * 1.5 ? y : yLisse + (y - yLisse) * (1 - Math.exp(-dt * 11));
   bornes();
   let i = 0;
   for (let j = 0; j < elements.length; j++) if (y >= elements[j].debut) i = j;
-  if (elements[i] !== courant) activer(elements[i], y, t);
+  if (elements[i] !== courant) activer(elements[i], yLisse, t);
   // chaque toile encore visible suit l'élément auquel elle appartient
-  for (const o of MF.toiles) if (o.alpha > 0 && o.proprio && o.p === o.proprio.p) poser(o.proprio, y, t);
+  for (const o of MF.toiles) if (o.alpha > 0 && o.proprio && o.p === o.proprio.p) poser(o.proprio, yLisse, t);
   // les cartes des plans de cinéma apparaissent avec leur décor
   for (const it of elements) {
     if (it.type !== 'cine') continue;
