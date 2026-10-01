@@ -507,7 +507,9 @@ function taille(force) {
 MF.taille = taille;
 
 const taches = [];
-let petit = null;
+let petit = null, tachesApres = 0;
+// pendant l'ouverture du voile, on laisse le navigateur tranquille : les tâches de préparation attendent
+MF.pauseTaches = ms => { tachesApres = performance.now() + ms; };
 // dessine une scène une fois, en tout petit et avec tous ses objets visibles : ses shaders sont compilés
 // et ses textures envoyées à la carte graphique avant qu'on ne la voie (sinon le défilement se fige un instant)
 function prechauffe(s) {
@@ -527,7 +529,7 @@ function image(now) {
   requestAnimationFrame(image);
   const t = now / 1000, brut = dernier ? t - dernier : .016, dt = Math.min(.05, brut);
   dernier = t;
-  if (taches.length) { taches.shift()(); images = 0; }
+  if (taches.length && now >= tachesApres) { taches.shift()(); images = 0; }
   // qualité adaptative : si les images arrivent trop lentement, moins de pixels et moins de petits détails
   if (MF.toiles.some(o => o.alpha > 0) && brut < .2 && ++images > 40) {
     lent = lent * .94 + (brut > .024 ? 1 : 0) * .06;

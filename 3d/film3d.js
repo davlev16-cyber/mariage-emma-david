@@ -381,16 +381,23 @@ function ouvrir() {
   if (REDUIT) { porte.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' }); setTimeout(() => porte.remove(), 600); return; }
   // les deux pans glissent vers les côtés : le haut part le premier, le bas traîne un peu, les plis se resserrent
   const OUV = 3400;
+  if (MF.pauseTaches) MF.pauseTaches(OUV + 400);   // la préparation des décors attend la fin de l'ouverture
   $$('.voilage').forEach((v, i) => {
     const s = i === 0 ? 1 : -1, depart = getComputedStyle(v).transform;
+    // la brise s'arrête : plus aucune animation sous celle de l'ouverture (elle pouvait reprendre la main à la fin
+    // et faire revenir les pans un instant)
+    v.style.animation = 'none';
     v.animate([
       { offset: 0, transform: depart === 'none' ? 'translateX(0) scaleX(1) skewX(0deg)' : depart },
       { offset: .45, transform: `translateX(${-s * 16}%) scaleX(.8) skewX(${s * 3}deg)` },
       { offset: 1, transform: `translateX(${-s * 64}%) scaleX(.44) skewX(${s * 1}deg)` },
     ], { duration: OUV, easing: 'cubic-bezier(.45, .05, .35, 1)', fill: 'forwards' });
   });
-  porte.animate([{ opacity: 1 }, { opacity: 1, offset: .85 }, { opacity: 0 }], { duration: OUV + 200, fill: 'forwards' });
-  setTimeout(() => { if (document.getElementById('porte')) porte.remove(); }, OUV + 300);
+  // le voile devient transparent puis disparaît un peu AVANT la fin du mouvement des pans : rien ne peut réapparaître
+  const fin = () => { if (document.getElementById('porte')) porte.remove(); };
+  const fondu = porte.animate([{ opacity: 1 }, { opacity: 1, offset: .7 }, { opacity: 0 }], { duration: OUV - 300, fill: 'forwards' });
+  fondu.finished.then(fin, fin);
+  setTimeout(fin, OUV);   // (filet de sécurité)
 }
 porte.addEventListener('click', ouvrir);
 porte.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
