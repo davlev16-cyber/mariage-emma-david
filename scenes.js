@@ -720,8 +720,8 @@ function createRenderer(canvas) {
   let current = "";
   return {
     resize(name) {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      w = canvas.clientWidth || innerWidth; h = canvas.clientHeight || innerHeight;
+      const T = window.__tailleScene, dpr = T ? T.dpr : Math.min(2, window.devicePixelRatio || 1);
+      w = canvas.clientWidth || (T ? T.w : innerWidth); h = canvas.clientHeight || (T ? T.h : innerHeight);
       canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       init(name); current = name;

@@ -211,13 +211,22 @@
     }
     return renderers[name];
   }
-  function sizeStage() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    stage.width = innerWidth * dpr; stage.height = innerHeight * dpr;
+  // le décor fait la taille de la « grande fenêtre » (CSS 100lvh) : il n'est redimensionné qu'à la rotation de l'écran,
+  // jamais quand la barre du navigateur apparaît ou disparaît en plein défilement (ce qui faisait tout redessiner)
+  const TELEPHONE = matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 700;
+  let tailleW = 0, tailleH = 0;
+  function sizeStage(force) {
+    const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight;
+    if (!force && w === tailleW && Math.abs(h - tailleH) < h * .2) return;
+    tailleW = w; tailleH = h;
+    const dpr = Math.min(TELEPHONE ? 1.5 : 2, window.devicePixelRatio || 1);
+    window.__tailleScene = { w, h, dpr };
+    stage.width = w * dpr; stage.height = h * dpr;
     Object.keys(renderers).forEach(n => renderers[n].r.resize(n));
   }
-  sizeStage();
-  addEventListener("resize", sizeStage);
+  sizeStage(true);
+  let attente;
+  addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => sizeStage(), 150); });
 
   function sceneImage(name, t, rt) {
     const R = rendererFor(name);
@@ -234,13 +243,20 @@
   const easeIO = v => { v = clamp(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
   const BLEND = .45;   // part de la cinématique pendant laquelle les décors se mélangent
 
+  // la boucle se relance AVANT de dessiner : une erreur ponctuelle ne peut plus figer tout le site
   function frame(now) {
+    requestAnimationFrame(frame);
+    try { dessineImage(now); } catch (e) { /* image suivante */ }
+    autoScroll(now);
+  }
+  function dessineImage(now) {
     const rt = now / 1000, y = scrollY;
     // Chapitre courant : le dernier dont la cinématique a commencé
     let i = 0;
     chapters.forEach((c, j) => { if (y >= c.sec.offsetTop - 1) i = j; });
     const c = chapters[i], span = c.sec.offsetHeight - innerHeight;
-    const p = clamp((y - c.sec.offsetTop) / span);
+    // (fenêtre pas encore mesurée, par exemple dans le navigateur de WhatsApp : on reste au début de la scène)
+    const p = span > 0 ? clamp((y - c.sec.offsetTop) / span) : 0;
     const t = p * SCENES[c.name].duration;
 
     sctx.clearRect(0, 0, stage.width, stage.height);
@@ -258,18 +274,15 @@
 
     chapters.forEach((ch, j) => {
       if (Math.abs(j - i) > 1) return;
-      const pj = clamp((y - ch.sec.offsetTop) / (ch.sec.offsetHeight - innerHeight));
+      const sj = ch.sec.offsetHeight - innerHeight, pj = sj > 0 ? clamp((y - ch.sec.offsetTop) / sj) : 0;
       const tj = pj * SCENES[ch.name].duration;
       ch.caps.forEach(cap => {
         // chaque légende arrive en douceur : elle monte, se pose et devient nette
         const e = 1 - Math.pow(1 - clamp((tj - Number(cap.dataset.at)) / 1.2), 3);
         cap.style.opacity = e.toFixed(3);
         cap.style.transform = "translateY(" + ((1 - e) * 16).toFixed(1) + "px) scale(" + (1.035 - .035 * e).toFixed(4) + ")";
-        cap.style.filter = e > .01 && e < .99 ? "blur(" + ((1 - e) * 6).toFixed(1) + "px)" : "none";
       });
     });
-    autoScroll(now);
-    requestAnimationFrame(frame);
   }
 
   // ----- Défilement automatique -----
@@ -283,8 +296,11 @@
     const r = document.getElementById("s-rsvp") || document.getElementById("s-cover");
     return r.offsetTop;
   };
-  ["wheel", "touchstart", "touchmove", "keydown", "mousedown"].forEach(t =>
-    addEventListener(t, () => { pausedUntil = performance.now() + PAUSE; }, { passive: true }));
+  // dès que l'invité fait défiler lui-même (doigt, molette, clavier), la page est à lui : le défilement automatique
+  // s'arrête pour de bon (écouteurs passifs, aucun preventDefault : le toucher n'est jamais intercepté)
+  const takeOver = () => { if (opened) stopped = true; };
+  ["wheel", "touchmove", "keydown"].forEach(t => addEventListener(t, takeOver, { passive: true }));
+  addEventListener("scroll", () => { if (opened && Math.abs(scrollY - pos) > 3) stopped = true; }, { passive: true });
   document.addEventListener("focusin", e => { if (e.target.closest("form")) stopped = true; });
 
   function speedHere() {

@@ -322,10 +322,11 @@ function histoire(t) {
 let arrete = REDUIT, pauseJusqua = Infinity, dernier = 0, pos = 0;
 const PAUSE = 2500, LECTURE = 7000;
 const vus = new Set();
-['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown'].forEach(ty => addEventListener(ty, () => { if (ouvert) pauseJusqua = performance.now() + PAUSE; }, { passive: true }));
-// après un geste du doigt, la page continue sur son élan : tant qu'elle bouge toute seule, le défilement automatique attend
-// (sinon il « rattrape » la page en plein élan, ce qui donne des à-coups)
-addEventListener('scroll', () => { if (ouvert && Math.abs(scrollY - pos) > 3) pauseJusqua = performance.now() + PAUSE; }, { passive: true });
+// dès que l'invité fait défiler lui-même (doigt, molette, clavier), la page est à lui : le défilement automatique
+// s'arrête pour de bon et ne reprend jamais la main (aucun script n'intercepte le toucher : écouteurs passifs, sans preventDefault)
+const prendLaMain = () => { if (ouvert) arrete = true; };
+['wheel', 'touchmove', 'keydown'].forEach(ty => addEventListener(ty, prendLaMain, { passive: true }));
+addEventListener('scroll', () => { if (ouvert && Math.abs(scrollY - pos) > 3) arrete = true; }, { passive: true });
 document.addEventListener('focusin', e => { if (e.target.closest('form')) arrete = true; });
 const finAuto = () => ($('#reponse') || $('#couverture')).offsetTop;
 const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - innerHeight) / 2));

@@ -227,14 +227,14 @@ const Music = (function () {
     if (e.target && e.target.closest && e.target.closest("#sound")) return;
     if (!started) start();
     if (ctx && ctx.state !== "running") ctx.resume().then(update);
-    if (started && (!ctx || ctx.state === "running")) GESTURES.forEach(t => removeEventListener(t, first, true));
+    if (started && (!ctx || ctx.state === "running")) GESTURES.forEach(t => removeEventListener(t, first, { capture: true }));
     update();
   };
-  GESTURES.forEach(t => addEventListener(t, first, true));
+  GESTURES.forEach(t => addEventListener(t, first, { capture: true, passive: true }));
   // #silence dans l'adresse : aucune musique (utile pour les vérifications)
   const silent = location.hash === "#silence";
   if (silent) {
-    GESTURES.forEach(t => removeEventListener(t, first, true));
+    GESTURES.forEach(t => removeEventListener(t, first, { capture: true }));
     addEventListener("DOMContentLoaded", () => { const h = document.getElementById("tap-hint"); if (h) h.hidden = true; });
   }
   addEventListener("load", () => {

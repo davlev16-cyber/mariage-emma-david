@@ -17,20 +17,21 @@
 }
 * { box-sizing: border-box; }
 html { background: #07080c; -webkit-text-size-adjust: 100%; }
-body { margin: 0; min-height: 100%; background: #07080c; color: var(--ivoire); font: 300 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { margin: 0; min-height: 100%; background: #07080c; color: var(--ivoire); font: 300 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
 body.verrou { overflow: hidden; height: 100%; position: fixed; inset: 0; }
 button { font: inherit; color: inherit; }
 a { color: inherit; }
 
 /* ---------- toiles et voile ---------- */
-canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; pointer-events: none; }
+canvas.monde { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh; display: block; pointer-events: none; }
 .voile { position: fixed; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(0, 0, 0, .42) 100%); }
-.grain { position: fixed; inset: -60px; z-index: 4; pointer-events: none; opacity: .045; background-image: var(--bruit); animation: grain 1s steps(6) infinite; will-change: transform; }
+.grain { position: fixed; inset: -60px; z-index: 4; pointer-events: none; opacity: .045; background-image: var(--bruit); animation: grain 1s steps(6) infinite; }
 @keyframes grain { 0% { transform: translate(0, 0) } 20% { transform: translate(-22px, 14px) } 40% { transform: translate(18px, -26px) } 60% { transform: translate(-12px, 30px) } 80% { transform: translate(26px, 8px) } 100% { transform: translate(0, 0) } }
 
 /* ---------- 1. l'ouverture : un voilage ivoire qui s'écarte ---------- */
 .porte { position: fixed; inset: 0; z-index: 20; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(20px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); text-align: center; color: #3f4126; }
 .porte:focus-visible { outline: none; }
+.porte, button, a, label { touch-action: manipulation; }
 .voilage { position: absolute; top: -3%; bottom: -3%; width: 53%; will-change: transform;
   background:
     linear-gradient(to bottom, rgba(255, 252, 244, .25), rgba(226, 214, 190, .22) 70%, rgba(210, 196, 168, .3)),
@@ -59,7 +60,8 @@ canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 @keyframes porte-in { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 .porte .bh { margin: 0 0 10px; font: 400 16px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: #6f6a57; }
 .porte-mono { display: block; width: clamp(64px, 18vw, 88px); height: auto; margin: 4px auto 14px; opacity: .85; }
-.porte-contenu > .porte-mono { animation-name: mono-in; }
+.porte-contenu > picture { display: contents; }
+.porte-contenu .porte-mono { animation: mono-in 1.5s cubic-bezier(.2, .7, .2, 1) .25s both; }
 @keyframes mono-in { from { opacity: 0; transform: translateY(6px); } to { opacity: .85; transform: none; } }
 .porte-invite { margin: 0; font: 500 12px/1.5 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: #6f6a57; }
 .porte-invite:empty { display: none; }
@@ -78,8 +80,8 @@ canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .bande.haut { top: 0; transform-origin: 50% 0; }
 .bande.bas { bottom: 0; transform-origin: 50% 100%; }
 .film.cadre .bande { transform: scaleY(1); }
-.replique { position: absolute; left: 0; right: 0; padding: 0 24px; text-align: center; opacity: 0; filter: blur(6px); transform: translateY(10px); transition: opacity .8s ease, filter .8s ease, transform 1s ease; text-shadow: 0 2px 24px rgba(0, 0, 0, .55), 0 0 2px rgba(0, 0, 0, .3); }
-.replique.vu { opacity: 1; filter: blur(0); transform: none; transition: opacity 1.5s ease, filter 1.4s ease, transform 2.2s var(--ease); }
+.replique { position: absolute; left: 0; right: 0; padding: 0 24px; text-align: center; opacity: 0; transform: translateY(10px); transition: opacity .8s ease, transform 1s ease; text-shadow: 0 2px 14px rgba(0, 0, 0, .5), 0 0 2px rgba(0, 0, 0, .3); }
+.replique.vu { opacity: 1; transform: none; transition: opacity 1.5s ease, transform 2.2s var(--ease); }
 .r-haut { top: calc(8.5vh + 7vh); }
 .r-bas { bottom: calc(8.5vh + 5vh); }
 .r-centre { top: 21vh; }
@@ -115,14 +117,14 @@ canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .cine-cadre { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; pointer-events: none; }
 .fin-carte .fin-date { display: block; margin-top: 16px; font: 500 12px/1.6 var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--or-p); }
 
-.invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; }
+.invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; overflow-x: clip; }
 body.page .invitation { opacity: 1; visibility: visible; }
 .chap { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; padding: calc(9vh + env(safe-area-inset-top)) 16px 10vh; text-align: center; }
 .chap + .chap { min-height: 118vh; min-height: 118svh; }
 .chap::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 70%; pointer-events: none; background: linear-gradient(to bottom, rgba(4, 5, 10, .42), rgba(4, 5, 10, .18) 55%, rgba(4, 5, 10, 0)); }
-.contenu { position: relative; width: 100%; max-width: 620px; text-shadow: 0 2px 22px rgba(0, 0, 0, .6), 0 0 2px rgba(0, 0, 0, .35); }
-[data-apparait] { opacity: 0; transform: translateY(18px); filter: blur(6px); transition: opacity 1.2s ease, transform 1.4s var(--ease), filter 1.4s ease; transition-delay: var(--d, 0s); }
-[data-apparait].vu { opacity: 1; transform: none; filter: none; }
+.contenu { position: relative; width: 100%; max-width: 620px; text-shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 2px rgba(0, 0, 0, .35); }
+[data-apparait] { opacity: 0; transform: translateY(18px); transition: opacity 1.2s ease, transform 1.4s var(--ease); transition-delay: var(--d, 0s); }
+[data-apparait].vu { opacity: 1; transform: none; }
 .bh { margin: 0 0 18px; font: 400 17px/1 "Frank Ruhl Libre", "Times New Roman", serif; color: var(--or-c); }
 .parents { margin: 0; font: 400 12px/1.9 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: rgba(251, 248, 241, .86); }
 .annonce { margin: 14px auto 0; max-width: 19em; text-wrap: balance; font: italic 300 clamp(19px, 4.9vw, 24px)/1.35 var(--serif); color: var(--ivoire); }
