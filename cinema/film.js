@@ -256,8 +256,12 @@ for (const sec of $$('.chap')) [...sec.querySelectorAll('[data-apparait]')].forE
 const film = $('#film');
 let ouvert = false, courant = null;
 // début de chaque élément (en pixels de défilement) ; la fin d'un élément est le début du suivant
+// hauteur d'écran STABLE (celle de la toile du décor, 100lvh) : elle ne change pas quand la barre du navigateur
+// apparaît ou disparaît pendant un défilement au doigt (innerHeight, lui, change de ~80 px et faisait sauter les calculs)
+const toileFond = document.querySelector('canvas.decor, canvas.monde');
+const hauteur = () => (toileFond && toileFond.clientHeight) || innerHeight;
 function bornes() {
-  const vh = innerHeight;
+  const vh = hauteur();
   elements.forEach((it, i) => { it.debut = i ? it.sec.offsetTop - vh * .5 : 0; });
   elements.forEach((it, i) => { it.fin = elements[i + 1] ? elements[i + 1].debut : it.debut + it.sec.offsetHeight; });
 }
@@ -296,7 +300,7 @@ function poser(it, y, t) {
 let yLisse = null, tPrec = 0;
 function histoire(t) {
   const y = scrollY, dt = tPrec ? clamp(t - tPrec, 0, .1) : 0; tPrec = t;
-  yLisse = yLisse === null || Math.abs(y - yLisse) > innerHeight * 1.5 ? y : yLisse + (y - yLisse) * (1 - Math.exp(-dt * 11));
+  yLisse = yLisse === null || Math.abs(y - yLisse) > hauteur() * 1.5 ? y : yLisse + (y - yLisse) * (1 - Math.exp(-dt * 11));
   bornes();
   let i = 0;
   for (let j = 0; j < elements.length; j++) if (y >= elements[j].debut) i = j;
@@ -334,10 +338,10 @@ addEventListener('touchstart', () => { doigt = true; attendre(); }, { passive: t
 addEventListener('scroll', () => { if (ouvert && (scrollY < Math.min(pos, posAvant) - 3 || scrollY > Math.max(pos, posAvant) + 3)) attendre(); }, { passive: true });
 document.addEventListener('focusin', e => { if (e.target.closest('form')) arrete = true; });
 const finAuto = () => ($('#reponse') || $('#couverture')).offsetTop;
-const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - innerHeight) / 2));
+const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - hauteur()) / 2));
 function vitesse() {
   if (courant && courant.type === 'cine') return (courant.fin - courant.debut) / courant.duree;
-  return Math.max(110, innerHeight / 3.4);
+  return Math.max(110, hauteur() / 3.4);
 }
 function avance(now) {
   const dt = dernier ? Math.min(.05, (now - dernier) / 1000) : 0; dernier = now;

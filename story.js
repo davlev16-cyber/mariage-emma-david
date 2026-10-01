@@ -243,6 +243,11 @@
   const easeIO = v => { v = clamp(v); return v < .5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
   const BLEND = .45;   // part de la cinématique pendant laquelle les décors se mélangent
 
+  // hauteur d'écran STABLE (celle du décor, 100lvh) : elle ne change pas quand la barre du navigateur apparaît ou
+  // disparaît pendant un défilement au doigt (innerHeight change de ~80 px et faisait sauter scène et légendes)
+  const H = () => stage.clientHeight || innerHeight;
+  // le décor suit le défilement avec un très léger amorti : il ne saute pas si une image tarde un peu
+  let yL = null, lastRtL = 0;
   // la boucle se relance AVANT de dessiner : une erreur ponctuelle ne peut plus figer tout le site
   function frame(now) {
     requestAnimationFrame(frame);
@@ -250,11 +255,13 @@
     autoScroll(now);
   }
   function dessineImage(now) {
-    const rt = now / 1000, y = scrollY;
+    const rt = now / 1000, dtL = lastRtL ? Math.min(.1, Math.max(0, rt - lastRtL)) : 0; lastRtL = rt;
+    yL = yL === null || Math.abs(scrollY - yL) > H() * 1.5 ? scrollY : yL + (scrollY - yL) * (1 - Math.exp(-dtL * 12));
+    const y = yL;
     // Chapitre courant : le dernier dont la cinématique a commencé
     let i = 0;
     chapters.forEach((c, j) => { if (y >= c.sec.offsetTop - 1) i = j; });
-    const c = chapters[i], span = c.sec.offsetHeight - innerHeight;
+    const c = chapters[i], span = c.sec.offsetHeight - H();
     // (fenêtre pas encore mesurée, par exemple dans le navigateur de WhatsApp : on reste au début de la scène)
     const p = span > 0 ? clamp((y - c.sec.offsetTop) / span) : 0;
     const t = p * SCENES[c.name].duration;
@@ -274,7 +281,7 @@
 
     chapters.forEach((ch, j) => {
       if (Math.abs(j - i) > 1) return;
-      const sj = ch.sec.offsetHeight - innerHeight, pj = sj > 0 ? clamp((y - ch.sec.offsetTop) / sj) : 0;
+      const sj = ch.sec.offsetHeight - H(), pj = sj > 0 ? clamp((y - ch.sec.offsetTop) / sj) : 0;
       const tj = pj * SCENES[ch.name].duration;
       ch.caps.forEach(cap => {
         // chaque légende arrive en douceur : elle monte, se pose et devient nette
@@ -310,10 +317,10 @@
   function speedHere() {
     const y = scrollY;
     for (const c of chapters) {
-      const top = c.sec.offsetTop, span = c.sec.offsetHeight - innerHeight;
+      const top = c.sec.offsetTop, span = c.sec.offsetHeight - H();
       if (y >= top - 2 && y < top + span) return span / SCENES[c.name].duration * FAST;
     }
-    return Math.max(120, innerHeight / 3.2);
+    return Math.max(120, H() / 3.2);
   }
 
   // Pause de lecture : le défilement s'arrête quelques secondes sur chaque page,
@@ -321,7 +328,7 @@
   const READ = 7000;
   const readStops = () => [...document.querySelectorAll(".content")]
     .filter(sec => sec.id !== "s-rsvp")
-    .map(sec => sec.offsetTop + Math.max(0, (sec.offsetHeight - innerHeight) / 2));
+    .map(sec => sec.offsetTop + Math.max(0, (sec.offsetHeight - H()) / 2));
   const reached = new Set();
 
   function autoScroll(now) {
