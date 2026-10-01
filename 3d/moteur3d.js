@@ -39,7 +39,7 @@ MF.palette = table => {
 MF.toile = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
 // couleur sRGB [r,g,b] (0-255) ou '#hex' -> THREE.Color (les dégradés du ciel restent en sRGB, comme la version cinéma)
 MF.vec = (c, cible = new THREE.Vector3()) => { const a = typeof c === 'string' ? MF.hex(c) : c; return cible.set(a[0] / 255, a[1] / 255, a[2] / 255); };
-MF.couleur = c => { const a = typeof c === 'string' ? MF.hex(c) : c; return new THREE.Color().setRGB(a[0] / 255, a[1] / 255, a[2] / 255, THREE.SRGBColorSpace); };
+MF.couleur = (c, cible = new THREE.Color()) => { const a = typeof c === 'string' ? MF.hex(c) : c; return cible.setRGB(a[0] / 255, a[1] / 255, a[2] / 255, THREE.SRGBColorSpace); };
 MF.texture = (cv, { srgb = true, repete = false } = {}) => {
   const t = new THREE.CanvasTexture(cv);
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
@@ -298,7 +298,13 @@ MF.Lueurs = class {
   }
   envoie() {
     this.g.instanceCount = this.n;
-    for (const k of ['centre', 'taille', 'teinte']) this.g.attributes[k].needsUpdate = true;
+    if (!this.n && !this.avant) return;
+    for (const k of ['centre', 'taille', 'teinte']) {
+      const at = this.g.attributes[k];
+      if (this.n) at.addUpdateRange(0, this.n * at.itemSize);
+      at.needsUpdate = true;
+    }
+    this.avant = this.n;
   }
 };
 
@@ -481,11 +487,28 @@ function taille(force) {
 }
 MF.taille = taille;
 
+const taches = [];
+let petit = null;
+// dessine une scène une fois, en tout petit et avec tous ses objets visibles : ses shaders sont compilés
+// et ses textures envoyées à la carte graphique avant qu'on ne la voie (sinon le défilement se fige un instant)
+function prechauffe(s) {
+  if (!petit) petit = new THREE.WebGLRenderTarget(64, 64);
+  s.prepare(MF.temps, .016, MF.W || 390, MF.H || 844);
+  const caches = [];
+  s.s3.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } });
+  renderer.compile(s.s3, s.cam);
+  s.s3.traverse(o => { if (o.material) for (const m of [].concat(o.material)) for (const k of ['map', 'envMap', 'alphaMap']) if (m[k] && m[k].isTexture) renderer.initTexture(m[k]); });
+  renderer.setRenderTarget(petit); renderer.render(s.s3, s.cam); renderer.setRenderTarget(null);
+  for (const o of caches) o.visible = false;
+}
+MF.prechauffe = prechauffe;
+MF.pret = () => !taches.length;
 let dernier = 0, lent = 0, images = 0;
 function image(now) {
   requestAnimationFrame(image);
   const t = now / 1000, brut = dernier ? t - dernier : .016, dt = Math.min(.05, brut);
   dernier = t;
+  if (taches.length) { taches.shift()(); images = 0; }
   // qualité adaptative : si les images arrivent trop lentement, moins de pixels et moins de petits détails
   if (MF.toiles.some(o => o.alpha > 0) && brut < .2 && ++images > 40) {
     lent = lent * .94 + (brut > .024 ? 1 : 0) * .06;
@@ -545,5 +568,15 @@ MF.demarre = () => {
   let attente;
   addEventListener('resize', () => { clearTimeout(attente); attente = setTimeout(() => taille(), 120); });
   for (const s of Object.values(MF.scenes)) s.construit && s.construit(renderer);
+  // file d'attente : d'abord les reflets de chaque décor, puis un premier dessin de chaque décor, puis le fondu
+  for (const s of Object.values(MF.scenes)) for (const f of (s.taches || [])) taches.push(f);
+  for (const s of Object.values(MF.scenes)) taches.push(() => prechauffe(s));
+  taches.push(() => {
+    cible = new THREE.WebGLRenderTarget(Math.round(MF.W * MF.DPR), Math.round(MF.H * MF.DPR), { samples: TELEPHONE ? 0 : 4 });
+    cible.texture.colorSpace = THREE.SRGBColorSpace;
+    compoMat.map = cible.texture; compoMat.needsUpdate = true;
+    renderer.setRenderTarget(cible); renderer.clear(); renderer.setRenderTarget(null);
+    compoMat.opacity = 0; renderer.autoClear = false; renderer.render(compoScene, compoCam); renderer.autoClear = true;
+  });
   requestAnimationFrame(image);
 };

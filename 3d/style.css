@@ -90,7 +90,7 @@ canvas.monde { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; he
 .ville { display: block; font: 400 clamp(54px, 15vw, 118px)/.95 var(--display); letter-spacing: .04em; color: var(--ivoire); }
 .r-bas p { margin: 0 auto; max-width: 30em; font: italic 300 clamp(21px, 5.4vw, 30px)/1.35 var(--serif); color: var(--ivoire); }
 .noms-film { display: block; font: 400 clamp(56px, 16vw, 132px)/1 var(--display); letter-spacing: .02em; }
-.noms-film .n1, .noms-film .n2 { background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 5s ease-in-out infinite; }
+.noms-film .n1, .noms-film .n2 { background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; background-position: 38% 0; }
 .noms-film { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .45)); }
 .noms-film .n1, .noms-film .n2 { text-shadow: none; }
 .noms-film em { display: block; margin: .1em 0 .06em; font: italic 300 .42em/1 var(--serif); color: var(--or-c); }
@@ -127,7 +127,7 @@ body.page .invitation { opacity: 1; visibility: visible; }
 .parents { margin: 0; font: 400 12px/1.9 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: rgba(251, 248, 241, .86); }
 .annonce { margin: 14px auto 0; max-width: 19em; text-wrap: balance; font: italic 300 clamp(19px, 4.9vw, 24px)/1.35 var(--serif); color: var(--ivoire); }
 .noms { margin: 20px 0 6px; font: 400 clamp(58px, 16.5vw, 120px)/.95 var(--display); letter-spacing: .02em; }
-.noms span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out infinite; }
+.noms span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; background-position: 38% 0; }
 .noms em { display: block; margin: 4px 0; font: italic 300 .4em/1 var(--serif); color: var(--or-c); }
 .date-grande { margin: 18px 0 0; font: 400 clamp(15px, 3.8vw, 18px)/1.5 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--ivoire); }
 .date-grande span { display: block; margin-top: 2px; font: italic 300 clamp(22px, 5.6vw, 28px)/1.3 var(--serif); letter-spacing: 0; text-transform: none; color: var(--or-p); }
@@ -208,6 +208,8 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
   .chap { padding-top: 12vh; }
   .r-haut { top: calc(8.5vh + 9vh); }
 }
+/* sur téléphone, pas de grain animé par-dessus tout l'écran : une couche de moins à recomposer à chaque image */
+@media (pointer: coarse) { .grain { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .grain, .poussiere { display: none; }
   [data-apparait] { transition-duration: .01s; filter: none; }
@@ -230,7 +232,7 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .lbl { font: 500 11px var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--or-c); }
 .val { font: 400 clamp(18px, 4.8vw, 21px)/1.45 var(--sans); letter-spacing: .02em; color: var(--ivoire); text-wrap: balance; }
 .noms-page { display: block; margin: 16px 0 6px; font: 400 clamp(60px, 17vw, 120px)/.95 var(--display); letter-spacing: .02em; }
-.noms-page span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: reflet 6s ease-in-out infinite; }
+.noms-page span { display: block; background: linear-gradient(100deg, #d2b673 0%, #fbeecb 36%, #fffdf6 46%, #ecd49a 58%, #c9a862 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; background-position: 38% 0; }
 .noms-page em { display: block; margin: 4px 0; font: italic 300 .4em/1 var(--serif); color: var(--or-c); }
 .noms-page { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .5)); }
 .noms-page span { text-shadow: none; }
@@ -268,6 +270,9 @@ h2 { margin: 0; font: 400 clamp(48px, 13vw, 92px)/1 var(--display); letter-spaci
 .replique .titre-ev { display: block; font: 400 clamp(60px, 17vw, 124px)/.95 var(--display); letter-spacing: .03em; color: var(--ivoire); }
 .replique .tag-ev { display: block; margin-top: 8px; font: italic 300 clamp(26px, 7vw, 40px)/1.1 var(--serif); color: var(--or-p); }
 .replique.sombre .titre-ev { color: #3f4126; }
+/* le nom de la célébration, seul, au-dessus du décor */
+.replique.r-titre { top: 24vh; }
+.replique.r-titre .titre-ev { font-size: clamp(66px, 19vw, 140px); }
 .replique.sombre .tag-ev { color: #8a7442; }
 .replique.sombre .eyebrow { color: #8a7442; }
 .replique.sombre { text-shadow: 0 1px 16px rgba(255, 252, 244, .9); }

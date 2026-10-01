@@ -142,19 +142,11 @@ function couverture() {
   const quand = apparait(el('p', 'quand')); quand.append(el('span', '', 'Juillet & août 2027'), el('span', '', 'Marseille & Israël'));
   c.append(ul, quand);
 }
-// le plan de cinéma d'une célébration : la carte (date, nom, lieu, horaire) arrive avec le décor
+// le plan de cinéma d'une célébration : seulement son nom, qui arrive avec le décor (les informations sont sur la page suivante)
 function planEvenement(k) {
   const { cadre, it, c } = plan(k);
-  const ev = EVENTS[k], n = el('div', 'replique r-haut' + (c.sombre ? ' sombre' : ''));
-  n.append(el('span', 'eyebrow', ev.date), el('span', 'titre-ev', ev.name), el('span', 'tag-ev', ev.tagline));
-  const infos = el('span', 'infos-ev');
-  for (const [a, b] of ev.details) {
-    const l = el('span', a === 'Horaire' ? 'i-heure' : 'i-lieu');
-    if (a !== 'Lieu' && a !== 'Horaire') l.append(el('small', '', a));
-    l.append(document.createTextNode(b));
-    infos.append(l);
-  }
-  n.append(infos);
+  const n = el('div', 'replique r-titre' + (c.sombre ? ' sombre' : ''));
+  n.append(el('span', 'titre-ev', EVENTS[k].name));
   cadre.append(n);
   it.textes = [[n, .1]];
 }
@@ -330,6 +322,9 @@ let arrete = REDUIT, pauseJusqua = Infinity, dernier = 0, pos = 0;
 const PAUSE = 2500, LECTURE = 7000;
 const vus = new Set();
 ['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown'].forEach(ty => addEventListener(ty, () => { if (ouvert) pauseJusqua = performance.now() + PAUSE; }, { passive: true }));
+// après un geste du doigt, la page continue sur son élan : tant qu'elle bouge toute seule, le défilement automatique attend
+// (sinon il « rattrape » la page en plein élan, ce qui donne des à-coups)
+addEventListener('scroll', () => { if (ouvert && Math.abs(scrollY - pos) > 3) pauseJusqua = performance.now() + PAUSE; }, { passive: true });
 document.addEventListener('focusin', e => { if (e.target.closest('form')) arrete = true; });
 const finAuto = () => ($('#reponse') || $('#couverture')).offsetTop;
 const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - innerHeight) / 2));

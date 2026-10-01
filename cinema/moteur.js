@@ -372,6 +372,22 @@ function rendu(t, dt = .016) {
 }
 
 MF.rendu = rendu;
+// préparation à l'avance : chaque décor est dessiné une fois hors écran (une scène par image, pendant que le voilage
+// est affiché), pour que ses petites images (fleurs, chaises, lanternes, nuages, halos) soient prêtes avant d'être vues
+MF.prechauffe = liste => {
+  const cv = MF.toile(Math.max(1, MF.W * MF.DPR), Math.max(1, MF.H * MF.DPR)), ctx = cv.getContext('2d');
+  const suivant = () => {
+    const tache = liste.shift();
+    if (!tache) return;
+    const [id, reglages] = tache, sc = MF.scenes[id], sauve = { ...sc.p };
+    Object.assign(sc.p, reglages);
+    ctx.setTransform(MF.DPR, 0, 0, MF.DPR, 0, 0);
+    try { sc.dessine(ctx, MF.W, MF.H, MF.temps || 1, .016); } catch (e) {}
+    Object.assign(sc.p, sauve);
+    requestAnimationFrame(suivant);
+  };
+  requestAnimationFrame(suivant);
+};
 MF.demarre = () => {
   for (const cv of document.querySelectorAll('canvas.decor')) MF.toiles.push({ cv, ctx: cv.getContext('2d'), scene: null, alpha: 0, cible: 0, duree: 1, debut: 0, alpha0: 0 });
   taille(true);

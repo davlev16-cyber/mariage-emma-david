@@ -247,6 +247,7 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
     return m;
   })();
   const lumCote = new MF.Lueurs(S.s3, 40, { profondeur: false, ordre: -5 });
+  const dirsCote = Array.from({ length: 40 }, (_, i) => MF.direction(-1.55 + (i * .618 % 1) * 1.3, .002 + (i * .37 % 1) * .005));
 
   // henné : lanternes orientales posées sur le sable, pétales rouges, braises qui montent
   const r = MF.rng(21), lanternes = [];
@@ -287,7 +288,7 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
 
   S.prepare = (t, dt, W, H) => {
     const p = S.p, v = p.variante | 0, P = V[v], henneOn = v === 0, dore = v === 2;
-    if (S.env) S.s3.environment = S.env[v].texture;
+    if (S.env[v]) S.s3.environment = S.env[v].texture;
     MF.cadre(S.cam, p, W, H);
     MF.reglerCiel(ciel.u, P.ciel, .75, { az: 0, el: p.soleil, r: P.r, force: 1, coeur: P.coeur, halo: P.halo, coupe: henneOn });
     ciel.suivre(S.cam);
@@ -297,8 +298,8 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
     // lumière : le soleil bas en face (contre-jour), le ciel et le sable qui renvoient la couleur
     MF.direction(0, Math.max(.05, p.soleil), sol.position).multiplyScalar(100).add(S.cam.position);
     sol.target.position.copy(S.cam.position);
-    sol.color.copy(MF.couleur(P.halo)); sol.intensity = henneOn ? 2.2 : 1.6;
-    hemi.color.copy(MF.couleur(P.ciel[P.ciel.length - 2])); hemi.groundColor.copy(MF.couleur(P.sable[0])); hemi.intensity = henneOn ? 1.25 : 1.5;
+    MF.couleur(P.halo, sol.color); sol.intensity = henneOn ? 2.2 : 1.6;
+    MF.couleur(P.ciel[P.ciel.length - 2], hemi.color); MF.couleur(P.sable[0], hemi.groundColor); hemi.intensity = henneOn ? 1.25 : 1.5;
     // bord de l'eau
     sable.visible = !!p.rivage;
     if (sable.visible) {
@@ -312,7 +313,7 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
     // côte lointaine
     cote.visible = dore; lumCote.vide();
     if (dore) for (let i = 0; i < 40; i++) {
-      const d = MF.direction(-1.55 + (i * .618 % 1) * 1.3, .002 + (i * .37 % 1) * .005);
+      const d = dirsCote[i];
       lumCote.ajoute(S.cam.position.x + d.x * 1300, S.cam.position.y + d.y * 1300, S.cam.position.z + d.z * 1300, 7, [255, 170, 90], .35 + .25 * Math.sin(t * 2 + i));
     }
     lumCote.envoie();
@@ -334,10 +335,9 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
       halos.envoie(); flaques.envoie();
     }
   };
-  S.construit = renderer => {
-    S.env = [0, 1, 2].map(v => environnement(renderer, V[v].ciel, V[v].sol, { el: .05, col: V[v].halo, force: .9 }));
-    S.s3.environment = S.env[0].texture;
-  };
+  // reflets des métaux, préparés à l'avance pour chaque variante
+  S.env = [];
+  S.taches = [0, 1, 2].map(v => () => { S.env[v] = environnement(MF.renderer(), V[v].ciel, V[v].sol, { el: .05, col: V[v].halo, force: .9 }); });
 
   MF.scenes.plage = S;
 }
@@ -451,6 +451,7 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
   const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1), soleil = new THREE.DirectionalLight(0xffffff, 1), luneL = new THREE.DirectionalLight(0xc8d2ff, 0);
   S.s3.add(hemi, soleil, soleil.target, luneL, luneL.target);
   const lampes = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffb070, 0, 7, 2); S.s3.add(l); return l; });
+  const POS_LAMPES = [[0, 1, 6], [0, 1, 10], [0, 1.4, ZH - .5]];
 
   // terrasse au bord de l'eau, bord arrondi, posée 3 m au-dessus de la mer
   {
@@ -581,7 +582,15 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
   const feux = new MF.Feux(ciels);
   S.tire = (x, y, taille = 1) => feux.tire(lerp(-28, 28, x), lerp(36, 18, y / .3), -(ZH + 75), 13 * taille);
   S.feux = feux;
-  let envCle = '';
+  const envs = new Map(), tmp = new THREE.Vector3();
+  function envPour(c) {
+    if (!envs.has(c)) {
+      const P = pal(c), el = lerp(.05, -.04, clamp(c / 1.6));
+      envs.set(c, environnement(MF.renderer(), [P.c0, P.c1, P.c2, P.c3], [P.s0, P.s1], P.soleil > .05 ? { el, col: [255, 236, 200], force: P.soleil } : null));
+    }
+    return envs.get(c);
+  }
+  S.taches = [.5, 1, 1.5, 2, 2.5, 3].map(c => () => envPour(c));
 
   S.prepare = (t, dt, W, H) => {
     const p = S.p, P = pal(p.tod), nuit = clamp(p.tod - 1.6), ombre = clamp((p.tod - 1.2) / 1.4);
@@ -596,14 +605,14 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
       astre: nuit > .3 ? { az: .22, el: .09 + nuit * .05, force: .5 * nuit, col: [235, 238, 255] } : { az: 0, el: Math.max(.004, el), force: P.soleil * .9, col: [255, 236, 200] }, brume: .5 }, ciel);
     mer.suivre(S.cam, t);
     // lumières : soleil couchant en contre-jour, ciel, lune, et la nuit les lanternes
-    MF.direction(0, Math.max(.06, el + .05), soleil.position).multiplyScalar(80).add(P3(0, 0, ZH)); soleil.target.position.copy(P3(0, 0, ZH - 6));
-    soleil.color.copy(MF.couleur([255, 214, 170])); soleil.intensity = 2.4 * P.soleil;
-    hemi.color.copy(MF.couleur(P.c2)); hemi.groundColor.copy(MF.couleur(P.s1)); hemi.intensity = .4 + 1.5 * P.lum;
+    MF.direction(0, Math.max(.06, el + .05), soleil.position).multiplyScalar(80).add(tmp.set(0, 0, -ZH)); soleil.target.position.set(0, 0, -(ZH - 6));
+    MF.couleur([255, 214, 170], soleil.color); soleil.intensity = 2.4 * P.soleil;
+    MF.couleur(P.c2, hemi.color); MF.couleur(P.s1, hemi.groundColor); hemi.intensity = .4 + 1.5 * P.lum;
     MF.direction(.22, .3, luneL.position).multiplyScalar(80); luneL.intensity = .45 * nuit;
     tissuMat.emissiveIntensity = .12 * P.soleil; voiles.forEach(v => { v.material.emissiveIntensity = .2 * P.soleil; });
     verreL.material.emissiveIntensity = .2 + 1.4 * P.lampes;
     // trois lampes chaudes le long de l'allée, la nuit
-    [[0, 1, 6], [0, 1, 10], [0, 1.4, ZH - .5]].forEach(([X, Y, Z], i) => { lampes[i].position.copy(P3(X, Y, Z)); lampes[i].intensity = 2.2 * ombre * (i === 2 ? 1.4 : 1); });
+    for (let i = 0; i < 3; i++) { const [X, Y, Z] = POS_LAMPES[i]; lampes[i].position.set(X, Y, -Z); lampes[i].intensity = 2.2 * ombre * (i === 2 ? 1.4 : 1); }
     tissus(t);
     // lueurs
     lueurs.vide(); flaques.vide();
@@ -618,13 +627,9 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
     if (ombre > 0) lueurs.ajoute(0, 1.2, -(ZH + .8), 4, [255, 196, 120], .18 * ombre);
     lueurs.envoie(); flaques.envoie();
     ciels.vide(); feux.pose(dt); ciels.envoie();
-    // reflets des métaux : on refait le petit ciel d'environnement quand la lumière change vraiment
-    const cle = (Math.round(p.tod * 4) / 4).toFixed(2);
-    if (cle !== envCle && MF.renderer()) {
-      envCle = cle;
-      S.envRT = environnement(MF.renderer(), [P.c0, P.c1, P.c2, P.c3], [P.s0, P.s1], P.soleil > .05 ? { el, col: [255, 236, 200], force: P.soleil } : null, S.envRT);
-      S.s3.environment = S.envRT.texture;
-    }
+    // reflets des métaux : préparés à l'avance pour chaque moment de la journée
+    const env = envPour(Math.round(clamp(p.tod, .5, 3) * 2) / 2).texture;
+    if (S.s3.environment !== env) S.s3.environment = env;
   };
   MF.scenes.houppa = S;
 }
@@ -707,7 +712,12 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
   const spritesF = flammes.map(() => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); S.s3.add(s); return s; });
   const halos = new MF.Lueurs(S.s3, 40), flaques = new MF.Lueurs(S.s3, 12, { sol: true, ordre: 4 });
   const cote = new MF.Lueurs(S.s3, 80, { profondeur: false, ordre: -5 });
-  let envCle = '';
+  const envs = new Map(), dirsVilles = villes.map(v => MF.direction(v.az, v.el));
+  function envPour(c) {
+    if (!envs.has(c)) { const P = pal(c); envs.set(c, environnement(MF.renderer(), [P.c0, P.c1, P.c2, P.c3], [[80, 70, 80], [40, 36, 46]], { el: .1, col: [255, 200, 140], force: .5 })); }
+    return envs.get(c);
+  }
+  S.taches = [0, .5, 1].map(c => () => envPour(c));
 
   S.prepare = (t, dt, W, H) => {
     const p = S.p, P = pal(p.nuit), lit = p.allume;
@@ -718,13 +728,13 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
     lune.regler(S.cam, .28, .22, .07, 1);
     mer.regler({ niveau: 14, cols: [P.m0, P.m1, P.m2], teinte: [220, 226, 255], reflet: .3, eclat: .7, astre: { az: .28, el: .22, force: .3 + .3 * p.nuit, col: [235, 240, 255] }, brume: .45 }, ciel);
     mer.suivre(S.cam, t);
-    hemi.color.copy(MF.couleur(P.c2)); hemi.groundColor.copy(MF.couleur([60, 50, 60])); hemi.intensity = .7 + 1.4 * P.lum;
+    MF.couleur(P.c2, hemi.color); MF.couleur([60, 50, 60], hemi.groundColor); hemi.intensity = .7 + 1.4 * P.lum;
     MF.direction(.28, .4, luneL.position).multiplyScalar(50); luneL.intensity = .25 + .35 * p.nuit;
     verre.emissiveIntensity = .35 * lit;
     // lumières de la côte lointaine
     cote.vide();
-    for (const v of villes) {
-      const d = MF.direction(v.az, v.el);
+    for (let i = 0; i < villes.length; i++) {
+      const v = villes[i], d = dirsVilles[i];
       cote.ajoute(S.cam.position.x + d.x * 1200, S.cam.position.y + d.y * 1200, S.cam.position.z + d.z * 1200, (2 + v.s * 3) * 3.4, [255, 206, 150], (.25 + .2 * Math.sin(t * 2 + v.ph)) * (.4 + .6 * p.nuit));
     }
     cote.envoie();
@@ -734,20 +744,16 @@ const matFeuille = () => new THREE.MeshStandardMaterial({ color: MF.couleur('#7d
       const l = f.bougie ? clamp(lit * 2 - f.i) : lit, s = spritesF[k];
       const fl = 1 + Math.sin(t * 13 + k) * .06 + Math.sin(t * 7.3 + k * 2) * .05;
       s.visible = l > .01;
-      s.position.copy(P3(f.X + Math.sin(t * 5 + k) * .002, f.Y + f.h * .5 * fl * l, f.Z));
+      s.position.set(f.X + Math.sin(t * 5 + k) * .002, f.Y + f.h * .5 * fl * l, -f.Z);
       s.scale.set(f.h * .5 * l, f.h * fl * l, 1);
       halos.ajoute(f.X, f.Y + f.h * .5, -f.Z, f.h * 3.2 * l, [255, 214, 150], .22 * l);
       halos.ajoute(f.X, f.Y + f.h * .5, -f.Z, f.h * 2 * l, [255, 240, 210], .5 * l);
       flaques.ajoute(f.X, .002, -f.Z, f.bougie ? .7 : .32, [255, 196, 120], .13 * l);
-      if (f.bougie) { f.bougie.material.emissiveIntensity = .25 * l; const L = lumB[f.i]; L.position.copy(P3(f.X, f.Y + .03, f.Z)); L.intensity = .9 * l * fl; }
+      if (f.bougie) { f.bougie.material.emissiveIntensity = .25 * l; const L = lumB[f.i]; L.position.set(f.X, f.Y + .03, -f.Z); L.intensity = .9 * l * fl; }
     });
     halos.envoie(); flaques.envoie();
-    const cle = (Math.round(p.nuit * 4) / 4).toFixed(2);
-    if (cle !== envCle && MF.renderer()) {
-      envCle = cle;
-      S.envRT = environnement(MF.renderer(), [P.c0, P.c1, P.c2, P.c3], [[80, 70, 80], [40, 36, 46]], { el: .1, col: [255, 200, 140], force: .5 * lit }, S.envRT);
-      S.s3.environment = S.envRT.texture;
-    }
+    const env = envPour(Math.round(clamp(p.nuit) * 2) / 2).texture;
+    if (S.s3.environment !== env) S.s3.environment = env;
   };
   MF.scenes.chabbat = S;
 }
