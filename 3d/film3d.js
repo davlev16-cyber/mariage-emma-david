@@ -318,14 +318,19 @@ function histoire(t) {
    4. La page avance toute seule, comme sur le premier site : les plans à leur vitesse, une pause sur chaque page
    pour lire ; dès que l'invité fait défiler lui-même, elle le laisse faire, puis reprend après quelques secondes de calme.
    ===================================================================== */
-let arrete = REDUIT, pauseJusqua = Infinity, dernier = 0, pos = 0;
-const PAUSE = 2500, LECTURE = 7000;
+let arrete = REDUIT, pauseJusqua = Infinity, dernier = 0, pos = 0, posAvant = 0, doigt = false, elan = 0;
+const PAUSE = 3000, LECTURE = 7000, DEMARRAGE = 1.4;
 const vus = new Set();
-// dès que l'invité fait défiler lui-même (doigt, molette, clavier), la page est à lui : le défilement automatique
-// s'arrête pour de bon et ne reprend jamais la main (aucun script n'intercepte le toucher : écouteurs passifs, sans preventDefault)
-const prendLaMain = () => { if (ouvert) arrete = true; };
-['wheel', 'touchmove', 'keydown'].forEach(ty => addEventListener(ty, prendLaMain, { passive: true }));
-addEventListener('scroll', () => { if (ouvert && Math.abs(scrollY - pos) > 3) arrete = true; }, { passive: true });
+// l'invité garde toujours la main : tant que son doigt est posé, rien ne bouge tout seul ; après un geste (doigt, molette,
+// clavier), la page finit de glisser sur son élan, puis le défilement automatique reprend après 3 s de calme, en douceur.
+// (écouteurs passifs, aucun preventDefault : le toucher n'est jamais intercepté)
+const attendre = () => { if (ouvert) { pauseJusqua = performance.now() + PAUSE; elan = 0; } };
+addEventListener('touchstart', () => { doigt = true; attendre(); }, { passive: true });
+['touchend', 'touchcancel'].forEach(ty => addEventListener(ty, () => { doigt = false; attendre(); }, { passive: true }));
+['wheel', 'keydown', 'mousedown'].forEach(ty => addEventListener(ty, attendre, { passive: true }));
+// la page bouge sans nous (élan du doigt, molette) : on attend qu'elle s'arrête
+// (nos propres pas de défilement tombent entre la position d'avant et la nouvelle : ceux-là ne comptent pas)
+addEventListener('scroll', () => { if (ouvert && (scrollY < Math.min(pos, posAvant) - 3 || scrollY > Math.max(pos, posAvant) + 3)) attendre(); }, { passive: true });
 document.addEventListener('focusin', e => { if (e.target.closest('form')) arrete = true; });
 const finAuto = () => ($('#reponse') || $('#couverture')).offsetTop;
 const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - innerHeight) / 2));
@@ -335,16 +340,18 @@ function vitesse() {
 }
 function avance(now) {
   const dt = dernier ? Math.min(.05, (now - dernier) / 1000) : 0; dernier = now;
-  if (!ouvert || arrete || now < pauseJusqua) { pos = scrollY; return; }
+  if (!ouvert || arrete || doigt || now < pauseJusqua) { pos = posAvant = scrollY; elan = 0; return; }
   const but = finAuto();
   if (scrollY >= but - 1) { pos = scrollY; return; }
   if (Math.abs(pos - scrollY) > 4) pos = scrollY;
-  let suivant = Math.min(but, pos + vitesse() * dt);
+  // reprise progressive : la vitesse monte doucement de zéro (pas de départ brusque)
+  elan = Math.min(1, elan + dt / DEMARRAGE);
+  let suivant = Math.min(but, pos + vitesse() * MF.ease.sine(elan) * dt);
   for (const y of arretsLecture()) {
     const cle = Math.round(y);
-    if (!vus.has(cle) && pos < y && suivant >= y) { suivant = y; vus.add(cle); pauseJusqua = now + LECTURE; break; }
+    if (!vus.has(cle) && pos < y && suivant >= y) { suivant = y; vus.add(cle); pauseJusqua = now + LECTURE; elan = 0; break; }
   }
-  pos = suivant;
+  posAvant = pos; pos = suivant;
   scrollTo(0, pos);
 }
 

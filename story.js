@@ -289,18 +289,22 @@
   // La page avance seule : les cinématiques à leur vitesse réelle, les pages de texte
   // plus lentement pour laisser le temps de lire. Dès que l'invité fait défiler
   // lui-même, l'automatique s'efface, puis reprend après quelques secondes de calme.
-  let pausedUntil = performance.now() + 600, last = 0, pos = scrollY, stopped = reduce;
-  const PAUSE = 2500;
+  let pausedUntil = performance.now() + 600, last = 0, pos = scrollY, posBefore = scrollY, stopped = reduce, finger = false, ramp = 0;
+  const PAUSE = 3000, RAMP = 1.4;
   const FAST = 2.2;   // les cinématiques défilent 2,2 fois plus vite que leur durée
   const stopAt = () => {
     const r = document.getElementById("s-rsvp") || document.getElementById("s-cover");
     return r.offsetTop;
   };
-  // dès que l'invité fait défiler lui-même (doigt, molette, clavier), la page est à lui : le défilement automatique
-  // s'arrête pour de bon (écouteurs passifs, aucun preventDefault : le toucher n'est jamais intercepté)
-  const takeOver = () => { if (opened) stopped = true; };
-  ["wheel", "touchmove", "keydown"].forEach(t => addEventListener(t, takeOver, { passive: true }));
-  addEventListener("scroll", () => { if (opened && Math.abs(scrollY - pos) > 3) stopped = true; }, { passive: true });
+  // l'invité garde toujours la main : tant que son doigt est posé, rien ne bouge tout seul ; après un geste, la page finit
+  // de glisser sur son élan, puis le défilement automatique reprend après 3 s de calme, en douceur
+  // (écouteurs passifs, aucun preventDefault : le toucher n'est jamais intercepté)
+  const wait = () => { pausedUntil = performance.now() + PAUSE; ramp = 0; };
+  addEventListener("touchstart", () => { finger = true; wait(); }, { passive: true });
+  ["touchend", "touchcancel"].forEach(t => addEventListener(t, () => { finger = false; wait(); }, { passive: true }));
+  ["wheel", "keydown", "mousedown"].forEach(t => addEventListener(t, wait, { passive: true }));
+  // (nos propres pas de défilement tombent entre la position d'avant et la nouvelle : ceux-là ne comptent pas)
+  addEventListener("scroll", () => { if (opened && (scrollY < Math.min(pos, posBefore) - 3 || scrollY > Math.max(pos, posBefore) + 3)) wait(); }, { passive: true });
   document.addEventListener("focusin", e => { if (e.target.closest("form")) stopped = true; });
 
   function speedHere() {
@@ -322,16 +326,18 @@
 
   function autoScroll(now) {
     const dt = last ? Math.min(.05, (now - last) / 1000) : 0; last = now;
-    if (!opened || stopped || now < pausedUntil) { pos = scrollY; return; }
+    if (!opened || stopped || finger || now < pausedUntil) { pos = posBefore = scrollY; ramp = 0; return; }
     const target = stopAt();
     if (scrollY >= target - 1) { pos = scrollY; return; }
     if (Math.abs(pos - scrollY) > 4) pos = scrollY;
-    let next = Math.min(target, pos + speedHere() * dt);
+    // reprise progressive : la vitesse monte doucement de zéro
+    ramp = Math.min(1, ramp + dt / RAMP);
+    let next = Math.min(target, pos + speedHere() * (.5 - Math.cos(Math.PI * ramp) / 2) * dt);
     for (const y of readStops()) {
       const key = Math.round(y);
-      if (!reached.has(key) && pos < y && next >= y) { next = y; reached.add(key); pausedUntil = now + READ; break; }
+      if (!reached.has(key) && pos < y && next >= y) { next = y; reached.add(key); pausedUntil = now + READ; ramp = 0; break; }
     }
-    pos = next;
+    posBefore = pos; pos = next;
     window.scrollTo(0, pos);
   }
 
