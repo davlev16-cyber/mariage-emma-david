@@ -113,8 +113,9 @@ canvas.monde { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; hei
 .film.fin .passer { opacity: 0; pointer-events: none; }
 
 /* ---------- 3. l'histoire : un plan de cinéma (zone de défilement avec sa carte), puis sa page ---------- */
-.cine { position: relative; height: calc(var(--h, 230) * 1vh); }
-.cine-cadre { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; pointer-events: none; }
+/* chaque plan tient sur un écran, dans le flux normal de la page (rien de « collé » pendant le défilement) */
+.cine { position: relative; height: 100vh; height: 100svh; }
+.cine-cadre { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .fin-carte .fin-date { display: block; margin-top: 16px; font: 500 12px/1.6 var(--sans); letter-spacing: .34em; text-transform: uppercase; color: var(--or-p); }
 
 .invitation { position: relative; z-index: 5; opacity: 0; visibility: hidden; transition: opacity 1.6s ease; overflow-x: clip; }

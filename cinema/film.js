@@ -105,7 +105,7 @@ const elements = [];   // plans de cinéma et pages, dans l'ordre de la page
 const apparait = n => { n.setAttribute('data-apparait', ''); return n; };
 
 function plan(k) {
-  const c = CINE[k], s = el('section', 'cine'); s.id = 'cine-' + k; s.style.setProperty('--h', c.hauteur);
+  const c = CINE[k], s = el('section', 'cine'); s.id = 'cine-' + k;
   const cadre = el('div', 'cine-cadre'); s.append(cadre); main.append(s);
   const it = { type: 'cine', k, groupe: k, sec: s, scene: c.scene, duree: c.duree, pose: c.pose, textes: [] };
   elements.push(it);
@@ -251,23 +251,34 @@ main.append(el('footer', 'signature-mariage', 'Emma & David · 2027'));
 for (const sec of $$('.chap')) [...sec.querySelectorAll('[data-apparait]')].forEach((n, i) => n.style.setProperty('--d', (i * .12) + 's'));
 
 /* =====================================================================
-   3. Le décor suit la lecture : chaque plan ou page prend la main quand il arrive au milieu de l'écran
+   3. Le décor suit la lecture : chaque partie (un écran) prend la main quand elle occupe le milieu de l'écran.
+   Le décor ne dépend jamais de la position exacte du doigt : chaque plan joue son mouvement de caméra dans le temps,
+   et un changement de décor se fait toujours en fondu (dans un sens comme dans l'autre). Rien ne peut donc sauter
+   pendant un défilement au doigt, même si l'image arrive un peu en retard sur le geste.
    ===================================================================== */
-const film = $('#film');
 let ouvert = false, courant = null;
-// début de chaque élément (en pixels de défilement) ; la fin d'un élément est le début du suivant
-// hauteur d'écran STABLE (celle de la toile du décor, 100lvh) : elle ne change pas quand la barre du navigateur
-// apparaît ou disparaît pendant un défilement au doigt (innerHeight, lui, change de ~80 px et faisait sauter les calculs)
+// feu d'artifice du final
+const tirer = (x, y, s) => feux.tire(MF.W * x, MF.H * y, s);
+// hauteur d'écran STABLE (celle de la toile du décor, 100lvh) : elle ne change pas quand la barre du navigateur apparaît ou disparaît
 const toileFond = document.querySelector('canvas.decor, canvas.monde');
 const hauteur = () => (toileFond && toileFond.clientHeight) || innerHeight;
-function bornes() {
-  const vh = hauteur();
-  elements.forEach((it, i) => { it.debut = i ? it.sec.offsetTop - vh * .5 : 0; });
-  elements.forEach((it, i) => { it.fin = elements[i + 1] ? elements[i + 1].debut : it.debut + it.sec.offsetHeight; });
+// la partie qui occupe le milieu de l'écran ; on ne change de partie que lorsque la nouvelle a nettement pris le milieu
+// (une marge évite que le décor change dans un sens puis dans l'autre quand on remue le doigt à la limite de deux parties)
+function choisit(y) {
+  const H = hauteur(), centre = y + H * .5;
+  let i = 0;
+  for (let j = 0; j < elements.length; j++) if (centre >= elements[j].sec.offsetTop) i = j;
+  const it = elements[i];
+  if (!courant || it === courant) return it;
+  const marge = H * .12, iC = elements.indexOf(courant);
+  if (i > iC && centre < it.sec.offsetTop + marge) return courant;
+  if (i < iC && centre > courant.sec.offsetTop - marge) return courant;
+  return it;
 }
-const progres = (it, y) => clamp((y - it.debut) / Math.max(1, it.fin - it.debut));
-function cible(it, y, t) {
-  if (it.type === 'cine') return it.pose(progres(it, y) * it.duree, it.duree + FONDU);
+const D = it => it.duree + FONDU;
+// réglages du décor : un plan joue son mouvement de caméra dans le temps (une fois), une page dérive doucement
+function cible(it, t) {
+  if (it.type === 'cine') return it.pose(Math.min(t - it.horloge, D(it)), D(it));
   return it.pose(t - it.t0);
 }
 // même décor et même variante : la page continue le plan sans fondu, la caméra glisse vers son cadrage
@@ -276,94 +287,68 @@ function continuite(it, toile) {
   const c = it.pose(0);
   return !('variante' in c) || c.variante === toile.p.variante;
 }
-function activer(it, y, t) {
+function activer(it, t) {
   const avant = courant;
   courant = it; it.t0 = t;
   // une vue encore à l'écran montre déjà cet élément (ou la suite de son plan) : on revient dessus en douceur
-  // (au doigt, on remonte souvent pendant un fondu : l'image ne doit jamais changer d'un coup)
   const vue = MF.toiles.filter(o => o.alpha > 0 && o.proprio && (o.proprio === it || continuite(it, o))).sort((a, b) => b.z - a.z)[0];
   if (vue) {
+    if (it.horloge === undefined) it.horloge = t;
     it.toile = vue; it.p = vue.p; it.depart = vue.proprio === it ? null : { ...vue.p };
     MF.ramene(vue, FONDU);
   } else {
-    it.p = { ...MF.scenes[it.scene].p, ...cible(it, y, t) }; it.depart = null;
+    // nouveau décor : le mouvement de caméra du plan repart du début
+    it.horloge = t; if (it.tirs !== undefined) it.tirs = 0;
+    it.p = { ...MF.scenes[it.scene].p, ...cible(it, t) }; it.depart = null;
     it.toile = MF.montre(it.scene, avant ? FONDU : .001, { nouvelle: !!avant, p: it.p });
   }
   it.toile.proprio = it;
 }
-function poser(it, y, t) {
-  const c = cible(it, y, t);
+function poser(it, t) {
+  const c = cible(it, t);
   if (it.depart) {
     const m = io((t - it.t0) / 2.4);
     for (const k in c) it.p[k] = k in it.depart && k !== 'variante' && k !== 'rivage' ? lerp(it.depart[k], c[k], m) : c[k];
     if (m >= 1) it.depart = null;
   } else Object.assign(it.p, c);
 }
-// la caméra suit le défilement avec un très léger amorti : les à-coups du doigt ne se voient pas
-let yLisse = null, tPrec = 0;
 function histoire(t) {
-  const y = scrollY, dt = tPrec ? clamp(t - tPrec, 0, .1) : 0; tPrec = t;
-  yLisse = yLisse === null || Math.abs(y - yLisse) > hauteur() * 1.5 ? y : yLisse + (y - yLisse) * (1 - Math.exp(-dt * 11));
-  bornes();
-  let i = 0;
-  for (let j = 0; j < elements.length; j++) if (y >= elements[j].debut) i = j;
-  if (elements[i] !== courant) activer(elements[i], yLisse, t);
+  const it = choisit(scrollY);
+  if (it !== courant) activer(it, t);
   // chaque toile encore visible suit l'élément auquel elle appartient
-  for (const o of MF.toiles) if (o.alpha > 0 && o.proprio && o.p === o.proprio.p) poser(o.proprio, yLisse, t);
-  // les cartes des plans de cinéma apparaissent avec leur décor
-  for (const it of elements) {
-    if (it.type !== 'cine') continue;
-    const p = progres(it, y);
-    for (const [n, a] of it.textes) n.classList.toggle('vu', ouvert && p >= a);
-    if (it.tirs !== undefined) {
-      if (p < .05) it.tirs = 0;
-      while (it === courant && it.tirs < TIRS.length && p >= TIRS[it.tirs][0]) { const [, x, yy] = TIRS[it.tirs++]; feux.tire(MF.W * x, MF.H * yy, .9 + Math.random() * .3); }
-    }
+  for (const o of MF.toiles) if (o.alpha > 0 && o.proprio && o.p === o.proprio.p) poser(o.proprio, t);
+  // le titre d'un plan apparaît peu après son décor (et reste) ; le feu d'artifice part pendant le final
+  if (ouvert && courant.type === 'cine') {
+    if (courant.horloge === undefined) courant.horloge = t;
+    const u = t - courant.horloge;
+    for (const [n, a] of courant.textes) if (u >= a * courant.duree) n.classList.add('vu');
+    if (courant.tirs !== undefined) while (courant.tirs < TIRS.length && u >= TIRS[courant.tirs][0] * courant.duree) { const [, x, yy] = TIRS[courant.tirs++]; tirer(x, yy, .9 + Math.random() * .3); }
   }
 }
 
 /* =====================================================================
-   4. La page avance toute seule, comme sur le premier site : les plans à leur vitesse, une pause sur chaque page
-   pour lire ; dès que l'invité fait défiler lui-même, elle le laisse faire, puis reprend après quelques secondes de calme.
+   4. La page avance toute seule (defile.js, commun aux trois versions) : un temps pour regarder chaque plan,
+   un temps pour lire chaque page, puis une glissade faite par le navigateur jusqu'à la partie suivante.
+   Le doigt garde toujours la main ; la page s'arrête sur la réponse.
    ===================================================================== */
-let arrete = REDUIT, pauseJusqua = Infinity, dernier = 0, pos = 0, posAvant = 0, doigt = false, elan = 0;
-const PAUSE = 3000, LECTURE = 7000, DEMARRAGE = 1.4;
-const vus = new Set();
-// l'invité garde toujours la main : tant que son doigt est posé, rien ne bouge tout seul ; après un geste (doigt, molette,
-// clavier), la page finit de glisser sur son élan, puis le défilement automatique reprend après 3 s de calme, en douceur.
-// (écouteurs passifs, aucun preventDefault : le toucher n'est jamais intercepté)
-const attendre = () => { if (ouvert) { pauseJusqua = performance.now() + PAUSE; elan = 0; } };
-addEventListener('touchstart', () => { doigt = true; attendre(); }, { passive: true });
-['touchend', 'touchcancel'].forEach(ty => addEventListener(ty, () => { doigt = false; attendre(); }, { passive: true }));
-['wheel', 'keydown', 'mousedown'].forEach(ty => addEventListener(ty, attendre, { passive: true }));
-// la page bouge sans nous (élan du doigt, molette) : on attend qu'elle s'arrête
-// (nos propres pas de défilement tombent entre la position d'avant et la nouvelle : ceux-là ne comptent pas)
-addEventListener('scroll', () => { if (ouvert && (scrollY < Math.min(pos, posAvant) - 3 || scrollY > Math.max(pos, posAvant) + 3)) attendre(); }, { passive: true });
-document.addEventListener('focusin', e => { if (e.target.closest('form')) arrete = true; });
-const finAuto = () => ($('#reponse') || $('#couverture')).offsetTop;
-const arretsLecture = () => elements.filter(it => it.type === 'page' && it.k !== 'reponse').map(it => it.sec.offsetTop + Math.max(0, (it.sec.offsetHeight - hauteur()) / 2));
-function vitesse() {
-  if (courant && courant.type === 'cine') return (courant.fin - courant.debut) / courant.duree;
-  return Math.max(110, hauteur() / 3.4);
-}
-function avance(now) {
-  const dt = dernier ? Math.min(.05, (now - dernier) / 1000) : 0; dernier = now;
-  if (!ouvert || arrete || doigt || now < pauseJusqua) { pos = posAvant = scrollY; elan = 0; return; }
-  const but = finAuto();
-  if (scrollY >= but - 1) { pos = scrollY; return; }
-  if (Math.abs(pos - scrollY) > 4) pos = scrollY;
-  // reprise progressive : la vitesse monte doucement de zéro (pas de départ brusque)
-  elan = Math.min(1, elan + dt / DEMARRAGE);
-  let suivant = Math.min(but, pos + vitesse() * MF.ease.sine(elan) * dt);
-  for (const y of arretsLecture()) {
-    const cle = Math.round(y);
-    if (!vus.has(cle) && pos < y && suivant >= y) { suivant = y; vus.add(cle); pauseJusqua = now + LECTURE; elan = 0; break; }
-  }
-  posAvant = pos; pos = suivant;
-  scrollTo(0, pos);
-}
+const LECTURE = 7;
+const sejour = it => it.type === 'cine' ? (it.k === 'apercu' ? 7 : 6) : (it.k === 'couverture' ? 9 : LECTURE);
+const defile = Defile({
+  reduit: REDUIT,
+  actif: () => ouvert,
+  cibles: () => {
+    const H = hauteur(), L = [];
+    for (const it of elements) {
+      const haut = it.sec.offsetTop, h = it.sec.offsetHeight, fin = it.k === 'reponse';
+      L.push({ y: haut, duree: sejour(it), fin });
+      // une page plus haute que l'écran : on s'arrête aussi sur sa fin
+      if (!fin && h > H * 1.15) L.push({ y: haut + h - H, duree: LECTURE * .6 });
+    }
+    return L;
+  },
+});
 
-MF.avant.push(t => { histoire(t); avance(performance.now()); });
+MF.avant.push(t => { histoire(t); defile.pas(); });
 
 /* ---------- les textes des pages apparaissent en douceur ---------- */
 const apparitions = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vu'); apparitions.unobserve(e.target); } }), { threshold: .15 });
@@ -382,7 +367,9 @@ function commencer() {
   ouvert = true;
   document.body.classList.remove('verrou'); document.body.classList.add('page');
   btnSon.hidden = SILENCE;
-  film.classList.add('on');
+  // le plan d'aperçu commence quand le voile s'ouvre
+  const t = maintenant();
+  if (courant && courant.k === 'apercu') courant.horloge = t;
   $$('[data-apparait]').forEach(n => apparitions.observe(n));
 }
 function ouvrir() {
@@ -390,8 +377,8 @@ function ouvrir() {
   musique(true);
   porte.classList.add('ouvre');
   commencer();
-  scrollTo(0, 0); pos = 0;
-  pauseJusqua = performance.now() + (REDUIT ? 0 : 1600);   // la page commence à avancer pendant que le voile s'écarte
+  scrollTo(0, 0);
+  defile.demarre(REDUIT ? 0 : 1600);
   if (REDUIT) { porte.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' }); setTimeout(() => porte.remove(), 600); return; }
   // les deux pans glissent vers les côtés : le haut part le premier, le bas traîne un peu, les plis se resserrent
   const OUV = 3400;
@@ -415,13 +402,12 @@ histoire(maintenant());
 
 /* ---------- raccourcis d'essai : #aller=cine-h&q=.5 (sans voile ni défilement automatique), #fixe ---------- */
 const h = location.hash, ma = h.match(/aller=([\w-]+)/);
-if (/fixe/.test(h)) arrete = true;
+if (/fixe/.test(h)) defile.arrete();
 if (ma && document.getElementById(ma[1])) {
-  porte.remove(); arrete = true; commencer();
+  porte.remove(); defile.arrete(); commencer();
   const it = elements.find(x => x.sec.id === ma[1]), mq = h.match(/q=([\d.]+)/);
-  bornes();
   const q = mq ? parseFloat(mq[1]) : 0;
-  scrollTo(0, it.type === 'cine' ? it.debut + q * (it.fin - it.debut) : it.sec.offsetTop + q * it.sec.offsetHeight);
+  scrollTo(0, it.sec.offsetTop + q * it.sec.offsetHeight);
   $$('[data-apparait]').forEach(n => n.classList.add('vu'));
 }
 })();
